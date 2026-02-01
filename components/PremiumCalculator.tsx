@@ -704,8 +704,8 @@ export function PremiumCalculator() {
           canton: formState.canton,
           persons: personsData,
           model: modelFilter,
-          currentInsurer: formState.currentInsurer,
-          currentPremium: formState.currentPremium,
+          currentInsurer: formState.currentInsurer === "keine" ? "Neu in der Schweiz" : formState.currentInsurer,
+          currentPremium: currentPremiumAuto ? String(currentPremiumAuto) : formState.currentPremium,
           cheapestInsurer: cheapest?.insurerName || "",
           cheapestPremium: cheapest?.totalMonthly || 0,
           extras: formState.extras,
@@ -821,9 +821,68 @@ export function PremiumCalculator() {
     [loadCantonPremiums]
   );
 
-  // ─── Auto-open lead modal after 5s on results ─────────────────────
+  // ─── Auto-calculate current premium from BAG data ──────────────────
 
-  // Auto-popup removed — lead is now captured before results are shown
+  const [currentPremiumAuto, setCurrentPremiumAuto] = useState<number | null>(null);
+  const [currentPremiumLoading, setCurrentPremiumLoading] = useState(false);
+
+  useEffect(() => {
+    if (!formState.currentInsurer || formState.currentInsurer === "keine" || formState.currentInsurer === "" || !formState.canton) {
+      setCurrentPremiumAuto(null);
+      return;
+    }
+
+    let cancelled = false;
+    setCurrentPremiumLoading(true);
+
+    (async () => {
+      try {
+        const cantonData = await loadCantonPremiums(formState.canton);
+        const regionStr = String(formState.region);
+        const regionData = cantonData[regionStr];
+        if (!regionData || cancelled) { setCurrentPremiumAuto(null); setCurrentPremiumLoading(false); return; }
+
+        let totalMonthly = 0;
+        let allFound = true;
+
+        for (const person of formState.persons) {
+          const ageGroup = getAgeGroup(person.birthYear);
+          const key = buildLookupKey(ageGroup, person.withAccident, person.franchise);
+          const entries = regionData[key] || [];
+
+          // Find entries matching current insurer
+          let insurerEntries = entries.filter((e) => e.n === formState.currentInsurer);
+
+          // Filter by model if specific model selected
+          if (modelFilter !== "all") {
+            const modelEntries = insurerEntries.filter((e) => e.t === modelFilter);
+            if (modelEntries.length > 0) insurerEntries = modelEntries;
+          }
+
+          if (insurerEntries.length > 0) {
+            // Use cheapest tariff for this insurer
+            const cheapest = insurerEntries.reduce((a, b) => a.p < b.p ? a : b);
+            totalMonthly += cheapest.p;
+          } else {
+            allFound = false;
+          }
+        }
+
+        if (!cancelled) {
+          setCurrentPremiumAuto(allFound ? totalMonthly : null);
+          // Also set in formState for lead data
+          if (allFound) {
+            setFormState((prev) => ({ ...prev, currentPremium: String(Math.round(totalMonthly * 100) / 100) }));
+          }
+          setCurrentPremiumLoading(false);
+        }
+      } catch {
+        if (!cancelled) { setCurrentPremiumAuto(null); setCurrentPremiumLoading(false); }
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [formState.currentInsurer, formState.canton, formState.region, formState.persons, modelFilter, loadCantonPremiums]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // RENDER
@@ -1346,25 +1405,38 @@ export function PremiumCalculator() {
                     </select>
                   </div>
 
-                  {/* Current premium — only if insurer selected (not "keine") */}
+                  {/* Auto-calculated current premium */}
                   {formState.currentInsurer && formState.currentInsurer !== "keine" && (
-                    <div className="animate-fade-in">
-                      <label className="block text-sm font-medium text-white/80 mb-2">
-                        Wie viel zahlst du aktuell pro Monat? {isMultiPerson ? "(Total für alle)" : ""}
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">CHF</span>
-                        <input
-                          type="number"
-                          placeholder={isMultiPerson ? "z.B. 900" : "z.B. 450"}
-                          value={formState.currentPremium}
-                          onChange={(e) => setFormState((prev) => ({ ...prev, currentPremium: e.target.value }))}
-                          className="input-field !pl-12"
-                        />
-                      </div>
-                      <p className="text-[11px] text-white/30 mt-1">
-                        Optional — ermöglicht die Anzeige deines Sparpotenzials.
-                      </p>
+                    <div className="animate-fade-in p-4 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+                      <div className="text-sm text-white/60 mb-1">Deine aktuelle Prämie bei {formState.currentInsurer}:</div>
+                      {currentPremiumLoading ? (
+                        <div className="flex items-center gap-2 text-white/40">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span className="text-sm">Wird berechnet...</span>
+                        </div>
+                      ) : currentPremiumAuto !== null ? (
+                        <div>
+                          <span className="text-2xl font-bold text-white">
+                            CHF {currentPremiumAuto.toFixed(2)}
+                          </span>
+                          <span className="text-sm text-white/40 ml-1">/ Monat{isMultiPerson ? " (Total)" : ""}</span>
+                          {modelFilter !== "all" && (
+                            <div className="text-xs text-white/30 mt-1">
+                              Günstigster {modelFilter === "standard" ? "Standard" : modelFilter === "hausarzt" ? "Hausarzt" : modelFilter === "hmo" ? "HMO" : "Telmed"}-Tarif
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-white/40">
+                          {formState.currentInsurer} bietet {modelFilter !== "all" ? `kein ${modelFilter}-Modell` : "keine Tarife"} in deiner Region an.
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {formState.currentInsurer === "keine" && (
+                    <div className="animate-fade-in p-4 rounded-xl bg-blue-500/5 border border-blue-500/15 text-sm text-white/50">
+                      🇨🇭 Willkommen in der Schweiz! Wir zeigen dir alle verfügbaren Krankenkassen sortiert nach Preis.
                     </div>
                   )}
 
