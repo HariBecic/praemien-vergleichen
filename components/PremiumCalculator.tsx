@@ -147,10 +147,47 @@ const INSURER_DOMAINS: Record<string, string> = {
   "ÖKK": "oekk.ch",
 };
 
+const INSURER_COLORS: Record<string, { bg: string; text: string }> = {
+  "Agrisano":            { bg: "#4a8c2a", text: "#fff" },
+  "Aquilana":            { bg: "#005da9", text: "#fff" },
+  "Assura":              { bg: "#00a651", text: "#fff" },
+  "Atupri":              { bg: "#009fe3", text: "#fff" },
+  "Avenir":              { bg: "#e30613", text: "#fff" },
+  "Birchmeier":          { bg: "#2c5aa0", text: "#fff" },
+  "CSS":                 { bg: "#003b80", text: "#fff" },
+  "Concordia":           { bg: "#0055a5", text: "#fff" },
+  "EGK":                 { bg: "#6aab25", text: "#fff" },
+  "Galenos":             { bg: "#1d4e89", text: "#fff" },
+  "Helsana":             { bg: "#e2001a", text: "#fff" },
+  "KPT":                 { bg: "#e64415", text: "#fff" },
+  "Luzerner Hinterland": { bg: "#2e7d32", text: "#fff" },
+  "Mutuel":              { bg: "#e30613", text: "#fff" },
+  "Philos":              { bg: "#e30613", text: "#fff" },
+  "SLKK":                { bg: "#1565c0", text: "#fff" },
+  "SWICA":               { bg: "#78be20", text: "#fff" },
+  "Sanitas":             { bg: "#c80078", text: "#fff" },
+  "Steffisburg":         { bg: "#2e7d32", text: "#fff" },
+  "Sumiswalder":         { bg: "#1a5276", text: "#fff" },
+  "Sympany":             { bg: "#662d91", text: "#fff" },
+  "Visana":              { bg: "#003399", text: "#fff" },
+  "Wädenswil":           { bg: "#1565c0", text: "#fff" },
+  "rhenusana":           { bg: "#00897b", text: "#fff" },
+  "sana24":              { bg: "#00b200", text: "#fff" },
+  "vita surselva":       { bg: "#388e3c", text: "#fff" },
+  "ÖKK":                 { bg: "#e3000f", text: "#fff" },
+};
+
 function getInsurerLogoUrl(insurerName: string): string | null {
   const domain = INSURER_DOMAINS[insurerName];
   if (!domain) return null;
   return `https://cdn.brandfetch.io/domain/${domain}?c=1idc9vLyOz1J1qurgu6`;
+}
+
+function getInsurerInitials(name: string): string {
+  if (name.length <= 4) return name.toUpperCase();
+  const words = name.split(/\s+/);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return name.slice(0, 3).toUpperCase();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1410,32 +1447,25 @@ export function PremiumCalculator() {
                               {/* Logo */}
                               {(() => {
                                 const logoUrl = getInsurerLogoUrl(group.insurerName);
-                                return logoUrl ? (
-                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden bg-white border ${
-                                    isFirst ? "border-emerald-200" : "border-stone-200"
-                                  }`}>
-                                    <img
-                                      src={logoUrl}
-                                      alt={group.insurerName}
-                                      className="w-8 h-8 object-contain"
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.style.display = "none";
-                                        const parent = target.parentElement;
-                                        if (parent) {
-                                          parent.textContent = group.insurerName.slice(0, 2).toUpperCase();
-                                          parent.className = `w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                                            isFirst ? "bg-emerald-100 text-emerald-700" : "bg-stone-100 text-stone-500"
-                                          }`;
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                ) : (
-                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                                    isFirst ? "bg-emerald-100 text-emerald-700" : "bg-stone-100 text-stone-500"
-                                  }`}>
-                                    {group.insurerName.slice(0, 2).toUpperCase()}
+                                const colors = INSURER_COLORS[group.insurerName] || { bg: "#64748b", text: "#fff" };
+                                const initials = getInsurerInitials(group.insurerName);
+                                return (
+                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden relative"
+                                    style={{ backgroundColor: colors.bg }}
+                                  >
+                                    {logoUrl && (
+                                      <img
+                                        src={logoUrl}
+                                        alt={group.insurerName}
+                                        className="w-10 h-10 object-contain absolute inset-0"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).style.display = "none";
+                                        }}
+                                      />
+                                    )}
+                                    <span className="text-xs font-bold" style={{ color: colors.text }}>
+                                      {initials}
+                                    </span>
                                   </div>
                                 );
                               })()}
