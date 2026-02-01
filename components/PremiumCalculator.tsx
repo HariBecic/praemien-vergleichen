@@ -616,14 +616,17 @@ export function PremiumCalculator() {
       setPersonRawDataList(results);
       setExpandedInsurer(null);
 
-      // If lead already captured, show results directly
-      if (leadSubmitted) {
-        setShowResults(true);
-      } else {
-        // Gate results behind lead form
+      // Always show results first
+      setShowResults(true);
+
+      // If lead not yet captured, show modal after a short delay
+      // so the customer sees the results briefly and knows what they'll get
+      if (!leadSubmitted) {
         const firstName = formState.persons[0]?.name || "";
         if (firstName && !leadName) setLeadName(firstName);
-        setShowLeadModal(true);
+        setTimeout(() => {
+          setShowLeadModal(true);
+        }, 1200);
       }
     } catch {
       setPersonRawDataList([]);
