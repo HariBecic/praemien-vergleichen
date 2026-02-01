@@ -49,8 +49,11 @@ export function InsurerCarousel() {
               <img
                 src={getLogoUrl(insurer.domain)}
                 alt={insurer.name}
-                className="h-6 sm:h-7 w-auto object-contain brightness-0 invert opacity-40 hover:opacity-70 transition-opacity"
+                className="h-6 sm:h-7 w-auto max-w-[100px] object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-90 transition-all duration-300"
                 loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
               />
             </div>
           ))}
