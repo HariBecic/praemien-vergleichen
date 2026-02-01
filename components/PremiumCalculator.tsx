@@ -1490,7 +1490,7 @@ export function PremiumCalculator() {
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-sm font-medium text-white/60">{groupedResults.length} Versicherer</span>
                         <button
-                          onClick={() => setShowResults(false)}
+                          onClick={() => { setShowResults(false); setStep(2); }}
                           className="text-xs sm:text-sm text-blue-400 font-medium hover:underline"
                         >
                           ✏️ Angaben ändern
@@ -1605,7 +1605,7 @@ export function PremiumCalculator() {
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
                                     </svg>
                                     <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">
-                                      –{group.savings.toLocaleString("de-CH")}/J.
+                                      CHF {group.savings.toLocaleString("de-CH")} sparen
                                     </span>
                                   </div>
                                 ) : <div />}
@@ -1614,11 +1614,11 @@ export function PremiumCalculator() {
                                 <div className="flex items-center gap-2">
                                   <button
                                     onClick={() => setExpandedInsurer(isExpanded ? null : group.insurerId)}
-                                    className="p-2 rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white/60 transition-colors"
-                                    title="Alle Tarife anzeigen"
+                                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs text-white/40 hover:bg-white/[0.06] hover:text-white/60 transition-colors"
                                   >
+                                    <span>{isExpanded ? "Weniger" : "Alle Tarife"}</span>
                                     <svg
-                                      className={`w-5 h-5 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                                      className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                                       fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                                     >
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
