@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useRef, useMemo, useCallback } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════════════
 
 interface Person {
   id: string;
@@ -16,63 +18,79 @@ interface Person {
 }
 
 interface FormState {
-  // Step 1
   calculationType: "single" | "couple" | "family" | "unborn";
   plz: string;
   ort: string;
   canton: string;
   region: number;
-
-  // Step 2
   persons: Person[];
-
-  // Step 3
   currentInsurer: string;
   currentPremium: string;
   preference: "cheapest" | "recommended" | "offers";
-
-  // Step 4 (Zusatzversicherung interests)
   extras: string[];
 }
 
 interface PlzEntry {
-  c: string; // canton
-  r: number; // region
-  o: string; // ort
+  c: string;
+  r: number;
+  o: string;
 }
 
 interface PremiumRawEntry {
   id: number;
-  n: string;  // insurer name
-  t: string;  // tariff type (standard/hausarzt/hmo/telmed)
-  tn: string; // tariff name
-  p: number;  // monthly premium
+  n: string;
+  t: string;
+  tn: string;
+  p: number;
 }
 
-interface Result {
-  insurer: string;
-  insurerNr: string;
-  model: string;
-  modelName: string;
-  monthlyPremium: number;
-  yearlyPremium: number;
+interface PersonRawData {
+  personId: string;
+  personLabel: string;
+  ageGroup: string;
+  franchise: number;
+  withAccident: boolean;
+  entries: PremiumRawEntry[];
+}
+
+interface InsurerPersonTariff {
+  personId: string;
+  personLabel: string;
+  ageGroup: string;
+  cheapest: PremiumRawEntry;
+  allTariffs: PremiumRawEntry[];
+}
+
+interface InsurerGroup {
+  insurerId: number;
+  insurerName: string;
+  persons: InsurerPersonTariff[];
+  totalMonthly: number;
+  totalYearly: number;
   savings: number;
+  modelTypes: string[];
 }
 
-// Canton premium data: { "1": { "ERW-OHN-2500": [...entries] } }
 type CantonData = Record<string, Record<string, PremiumRawEntry[]>>;
-
-// PLZ data: { "8001": [{ c, r, o }] }
 type PlzData = Record<string, PlzEntry[]>;
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════
 
 const FRANCHISES_ADULT = [300, 500, 1000, 1500, 2000, 2500];
 const FRANCHISES_CHILD = [0, 100, 200, 300, 400, 500, 600];
+const DEFAULT_FRANCHISE_ADULT = 2500;
+const DEFAULT_FRANCHISE_CHILD = 0;
 
 const CURRENT_INSURERS = [
-  "CSS", "Sanitas", "SWICA", "Helsana", "Visana", "Concordia",
-  "Assura", "Groupe Mutuel", "KPT", "Atupri", "ÖKK", "Sympany", "Andere",
+  "Agrisano", "AMB", "Aquilana", "Assura", "Atupri", "Avenir",
+  "Birchmeier", "Concordia", "CSS", "d'Entremont", "EGK", "Einsiedeln",
+  "Galenos", "Glarner", "Helsana", "KPT", "Lumneziana",
+  "Luzerner Hinterland", "Mutuel", "ÖKK", "Philos", "rhenusana",
+  "sana24", "Sanitas", "SLKK", "sodalis", "Steffisburg", "Sumiswalder",
+  "SWICA", "Sympany", "Visana", "Visperterminen", "vita surselva",
+  "vivacare", "Wädenswil", "Andere",
 ];
 
 const EXTRA_OPTIONS = [
@@ -93,7 +111,15 @@ const MODEL_LABELS: Record<string, string> = {
   telmed: "Telmed",
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+const AGE_LABELS: Record<string, string> = {
+  KIN: "Kind",
+  JUG: "Junger Erwachsener",
+  ERW: "Erwachsene/r",
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
 
 function getAgeGroup(birthdate: string): "KIN" | "JUG" | "ERW" {
   if (!birthdate) return "ERW";
@@ -111,59 +137,113 @@ function getFranchisesForAge(ageGroup: string): number[] {
   return ageGroup === "KIN" ? FRANCHISES_CHILD : FRANCHISES_ADULT;
 }
 
+function getDefaultFranchise(ageGroup: string): number {
+  return ageGroup === "KIN" ? DEFAULT_FRANCHISE_CHILD : DEFAULT_FRANCHISE_ADULT;
+}
+
 function createPerson(id?: string): Person {
   return {
     id: id || `p-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     gender: "",
     name: "",
     birthdate: "",
-    franchise: 2500,
+    franchise: DEFAULT_FRANCHISE_ADULT,
     withAccident: true,
     isNewToSwitzerland: false,
     entryDate: "",
   };
 }
 
-function buildLookupKey(
-  ageGroup: string,
-  withAccident: boolean,
-  franchise: number
-): string {
+function buildLookupKey(ageGroup: string, withAccident: boolean, franchise: number): string {
   return `${ageGroup}-${withAccident ? "MIT" : "OHN"}-${franchise}`;
 }
 
-function mapToResults(
-  entries: PremiumRawEntry[],
-  modelFilter: string
-): Result[] {
-  let filtered = entries;
-  if (modelFilter !== "all") {
-    filtered = entries.filter((e) => e.t === modelFilter);
+// ═══════════════════════════════════════════════════════════════════════════
+// GROUPED RESULTS COMPUTATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+function computeGroupedResults(
+  personDataList: PersonRawData[],
+  modelFilter: string,
+  currentPremiumTotal?: number
+): InsurerGroup[] {
+  if (personDataList.length === 0) return [];
+
+  // Find insurers common to ALL persons (after model filter)
+  const insurerSets = personDataList.map((pd) => {
+    let entries = pd.entries;
+    if (modelFilter !== "all") entries = entries.filter((e) => e.t === modelFilter);
+    return new Set(entries.map((e) => e.id));
+  });
+
+  let commonIds = insurerSets[0];
+  for (let i = 1; i < insurerSets.length; i++) {
+    commonIds = new Set([...commonIds].filter((id) => insurerSets[i].has(id)));
   }
 
-  const results: Result[] = filtered.map((e) => ({
-    insurer: e.n,
-    insurerNr: String(e.id),
-    model: e.t,
-    modelName: e.tn,
-    monthlyPremium: e.p,
-    yearlyPremium: Math.round(e.p * 12 * 100) / 100,
-    savings: 0,
-  }));
+  const groups: InsurerGroup[] = [];
 
-  results.sort((a, b) => a.monthlyPremium - b.monthlyPremium);
+  for (const insurerId of commonIds) {
+    const modelSet = new Set<string>();
+    let totalMonthly = 0;
+    const persons: InsurerPersonTariff[] = [];
 
-  if (results.length > 0) {
-    const max = results[results.length - 1].monthlyPremium;
-    results.forEach((r) => {
-      r.savings = Math.round((max - r.monthlyPremium) * 12);
+    for (const pd of personDataList) {
+      let entries = pd.entries.filter((e) => e.id === insurerId);
+      if (modelFilter !== "all") entries = entries.filter((e) => e.t === modelFilter);
+      entries.sort((a, b) => a.p - b.p);
+
+      if (entries.length === 0) continue;
+
+      const cheapest = entries[0];
+      entries.forEach((e) => modelSet.add(e.t));
+      totalMonthly += cheapest.p;
+
+      persons.push({
+        personId: pd.personId,
+        personLabel: pd.personLabel,
+        ageGroup: pd.ageGroup,
+        cheapest,
+        allTariffs: entries,
+      });
+    }
+
+    if (persons.length !== personDataList.length) continue; // skip if not all persons covered
+
+    const insurerName = persons[0].cheapest.n;
+
+    groups.push({
+      insurerId,
+      insurerName,
+      persons,
+      totalMonthly: Math.round(totalMonthly * 100) / 100,
+      totalYearly: Math.round(totalMonthly * 12 * 100) / 100,
+      savings: 0,
+      modelTypes: [...modelSet].sort(),
     });
   }
 
-  return results;
+  groups.sort((a, b) => a.totalMonthly - b.totalMonthly);
+
+  // Calculate savings
+  if (groups.length > 0) {
+    const reference =
+      currentPremiumTotal && currentPremiumTotal > 0
+        ? currentPremiumTotal
+        : groups[groups.length - 1].totalMonthly;
+
+    groups.forEach((g) => {
+      g.savings = Math.round((reference - g.totalMonthly) * 12);
+      if (g.savings < 0) g.savings = 0;
+    });
+  }
+
+  return groups;
 }
 
-// ─── Main Component ──────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
 
 export function PremiumCalculator() {
   const [step, setStep] = useState(1);
@@ -180,9 +260,10 @@ export function PremiumCalculator() {
     extras: [],
   });
 
-  // Data loading
+  // Data loading refs & state
   const plzDataRef = useRef<PlzData | null>(null);
   const premiumCacheRef = useRef<Record<string, CantonData>>({});
+  const plzDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [plzLoading, setPlzLoading] = useState(false);
   const [premiumLoading, setPremiumLoading] = useState(false);
 
@@ -192,15 +273,15 @@ export function PremiumCalculator() {
   const [showPlzSelect, setShowPlzSelect] = useState(false);
 
   // Results state
-  const [allResults, setAllResults] = useState<Result[]>([]);
+  const [personRawDataList, setPersonRawDataList] = useState<PersonRawData[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [modelFilter, setModelFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [expandedInsurer, setExpandedInsurer] = useState<number | null>(null);
+
+  // Lead modal
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [leadSubmitted, setLeadSubmitted] = useState(false);
-  const [rawEntries, setRawEntries] = useState<PremiumRawEntry[]>([]);
-
-  // Lead form
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
   const [leadPhone, setLeadPhone] = useState("");
@@ -208,7 +289,8 @@ export function PremiumCalculator() {
   const [leadNewsletter, setLeadNewsletter] = useState(false);
   const [leadLoading, setLeadLoading] = useState(false);
 
-  // ─── Load PLZ Data ──────────────────────────────────────────────────────
+  // ─── Data Loading ───────────────────────────────────────────────────────
+
   const loadPlzData = useCallback(async (): Promise<PlzData> => {
     if (plzDataRef.current) return plzDataRef.current;
     setPlzLoading(true);
@@ -226,32 +308,27 @@ export function PremiumCalculator() {
     }
   }, []);
 
-  // ─── Load Premium Data for Canton ───────────────────────────────────────
-  const loadCantonPremiums = useCallback(
-    async (canton: string): Promise<CantonData> => {
-      if (premiumCacheRef.current[canton]) {
-        return premiumCacheRef.current[canton];
-      }
-      setPremiumLoading(true);
-      try {
-        const res = await fetch(`/data/premiums/${canton}.json`);
-        if (!res.ok) throw new Error(`Premium data for ${canton} not found`);
-        const data: CantonData = await res.json();
-        premiumCacheRef.current[canton] = data;
-        return data;
-      } catch (err) {
-        console.error(`Failed to load premiums for ${canton}:`, err);
-        throw err;
-      } finally {
-        setPremiumLoading(false);
-      }
-    },
-    []
-  );
+  const loadCantonPremiums = useCallback(async (canton: string): Promise<CantonData> => {
+    if (premiumCacheRef.current[canton]) return premiumCacheRef.current[canton];
+    setPremiumLoading(true);
+    try {
+      const res = await fetch(`/data/premiums/${canton}.json`);
+      if (!res.ok) throw new Error(`Premium data for ${canton} not found`);
+      const data: CantonData = await res.json();
+      premiumCacheRef.current[canton] = data;
+      return data;
+    } catch (err) {
+      console.error(`Failed to load premiums for ${canton}:`, err);
+      throw err;
+    } finally {
+      setPremiumLoading(false);
+    }
+  }, []);
 
-  // ─── PLZ Lookup ─────────────────────────────────────────────────────────
+  // ─── PLZ Handling (debounced) ───────────────────────────────────────────
+
   const handlePlzChange = useCallback(
-    async (plz: string) => {
+    (plz: string) => {
       setFormState((prev) => ({ ...prev, plz }));
       setPlzError("");
       setShowPlzSelect(false);
@@ -262,42 +339,43 @@ export function PremiumCalculator() {
         return;
       }
 
+      // Debounce the actual lookup
+      if (plzDebounceRef.current) clearTimeout(plzDebounceRef.current);
+
       if (plz.length === 4) {
-        try {
-          const data = await loadPlzData();
-          const entries = data[plz];
+        plzDebounceRef.current = setTimeout(async () => {
+          try {
+            const data = await loadPlzData();
+            const entries = data[plz];
 
-          if (!entries || entries.length === 0) {
-            setPlzError("PLZ nicht gefunden. Bitte prüfe deine Eingabe.");
-            setFormState((prev) => ({ ...prev, canton: "", ort: "", region: 0 }));
-            setPlzEntries([]);
-            return;
-          }
+            if (!entries || entries.length === 0) {
+              setPlzError("PLZ nicht gefunden. Bitte prüfe deine Eingabe.");
+              setFormState((prev) => ({ ...prev, canton: "", ort: "", region: 0 }));
+              setPlzEntries([]);
+              return;
+            }
 
-          setPlzEntries(entries);
+            setPlzEntries(entries);
 
-          if (entries.length === 1) {
+            // Auto-select first entry
             setFormState((prev) => ({
               ...prev,
               canton: entries[0].c,
               ort: entries[0].o,
               region: entries[0].r,
             }));
-          } else {
-            setFormState((prev) => ({
-              ...prev,
-              canton: entries[0].c,
-              ort: entries[0].o,
-              region: entries[0].r,
-            }));
-            setShowPlzSelect(true);
+
+            if (entries.length > 1) setShowPlzSelect(true);
+
+            // Preload canton premium data in background
+            loadCantonPremiums(entries[0].c).catch(() => {});
+          } catch {
+            setPlzError("Fehler beim Laden der PLZ-Daten.");
           }
-        } catch {
-          setPlzError("Fehler beim Laden der PLZ-Daten.");
-        }
+        }, 150);
       }
     },
-    [loadPlzData]
+    [loadPlzData, loadCantonPremiums]
   );
 
   const handlePlzEntrySelect = useCallback(
@@ -310,86 +388,133 @@ export function PremiumCalculator() {
           ort: entry.o,
           region: entry.r,
         }));
+        // Preload new canton if different
+        loadCantonPremiums(entry.c).catch(() => {});
       }
     },
-    [plzEntries]
+    [plzEntries, loadCantonPremiums]
   );
 
-  // ─── Calculate Results ─────────────────────────────────────────────────
-  const calculateResults = useCallback(async () => {
-    const person = formState.persons[0];
-    const ageGroup = getAgeGroup(person.birthdate);
-    const key = buildLookupKey(ageGroup, person.withAccident, person.franchise);
+  // ─── Person Management ─────────────────────────────────────────────────
 
+  const updatePerson = useCallback((id: string, updates: Partial<Person>) => {
+    setFormState((prev) => ({
+      ...prev,
+      persons: prev.persons.map((p) => {
+        if (p.id !== id) return p;
+        const updated = { ...p, ...updates };
+
+        // Auto-reset franchise when age group changes
+        if (updates.birthdate !== undefined) {
+          const oldAgeGroup = getAgeGroup(p.birthdate);
+          const newAgeGroup = getAgeGroup(updated.birthdate);
+          if (oldAgeGroup !== newAgeGroup) {
+            const validFranchises = getFranchisesForAge(newAgeGroup);
+            if (!validFranchises.includes(updated.franchise)) {
+              updated.franchise = getDefaultFranchise(newAgeGroup);
+            }
+          }
+        }
+
+        return updated;
+      }),
+    }));
+  }, []);
+
+  const addPerson = useCallback(() => {
+    setFormState((prev) => ({
+      ...prev,
+      persons: [...prev.persons, createPerson()],
+    }));
+  }, []);
+
+  const removePerson = useCallback((id: string) => {
+    setFormState((prev) => ({
+      ...prev,
+      persons: prev.persons.filter((p) => p.id !== id),
+    }));
+  }, []);
+
+  // ─── Calculate Results (multi-person) ──────────────────────────────────
+
+  const calculateResults = useCallback(async () => {
+    setPremiumLoading(true);
     try {
       const cantonData = await loadCantonPremiums(formState.canton);
       const regionStr = String(formState.region);
       const regionData = cantonData[regionStr];
 
       if (!regionData) {
-        setAllResults([]);
-        setRawEntries([]);
+        setPersonRawDataList([]);
         setShowResults(true);
         return;
       }
 
-      const entries = regionData[key];
+      const results: PersonRawData[] = [];
 
-      if (!entries || entries.length === 0) {
-        setAllResults([]);
-        setRawEntries([]);
-        setShowResults(true);
-        return;
+      for (let i = 0; i < formState.persons.length; i++) {
+        const person = formState.persons[i];
+        const ageGroup = getAgeGroup(person.birthdate);
+        const key = buildLookupKey(ageGroup, person.withAccident, person.franchise);
+        const entries = regionData[key] || [];
+
+        results.push({
+          personId: person.id,
+          personLabel: formState.persons.length > 1 ? `Person ${i + 1}` : "",
+          ageGroup,
+          franchise: person.franchise,
+          withAccident: person.withAccident,
+          entries,
+        });
       }
 
-      setRawEntries(entries);
-      const results = mapToResults(entries, modelFilter);
-      setAllResults(results);
+      setPersonRawDataList(results);
+      setExpandedInsurer(null);
       setShowResults(true);
     } catch {
-      setAllResults([]);
-      setRawEntries([]);
+      setPersonRawDataList([]);
       setShowResults(true);
+    } finally {
+      setPremiumLoading(false);
     }
-  }, [formState, modelFilter, loadCantonPremiums]);
+  }, [formState, loadCantonPremiums]);
 
-  // ─── Display results (re-filter when model/sort changes) ──────────────
-  const displayResults = useMemo(() => {
-    let results = modelFilter === "all"
-      ? [...allResults]
-      : mapToResults(rawEntries, modelFilter);
+  // ─── Derived: Grouped Results ──────────────────────────────────────────
 
-    if (sortOrder === "desc") {
-      results.reverse();
-    }
-    return results;
-  }, [allResults, rawEntries, modelFilter, sortOrder]);
+  const currentPremiumNum = parseFloat(formState.currentPremium) || 0;
+  const isMultiPerson = formState.persons.length > 1;
+
+  const groupedResults = useMemo(() => {
+    let groups = computeGroupedResults(
+      personRawDataList,
+      modelFilter,
+      currentPremiumNum > 0 ? currentPremiumNum : undefined
+    );
+    if (sortOrder === "desc") groups = [...groups].reverse();
+    return groups;
+  }, [personRawDataList, modelFilter, currentPremiumNum, sortOrder]);
 
   const maxSavings = useMemo(() => {
-    if (displayResults.length === 0) return 0;
-    const sorted = [...displayResults].sort((a, b) => a.monthlyPremium - b.monthlyPremium);
+    if (groupedResults.length === 0) return 0;
+    const sorted = [...groupedResults].sort((a, b) => a.totalMonthly - b.totalMonthly);
     return sorted[0].savings;
-  }, [displayResults]);
+  }, [groupedResults]);
 
-  // ─── Handle model filter change ───────────────────────────────────────
-  const handleModelFilterChange = useCallback(
-    (newFilter: string) => {
-      setModelFilter(newFilter);
-      if (rawEntries.length > 0) {
-        const results = mapToResults(rawEntries, newFilter);
-        setAllResults(results);
-      }
-    },
-    [rawEntries]
+  const uniqueInsurerCount = useMemo(
+    () => new Set(groupedResults.map((g) => g.insurerId)).size,
+    [groupedResults]
   );
 
   // ─── Step Validation ───────────────────────────────────────────────────
+
   const canProceed = (currentStep: number): boolean => {
     switch (currentStep) {
       case 1:
         return formState.plz.length === 4 && formState.canton !== "" && !plzError;
       case 2:
-        return formState.persons.every((p) => p.birthdate !== "");
+        return formState.persons.every(
+          (p) => p.birthdate !== "" && p.franchise > -1
+        );
       case 3:
         return true;
       case 4:
@@ -399,39 +524,17 @@ export function PremiumCalculator() {
     }
   };
 
-  // ─── Person Management ─────────────────────────────────────────────────
-  const updatePerson = (id: string, updates: Partial<Person>) => {
-    setFormState((prev) => ({
-      ...prev,
-      persons: prev.persons.map((p) => (p.id === id ? { ...p, ...updates } : p)),
-    }));
-  };
-
-  const addPerson = () => {
-    setFormState((prev) => ({
-      ...prev,
-      persons: [...prev.persons, createPerson()],
-    }));
-  };
-
-  const removePerson = (id: string) => {
-    setFormState((prev) => ({
-      ...prev,
-      persons: prev.persons.filter((p) => p.id !== id),
-    }));
-  };
-
   // ─── Lead Submit ───────────────────────────────────────────────────────
+
   const handleLeadSubmit = async () => {
     if (!leadConsent || !leadName || !leadEmail || !leadPhone) return;
     setLeadLoading(true);
 
     try {
       const person = formState.persons[0];
-      const cheapest =
-        displayResults.length > 0
-          ? [...displayResults].sort((a, b) => a.monthlyPremium - b.monthlyPremium)[0]
-          : null;
+      const cheapest = groupedResults.length > 0
+        ? [...groupedResults].sort((a, b) => a.totalMonthly - b.totalMonthly)[0]
+        : null;
 
       const res = await fetch("/api/leads", {
         method: "POST",
@@ -449,8 +552,8 @@ export function PremiumCalculator() {
           model: modelFilter,
           currentInsurer: formState.currentInsurer,
           currentPremium: formState.currentPremium,
-          cheapestInsurer: cheapest?.insurer || "",
-          cheapestPremium: cheapest?.monthlyPremium || 0,
+          cheapestInsurer: cheapest?.insurerName || "",
+          cheapestPremium: cheapest?.totalMonthly || 0,
           extras: formState.extras,
           newsletter: leadNewsletter,
           calculationType: formState.calculationType,
@@ -473,15 +576,25 @@ export function PremiumCalculator() {
     }
   };
 
-  // ─── Render ────────────────────────────────────────────────────────────
+  // ─── Cleanup debounce on unmount ───────────────────────────────────────
+
+  useEffect(() => {
+    return () => {
+      if (plzDebounceRef.current) clearTimeout(plzDebounceRef.current);
+    };
+  }, []);
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════════════════════════════════
 
   const StepIndicator = () => (
     <div className="flex items-center justify-center gap-2 mb-8">
       {[
-        { n: 1, label: "Situation & Wohnort" },
-        { n: 2, label: "Persönliche Angaben" },
-        { n: 3, label: "Grundversicherung" },
-        { n: 4, label: "Zusatzversicherung" },
+        { n: 1, label: "Wohnort" },
+        { n: 2, label: "Personen" },
+        { n: 3, label: "Präferenzen" },
+        { n: 4, label: "Zusatz" },
       ].map((s, i) => (
         <div key={s.n} className="flex items-center">
           <button
@@ -502,35 +615,31 @@ export function PremiumCalculator() {
               s.n
             )}
           </button>
-          <span
-            className={`hidden sm:inline ml-2 text-xs font-medium ${
-              step === s.n ? "text-[#0f4c5c]" : "text-stone-400"
-            }`}
-          >
+          <span className={`hidden sm:inline ml-2 text-xs font-medium ${step === s.n ? "text-[#0f4c5c]" : "text-stone-400"}`}>
             {s.label}
           </span>
-          {i < 3 && (
-            <div
-              className={`w-8 sm:w-12 h-0.5 mx-2 ${step > s.n ? "bg-emerald-300" : "bg-stone-200"}`}
-            />
-          )}
+          {i < 3 && <div className={`w-8 sm:w-12 h-0.5 mx-2 ${step > s.n ? "bg-emerald-300" : "bg-stone-200"}`} />}
         </div>
       ))}
     </div>
   );
 
-  // ───────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════
   // RESULTS VIEW
-  // ───────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════
+
   if (showResults) {
-    const person = formState.persons[0];
-    const ageGroup = person ? getAgeGroup(person.birthdate) : "ERW";
-    const ageLabel =
-      ageGroup === "KIN"
-        ? "Kind"
-        : ageGroup === "JUG"
-        ? "Junger Erwachsener"
-        : "Erwachsene/r";
+    const summaryParts: string[] = [
+      `${formState.plz} ${formState.ort} (${formState.canton})`,
+    ];
+    if (isMultiPerson) {
+      summaryParts.push(`${formState.persons.length} Personen`);
+    } else {
+      const p = formState.persons[0];
+      const ag = p ? getAgeGroup(p.birthdate) : "ERW";
+      summaryParts.push(AGE_LABELS[ag] || ag);
+      summaryParts.push(`Franchise CHF ${p?.franchise?.toLocaleString("de-CH")}`);
+    }
 
     return (
       <div className="animate-fade-in">
@@ -539,7 +648,6 @@ export function PremiumCalculator() {
             <div className="text-center">
               <div className="w-12 h-12 border-4 border-[#0f4c5c]/20 border-t-[#0f4c5c] rounded-full animate-spin mx-auto mb-4" />
               <p className="text-stone-600 font-medium">Prämien werden geladen...</p>
-              <p className="text-stone-400 text-sm mt-1">Offizielle BAG-Daten 2026</p>
             </div>
           </div>
         )}
@@ -547,33 +655,41 @@ export function PremiumCalculator() {
         <h2 className="text-2xl font-bold text-center mb-2">
           Dein Prämienvergleich 2026
         </h2>
-        <p className="text-center text-stone-500 mb-1">
-          {formState.plz} {formState.ort} ({formState.canton}) • Region{" "}
-          {formState.region} • {ageLabel} • Franchise CHF{" "}
-          {person?.franchise?.toLocaleString("de-CH")}
-        </p>
+        <p className="text-center text-stone-500 mb-1">{summaryParts.join(" • ")}</p>
         <p className="text-center text-xs text-stone-400 mb-6">
-          Quelle: Bundesamt für Gesundheit (BAG) •{" "}
-          {person?.withAccident ? "Mit" : "Ohne"} Unfalldeckung
+          Offizielle Daten: Bundesamt für Gesundheit (BAG)
         </p>
+
+        {/* Multi-person summary */}
+        {isMultiPerson && (
+          <div className="flex flex-wrap gap-2 justify-center mb-4">
+            {personRawDataList.map((pd, i) => (
+              <span key={pd.personId} className="text-xs bg-stone-100 text-stone-600 px-3 py-1 rounded-full">
+                Person {i + 1}: {AGE_LABELS[pd.ageGroup]} • Fr. {formState.persons[i]?.franchise}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Savings highlight */}
         {maxSavings > 0 && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 mb-6 text-center">
             <div className="text-sm font-medium text-emerald-700">
-              Mögliches Sparpotenzial pro Jahr
+              {currentPremiumNum > 0 ? "Deine mögliche Ersparnis pro Jahr" : "Sparpotenzial pro Jahr"}
             </div>
             <div className="text-3xl sm:text-4xl font-bold text-emerald-800 my-1">
               bis CHF {maxSavings.toLocaleString("de-CH")}
             </div>
             <div className="text-xs text-emerald-600 mt-1">
-              {displayResults.length} Tarife von{" "}
-              {new Set(displayResults.map((r) => r.insurer)).size} Versicherern
+              {uniqueInsurerCount} Versicherer verglichen
+              {currentPremiumNum > 0 && (
+                <> • aktuell CHF {currentPremiumNum.toFixed(0)}/Mt.</>
+              )}
             </div>
           </div>
         )}
 
-        {displayResults.length === 0 && !premiumLoading && (
+        {groupedResults.length === 0 && !premiumLoading && (
           <div className="text-center py-10">
             <p className="text-stone-500 text-lg">Keine Ergebnisse gefunden.</p>
             <p className="text-stone-400 text-sm mt-2">
@@ -582,13 +698,13 @@ export function PremiumCalculator() {
           </div>
         )}
 
-        {/* Filters */}
-        {displayResults.length > 0 && (
+        {groupedResults.length > 0 && (
           <>
+            {/* Filters */}
             <div className="flex flex-wrap gap-3 mb-6">
               <select
                 value={modelFilter}
-                onChange={(e) => handleModelFilterChange(e.target.value)}
+                onChange={(e) => { setModelFilter(e.target.value); setExpandedInsurer(null); }}
                 className="select-field !w-auto"
               >
                 <option value="all">Alle Modelle</option>
@@ -608,89 +724,151 @@ export function PremiumCalculator() {
               </select>
 
               <button
-                onClick={() => {
-                  setShowResults(false);
-                  setStep(1);
-                }}
+                onClick={() => { setShowResults(false); setStep(1); }}
                 className="ml-auto text-sm text-[#0f4c5c] font-medium hover:underline"
               >
-                Angaben bearbeiten
+                Angaben ändern
               </button>
             </div>
 
-            {/* Result list */}
+            {/* Grouped insurer results */}
             <div className="space-y-2">
-              {displayResults.slice(0, 20).map((result, i) => (
-                <div
-                  key={`${result.insurerNr}-${result.model}-${result.modelName}`}
-                  className={`card p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 ${
-                    i === 0 && sortOrder === "asc"
-                      ? "ring-2 ring-emerald-400 bg-emerald-50/30"
-                      : ""
-                  }`}
-                  style={{ animation: `slideUp 0.3s ease-out ${i * 0.03}s both` }}
-                >
+              {groupedResults.map((group, i) => {
+                const isExpanded = expandedInsurer === group.insurerId;
+                const isFirst = i === 0 && sortOrder === "asc";
+                // For single person, show the cheapest tariff info
+                const primaryPerson = group.persons[0];
+                const cheapestModel = primaryPerson?.cheapest.t || "";
+                const cheapestTariff = primaryPerson?.cheapest.tn || "";
+
+                return (
                   <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                      i === 0 && sortOrder === "asc"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : i < 3
-                        ? "bg-[#0f4c5c]/10 text-[#0f4c5c]"
-                        : "bg-stone-100 text-stone-400"
+                    key={group.insurerId}
+                    className={`card overflow-hidden transition-all ${
+                      isFirst ? "ring-2 ring-emerald-400 bg-emerald-50/30" : ""
                     }`}
+                    style={{ animation: `slideUp 0.3s ease-out ${i * 0.03}s both` }}
                   >
-                    {i + 1}
-                  </div>
+                    {/* Main row */}
+                    <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                          isFirst
+                            ? "bg-emerald-100 text-emerald-700"
+                            : i < 3 && sortOrder === "asc"
+                            ? "bg-[#0f4c5c]/10 text-[#0f4c5c]"
+                            : "bg-stone-100 text-stone-400"
+                        }`}
+                      >
+                        {i + 1}
+                      </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold">{result.insurer}</span>
-                      {i === 0 && sortOrder === "asc" && (
-                        <span className="savings-badge text-xs">✓ Günstigste</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-stone-900">{group.insurerName}</span>
+                          {isFirst && <span className="savings-badge text-xs">✓ Günstigste</span>}
+                        </div>
+                        {!isMultiPerson && (
+                          <div className="text-sm text-stone-500">
+                            {MODEL_LABELS[cheapestModel] || cheapestModel} – {cheapestTariff}
+                          </div>
+                        )}
+                        {isMultiPerson && (
+                          <div className="text-sm text-stone-500">
+                            {group.persons.map((pt) => `${pt.personLabel}: CHF ${pt.cheapest.p.toFixed(0)}`).join(" + ")}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Savings */}
+                      {group.savings > 0 && sortOrder === "asc" && (
+                        <div className="text-right hidden sm:block">
+                          <div className="text-xs text-emerald-600 font-medium">Ersparnis/Jahr</div>
+                          <div className="text-sm font-semibold text-emerald-700">
+                            CHF {group.savings.toLocaleString("de-CH")}
+                          </div>
+                        </div>
                       )}
-                    </div>
-                    <div className="text-sm text-stone-500">
-                      {MODEL_LABELS[result.model] || result.model}
-                      {result.modelName && ` – ${result.modelName}`}
-                    </div>
-                  </div>
 
-                  {result.savings > 0 && sortOrder === "asc" && (
-                    <div className="text-right hidden sm:block">
-                      <div className="text-xs text-emerald-600 font-medium">Ersparnis/Jahr</div>
-                      <div className="text-sm font-semibold text-emerald-700">
-                        CHF {result.savings.toLocaleString("de-CH")}
+                      {/* Price */}
+                      <div className="text-right">
+                        <div className="text-xl font-bold">
+                          <span className="text-sm font-normal text-stone-400">CHF </span>
+                          {group.totalMonthly.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-stone-400">
+                          {isMultiPerson ? "Total/Monat" : "pro Monat"}
+                        </div>
+                      </div>
+
+                      {/* Expand + Offerte */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => setExpandedInsurer(isExpanded ? null : group.insurerId)}
+                          className="p-2 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
+                          title="Alle Tarife anzeigen"
+                        >
+                          <svg
+                            className={`w-5 h-5 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => setShowLeadModal(true)}
+                          className="px-4 py-2 rounded-lg text-sm font-medium bg-[#e36414] text-white hover:bg-[#fb8b24] transition-colors"
+                        >
+                          Offerte
+                        </button>
                       </div>
                     </div>
-                  )}
 
-                  <div className="text-right">
-                    <div className="text-xl font-bold">
-                      <span className="text-sm font-normal text-stone-400">CHF </span>
-                      {result.monthlyPremium.toFixed(2)}
-                    </div>
-                    <div className="text-xs text-stone-400">pro Monat</div>
+                    {/* Expanded tariff details */}
+                    {isExpanded && (
+                      <div className="border-t border-stone-100 bg-stone-50/50 px-4 py-3 animate-fade-in">
+                        {group.persons.map((pt, pIdx) => (
+                          <div key={pt.personId}>
+                            {isMultiPerson && (
+                              <div className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2 mt-2 first:mt-0">
+                                {pt.personLabel} ({AGE_LABELS[pt.ageGroup]})
+                              </div>
+                            )}
+                            <div className="space-y-1">
+                              {pt.allTariffs.map((tariff, tIdx) => (
+                                <div
+                                  key={`${tariff.tn}-${tIdx}`}
+                                  className={`flex items-center justify-between py-1.5 px-3 rounded-lg text-sm ${
+                                    tariff === pt.cheapest ? "bg-emerald-50 text-emerald-800" : "text-stone-600"
+                                  }`}
+                                >
+                                  <div>
+                                    <span className="font-medium">{tariff.tn}</span>
+                                    <span className="text-stone-400 ml-2">
+                                      {MODEL_LABELS[tariff.t] || tariff.t}
+                                    </span>
+                                  </div>
+                                  <span className="font-semibold tabular-nums">
+                                    CHF {tariff.p.toFixed(2)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                            {pIdx < group.persons.length - 1 && (
+                              <div className="border-b border-stone-200 my-2" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-
-                  <button
-                    onClick={() => setShowLeadModal(true)}
-                    className="px-4 py-2 rounded-lg text-sm font-medium bg-[#e36414] text-white hover:bg-[#fb8b24] transition-colors flex-shrink-0"
-                  >
-                    Offerte
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
-
-            {displayResults.length > 20 && (
-              <p className="text-center text-stone-400 text-sm mt-4">
-                + {displayResults.length - 20} weitere Tarife verfügbar
-              </p>
-            )}
           </>
         )}
 
-        {/* Lead Modal */}
+        {/* ── Lead Modal ── */}
         {showLeadModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
@@ -705,13 +883,10 @@ export function PremiumCalculator() {
 
               {!leadSubmitted ? (
                 <>
-                  <h3 className="text-xl font-bold mb-1">
-                    Jetzt Vergleichsofferte erhalten
-                  </h3>
+                  <h3 className="text-xl font-bold mb-1">Jetzt Vergleichsofferte erhalten</h3>
                   <p className="text-sm text-stone-500 mb-5">
                     Erhalte eine kostenlose und unverbindliche Offerte basierend auf deinen Angaben.
                   </p>
-
                   <div className="space-y-3">
                     <input
                       type="text"
@@ -719,7 +894,6 @@ export function PremiumCalculator() {
                       value={leadName}
                       onChange={(e) => setLeadName(e.target.value)}
                       className="input-field"
-                      required
                     />
                     <input
                       type="email"
@@ -727,7 +901,6 @@ export function PremiumCalculator() {
                       value={leadEmail}
                       onChange={(e) => setLeadEmail(e.target.value)}
                       className="input-field"
-                      required
                     />
                     <div className="flex gap-2">
                       <span className="input-field !w-20 flex items-center justify-center text-sm text-stone-500">
@@ -739,7 +912,6 @@ export function PremiumCalculator() {
                         value={leadPhone}
                         onChange={(e) => setLeadPhone(e.target.value)}
                         className="input-field"
-                        required
                       />
                     </div>
 
@@ -751,12 +923,10 @@ export function PremiumCalculator() {
                         className="mt-0.5 w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
                       />
                       <span className="text-xs text-stone-500 leading-relaxed">
-                        Ich stimme zu, dass meine personenbezogenen Daten verarbeitet werden, um eine
-                        Offerte zu erhalten. Meine Daten werden vertraulich behandelt.{" "}
-                        <a href="/datenschutz" className="text-[#0f4c5c] underline">
-                          Datenschutzerklärung
-                        </a>
-                        .
+                        Ich stimme zu, dass meine Daten verarbeitet und an geprüfte
+                        Versicherungsberater weitergegeben werden, um eine persönliche Offerte
+                        zu erhalten.{" "}
+                        <a href="/datenschutz" className="text-[#0f4c5c] underline">Datenschutzerklärung</a>.
                       </span>
                     </label>
 
@@ -768,8 +938,7 @@ export function PremiumCalculator() {
                         className="mt-0.5 w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
                       />
                       <span className="text-xs text-stone-500 leading-relaxed">
-                        Ja, ich möchte den Newsletter mit Spartipps, Fristen und einfachen
-                        Erklärungen abonnieren.
+                        Ja, ich möchte den Newsletter mit Spartipps und Fristen abonnieren.
                       </span>
                     </label>
 
@@ -794,9 +963,7 @@ export function PremiumCalculator() {
                     Wir haben deine Anfrage erhalten und melden uns in Kürze bei dir.
                   </p>
                   <p className="text-stone-400 text-xs mt-3">
-                    Bei Fragen erreichst du uns unter:
-                    <br />
-                    <strong className="text-stone-600">info@praemien-vergleichen.ch</strong>
+                    Bei Fragen: <strong className="text-stone-600">info@praemien-vergleichen.ch</strong>
                   </p>
                 </div>
               )}
@@ -807,21 +974,21 @@ export function PremiumCalculator() {
     );
   }
 
-  // ───────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════
   // FORM STEPS
-  // ───────────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════
+
   return (
     <div className="card-elevated p-6 sm:p-8">
       <StepIndicator />
 
-      {/* ── STEP 1: Situation & Wohnort ── */}
+      {/* ── STEP 1: Wohnort ── */}
       {step === 1 && (
         <div className="animate-fade-in">
           <h2 className="text-xl font-bold text-center mb-6">
-            Für wen möchtest du jetzt Prämien berechnen?
+            Für wen möchtest du Prämien berechnen?
           </h2>
 
-          {/* Type Selection */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
             {(
               [
@@ -845,11 +1012,7 @@ export function PremiumCalculator() {
                     default:
                       persons = [createPerson("p1")];
                   }
-                  setFormState((prev) => ({
-                    ...prev,
-                    calculationType: type.value,
-                    persons,
-                  }));
+                  setFormState((prev) => ({ ...prev, calculationType: type.value, persons }));
                 }}
                 className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
                   formState.calculationType === type.value
@@ -863,12 +1026,9 @@ export function PremiumCalculator() {
             ))}
           </div>
 
-          {/* PLZ Input */}
           <div className="max-w-sm mx-auto">
             <h3 className="font-semibold mb-1">Prämienregion wählen</h3>
-            <p className="text-sm text-stone-500 mb-3">
-              Die Prämien ändern sich je nach Region
-            </p>
+            <p className="text-sm text-stone-500 mb-3">Die Prämien ändern sich je nach Region</p>
             <div className="relative">
               <input
                 type="text"
@@ -894,11 +1054,10 @@ export function PremiumCalculator() {
 
             {plzError && <p className="text-red-500 text-sm mt-2">{plzError}</p>}
 
-            {/* Multi-region selector */}
             {showPlzSelect && plzEntries.length > 1 && (
               <div className="mt-3">
                 <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                  Deine PLZ umfasst mehrere Gemeinden. Bitte wähle:
+                  Deine PLZ umfasst mehrere Gemeinden:
                 </label>
                 <select
                   value={`${formState.canton}-${formState.region}-${formState.ort}`}
@@ -926,7 +1085,6 @@ export function PremiumCalculator() {
             )}
           </div>
 
-          {/* Next */}
           <div className="mt-8 flex justify-end">
             <button
               onClick={() => setStep(2)}
@@ -952,7 +1110,14 @@ export function PremiumCalculator() {
               return (
                 <div key={person.id} className="p-4 rounded-xl bg-stone-50 border border-stone-200">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-stone-700">Person {idx + 1}</h3>
+                    <h3 className="font-semibold text-stone-700">
+                      Person {idx + 1}
+                      {person.birthdate && (
+                        <span className="text-xs font-normal text-stone-400 ml-2">
+                          ({AGE_LABELS[ageGroup]})
+                        </span>
+                      )}
+                    </h3>
                     {idx > 0 && (
                       <button
                         onClick={() => removePerson(person.id)}
@@ -964,7 +1129,6 @@ export function PremiumCalculator() {
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-3">
-                    {/* Gender */}
                     <div className="flex gap-2">
                       {(["m", "f"] as const).map((g) => (
                         <button
@@ -981,7 +1145,6 @@ export function PremiumCalculator() {
                       ))}
                     </div>
 
-                    {/* Name */}
                     <input
                       type="text"
                       placeholder="Vor- und Nachname"
@@ -990,7 +1153,6 @@ export function PremiumCalculator() {
                       className="input-field"
                     />
 
-                    {/* Birthdate */}
                     <div>
                       <label className="block text-xs text-stone-500 mb-1">Geburtsdatum *</label>
                       <input
@@ -1002,14 +1164,11 @@ export function PremiumCalculator() {
                       />
                     </div>
 
-                    {/* Franchise */}
                     <div>
                       <label className="block text-xs text-stone-500 mb-1">Franchise *</label>
                       <select
-                        value={person.franchise}
-                        onChange={(e) =>
-                          updatePerson(person.id, { franchise: parseInt(e.target.value) })
-                        }
+                        value={franchises.includes(person.franchise) ? person.franchise : ""}
+                        onChange={(e) => updatePerson(person.id, { franchise: parseInt(e.target.value) })}
                         className="select-field"
                       >
                         <option value="">Wählen</option>
@@ -1022,27 +1181,21 @@ export function PremiumCalculator() {
                     </div>
                   </div>
 
-                  {/* Toggles */}
                   <div className="flex flex-wrap gap-4 mt-3">
                     <label className="flex items-center gap-2 cursor-pointer text-sm">
                       <input
                         type="checkbox"
                         checked={person.withAccident}
-                        onChange={(e) =>
-                          updatePerson(person.id, { withAccident: e.target.checked })
-                        }
+                        onChange={(e) => updatePerson(person.id, { withAccident: e.target.checked })}
                         className="w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
                       />
                       Unfalldeckung einschliessen
                     </label>
-
                     <label className="flex items-center gap-2 cursor-pointer text-sm">
                       <input
                         type="checkbox"
                         checked={person.isNewToSwitzerland}
-                        onChange={(e) =>
-                          updatePerson(person.id, { isNewToSwitzerland: e.target.checked })
-                        }
+                        onChange={(e) => updatePerson(person.id, { isNewToSwitzerland: e.target.checked })}
                         className="w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
                       />
                       Neu in der Schweiz
@@ -1065,22 +1218,17 @@ export function PremiumCalculator() {
             })}
           </div>
 
-          {/* Add person buttons */}
           <div className="flex flex-wrap gap-3 mt-4">
             <button
               onClick={addPerson}
               className="text-sm font-medium text-[#0f4c5c] hover:text-[#1a6b7a] flex items-center gap-1"
             >
-              <span className="text-lg">+</span> Personen hinzufügen
+              <span className="text-lg">+</span> Person hinzufügen
             </button>
           </div>
 
-          {/* Navigation */}
           <div className="mt-8 flex justify-between">
-            <button
-              onClick={() => setStep(1)}
-              className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2"
-            >
+            <button onClick={() => setStep(1)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
               Zurück
             </button>
             <button
@@ -1094,17 +1242,14 @@ export function PremiumCalculator() {
         </div>
       )}
 
-      {/* ── STEP 3: Grundversicherung (Preferences) ── */}
+      {/* ── STEP 3: Präferenzen ── */}
       {step === 3 && (
         <div className="animate-fade-in">
-          <h2 className="text-xl font-bold text-center mb-2">
-            Stell deine Präferenzen ein
-          </h2>
+          <h2 className="text-xl font-bold text-center mb-2">Stell deine Präferenzen ein</h2>
           <p className="text-center text-stone-500 text-sm mb-6">
-            Personalisiere deine Ergebnisse mit unseren Empfehlungen und Angeboten
+            Personalisiere deine Ergebnisse
           </p>
 
-          {/* Current insurer */}
           <div className="max-w-md mx-auto space-y-4">
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-1.5">
@@ -1112,16 +1257,12 @@ export function PremiumCalculator() {
               </label>
               <select
                 value={formState.currentInsurer}
-                onChange={(e) =>
-                  setFormState((prev) => ({ ...prev, currentInsurer: e.target.value }))
-                }
+                onChange={(e) => setFormState((prev) => ({ ...prev, currentInsurer: e.target.value }))}
                 className="select-field"
               >
-                <option value="">Wählen...</option>
+                <option value="">Wählen... (optional)</option>
                 {CURRENT_INSURERS.map((ins) => (
-                  <option key={ins} value={ins}>
-                    {ins}
-                  </option>
+                  <option key={ins} value={ins}>{ins}</option>
                 ))}
               </select>
             </div>
@@ -1129,38 +1270,33 @@ export function PremiumCalculator() {
             {formState.currentInsurer && (
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                  Aktuelle Monatsprämie CHF
+                  Aktuelle Monatsprämie CHF {isMultiPerson ? "(Total für alle Personen)" : ""}
                 </label>
                 <input
                   type="number"
-                  placeholder="z.B. 450"
+                  placeholder={isMultiPerson ? "z.B. 900" : "z.B. 450"}
                   value={formState.currentPremium}
-                  onChange={(e) =>
-                    setFormState((prev) => ({ ...prev, currentPremium: e.target.value }))
-                  }
+                  onChange={(e) => setFormState((prev) => ({ ...prev, currentPremium: e.target.value }))}
                   className="input-field"
                 />
               </div>
             )}
 
-            {/* Preference */}
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-3">
-                Passe deine Ergebnisse an, wähle deine Präferenzen:
+                Wähle deine Präferenz:
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {(
                   [
                     { value: "cheapest", label: "Günstigste", icon: "💰" },
-                    { value: "recommended", label: "Unsere Empfehlungen", icon: "⭐" },
-                    { value: "offers", label: "Sonderangebote", icon: "🎁" },
+                    { value: "recommended", label: "Empfehlung", icon: "⭐" },
+                    { value: "offers", label: "Angebote", icon: "🎁" },
                   ] as const
                 ).map((pref) => (
                   <button
                     key={pref.value}
-                    onClick={() =>
-                      setFormState((prev) => ({ ...prev, preference: pref.value }))
-                    }
+                    onClick={() => setFormState((prev) => ({ ...prev, preference: pref.value }))}
                     className={`p-3 rounded-xl text-center text-sm font-medium border-2 transition-all ${
                       formState.preference === pref.value
                         ? "border-[#0f4c5c] bg-[#0f4c5c]/5 text-[#0f4c5c]"
@@ -1176,10 +1312,7 @@ export function PremiumCalculator() {
           </div>
 
           <div className="mt-8 flex justify-between">
-            <button
-              onClick={() => setStep(2)}
-              className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2"
-            >
+            <button onClick={() => setStep(2)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
               Zurück
             </button>
             <button
@@ -1229,10 +1362,7 @@ export function PremiumCalculator() {
           </div>
 
           <div className="mt-8 flex justify-between">
-            <button
-              onClick={() => setStep(3)}
-              className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2"
-            >
+            <button onClick={() => setStep(3)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
               Zurück
             </button>
             <button
