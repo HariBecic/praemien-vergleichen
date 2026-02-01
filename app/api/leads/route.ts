@@ -177,6 +177,7 @@ export async function PATCH(request: NextRequest) {
     const mergedExtraData = {
       ...(existing?.extra_data || {}),
       zusatzversicherungen: body.extras || [],
+      gewuenschte_versicherer: body.selectedInsurers || [],
     };
 
     const { error } = await supabase

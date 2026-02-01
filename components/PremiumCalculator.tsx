@@ -402,6 +402,7 @@ export function PremiumCalculator() {
   const [leadSubmitted, setLeadSubmitted] = useState(false);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [extrasSubmitted, setExtrasSubmitted] = useState(false);
+  const [selectedInsurers, setSelectedInsurers] = useState<string[]>([]);
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
   const [leadPhone, setLeadPhone] = useState("");
@@ -1743,9 +1744,28 @@ export function PremiumCalculator() {
                                     </svg>
                                   </button>
                                   <button
-                                    onClick={() => setStep(4)}
-                                    className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-400 hover:to-orange-500 transition-colors"
+                                    onClick={() => {
+                                      setSelectedInsurers((prev) =>
+                                        prev.includes(group.insurerName)
+                                          ? prev.filter((n) => n !== group.insurerName)
+                                          : [...prev, group.insurerName]
+                                      );
+                                    }}
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                      selectedInsurers.includes(group.insurerName)
+                                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                                        : "bg-white/[0.06] text-white/60 hover:bg-white/[0.1] border border-white/[0.08]"
+                                    }`}
                                   >
+                                    {selectedInsurers.includes(group.insurerName) ? (
+                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                      </svg>
+                                    ) : (
+                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                      </svg>
+                                    )}
                                     Offerte
                                   </button>
                                 </div>
@@ -1796,15 +1816,35 @@ export function PremiumCalculator() {
                   </>
                 )}
 
-                {/* Weiter to Step 4 */}
-                <div className="mt-8 flex justify-center">
-                  <button
-                    onClick={() => setStep(4)}
-                    className="btn-accent px-10 py-3 rounded-xl"
-                  >
-                    Weiter zu Zusatzversicherung
-                  </button>
-                </div>
+                {/* Floating selection bar */}
+                {selectedInsurers.length > 0 && (
+                  <div className="sticky bottom-4 mt-6 mx-auto max-w-lg z-20 animate-slide-up">
+                    <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-[#0f1a3a]/95 backdrop-blur-xl border border-orange-500/30 shadow-2xl shadow-orange-500/10">
+                      <div className="flex items-center gap-2 min-w-0 pl-1">
+                        <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-sm font-bold text-orange-400 shrink-0">
+                          {selectedInsurers.length}
+                        </div>
+                        <span className="text-sm text-white/70 truncate">
+                          {selectedInsurers.length === 1 ? "Offerte ausgewählt" : "Offerten ausgewählt"}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setStep(4)}
+                        className="btn-accent px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap shrink-0 flex items-center gap-1.5"
+                      >
+                        Weiter
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Fallback if no selection */}
+                {selectedInsurers.length === 0 && (
+                  <div className="mt-6 text-center">
+                    <p className="text-xs text-white/30">Wähle eine oder mehrere Krankenkassen für eine persönliche Offerte</p>
+                  </div>
+                )}
               </div>
             )}
             </div>
@@ -1830,6 +1870,26 @@ export function PremiumCalculator() {
           {step === 4 && (
             <div className="px-5 pb-6 sm:px-8 sm:pb-8 animate-slide-down">
               <>
+                {/* Selected insurers summary */}
+                {selectedInsurers.length > 0 && (
+                  <div className="mb-6 p-4 rounded-xl bg-orange-500/5 border border-orange-500/15">
+                    <div className="text-xs font-medium text-orange-400/80 uppercase tracking-wider mb-2">Offerte für</div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedInsurers.map((name) => (
+                        <span key={name} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-sm text-orange-300 font-medium">
+                          {name}
+                          <button
+                            onClick={() => setSelectedInsurers((prev) => prev.filter((n) => n !== name))}
+                            className="w-4 h-4 rounded-full hover:bg-orange-500/30 flex items-center justify-center transition-colors"
+                          >
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-bold mb-2">Wähle, was zählt</h2>
                   <p className="text-white/40 text-sm">
@@ -1908,13 +1968,14 @@ export function PremiumCalculator() {
                       // Update existing lead with extras
                       if (leadId && formState.extras.length > 0) {
                         try {
-                          console.log("[EXTRAS PATCH] leadId:", leadId, "extras:", formState.extras);
+                          console.log("[EXTRAS PATCH] leadId:", leadId, "extras:", formState.extras, "selectedInsurers:", selectedInsurers);
                           const res = await fetch("/api/leads", {
                             method: "PATCH",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
                               id: leadId,
                               extras: formState.extras,
+                              selectedInsurers,
                             }),
                           });
                           const result = await res.json();
