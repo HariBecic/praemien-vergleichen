@@ -706,6 +706,8 @@ export function PremiumCalculator() {
         ageGroup: getAgeGroup(p.birthYear),
         franchise: p.franchise,
         withAccident: p.withAccident,
+        isNewToSwitzerland: p.isNewToSwitzerland,
+        entryDate: p.entryDate || "",
       }));
 
       console.log("[LEAD POST] sending", personsData.length, "persons:", personsData);
@@ -935,10 +937,9 @@ export function PremiumCalculator() {
       {activeTooltip === id && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setActiveTooltip(null)} />
-          <div className="absolute z-50 bottom-full right-0 mb-2 w-72 p-3.5 rounded-xl text-white text-xs leading-relaxed shadow-2xl"
-               style={{ background: 'rgba(15, 26, 58, 0.98)', border: '1px solid rgba(255,255,255,0.12)' }}>
+          <div className="fixed z-50 left-4 right-4 sm:absolute sm:left-auto sm:right-0 sm:bottom-full sm:w-72 sm:mb-2 bottom-auto top-1/3 sm:top-auto p-4 sm:p-3.5 rounded-xl text-white text-sm sm:text-xs leading-relaxed shadow-2xl"
+               style={{ background: 'rgba(15, 26, 58, 0.98)', border: '1px solid rgba(255,255,255,0.15)' }}>
             {text}
-            <div className="absolute top-full right-3 -mt-px border-4 border-transparent" style={{ borderTopColor: 'rgba(15, 26, 58, 0.98)' }} />
           </div>
         </>
       )}
@@ -1351,10 +1352,24 @@ export function PremiumCalculator() {
                       <div className="mt-3">
                         <label className="block text-xs text-white/50 mb-1">Einreisedatum</label>
                         <input
-                          type="date"
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="TT.MM.JJJJ"
                           value={person.entryDate}
-                          onChange={(e) => updatePerson(person.id, { entryDate: e.target.value })}
-                          className="input-field max-w-xs"
+                          onChange={(e) => {
+                            // Auto-format: add dots after DD and MM
+                            let v = e.target.value.replace(/[^\d.]/g, "");
+                            // Remove extra dots and reformat
+                            const digits = v.replace(/\./g, "");
+                            if (digits.length >= 5) {
+                              v = digits.slice(0, 2) + "." + digits.slice(2, 4) + "." + digits.slice(4, 8);
+                            } else if (digits.length >= 3) {
+                              v = digits.slice(0, 2) + "." + digits.slice(2);
+                            }
+                            updatePerson(person.id, { entryDate: v });
+                          }}
+                          maxLength={10}
+                          className="input-field max-w-[11rem]"
                         />
                       </div>
                     )}

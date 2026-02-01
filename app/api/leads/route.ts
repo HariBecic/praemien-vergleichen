@@ -67,6 +67,8 @@ export async function POST(request: NextRequest) {
             altersgruppe: p.ageGroup || "",
             franchise: p.franchise || 0,
             unfalldeckung: p.withAccident || false,
+            neu_in_schweiz: p.isNewToSwitzerland || false,
+            einreisedatum: p.entryDate || "",
           })),
           jahrgang: firstPerson.birthYear || "",
           altersgruppe: firstPerson.ageGroup || "",
