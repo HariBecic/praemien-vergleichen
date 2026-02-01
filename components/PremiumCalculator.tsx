@@ -1450,7 +1450,7 @@ export function PremiumCalculator() {
                   <div className="flex flex-wrap gap-2 justify-center mb-4">
                     {personRawDataList.map((pd, i) => (
                       <span key={pd.personId} className="text-xs bg-white/[0.06] text-white/60 px-3 py-1 rounded-full">
-                        Person {i + 1}: {AGE_LABELS[pd.ageGroup]} • Fr. {formState.persons[i]?.franchise}
+                        {formState.persons[i]?.name || `Person ${i + 1}`}: {AGE_LABELS[pd.ageGroup]} • Fr. {formState.persons[i]?.franchise}
                       </span>
                     ))}
                   </div>
