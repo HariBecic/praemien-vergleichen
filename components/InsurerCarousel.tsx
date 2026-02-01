@@ -34,27 +34,35 @@ export function InsurerCarousel() {
       </p>
 
       {/* Carousel container */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden py-2">
         {/* Fade edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-r from-[#0a1128] to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 bg-gradient-to-l from-[#0a1128] to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-r from-[#0a1128] to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-l from-[#0a1128] to-transparent z-10 pointer-events-none" />
 
         {/* Scrolling track */}
-        <div className="flex items-center gap-10 sm:gap-14 animate-scroll-logos">
+        <div className="flex items-center gap-12 sm:gap-16 animate-scroll-logos">
           {items.map((insurer, i) => (
             <div
               key={`${insurer.domain}-${i}`}
-              className="flex-shrink-0 flex items-center justify-center h-8 sm:h-9"
+              className="flex-shrink-0 flex flex-col items-center gap-2"
             >
-              <img
-                src={getLogoUrl(insurer.domain)}
-                alt={insurer.name}
-                className="h-6 sm:h-7 w-auto max-w-[100px] object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-90 transition-all duration-300"
-                loading="lazy"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
-              />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white/[0.07] border border-white/[0.08] flex items-center justify-center p-2 hover:bg-white/[0.12] transition-all">
+                <img
+                  src={getLogoUrl(insurer.domain)}
+                  alt={insurer.name}
+                  className="w-full h-full object-contain rounded-md"
+                  loading="lazy"
+                  onError={(e) => {
+                    const el = e.target as HTMLImageElement;
+                    el.style.display = "none";
+                    const parent = el.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<span class="text-xs font-bold text-white/40">${insurer.name.slice(0, 3).toUpperCase()}</span>`;
+                    }
+                  }}
+                />
+              </div>
+              <span className="text-[10px] text-white/30 font-medium">{insurer.name}</span>
             </div>
           ))}
         </div>
