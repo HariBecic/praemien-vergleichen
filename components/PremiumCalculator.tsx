@@ -1452,7 +1452,7 @@ export function PremiumCalculator() {
                     <div className="text-sm font-medium text-emerald-400">
                       {currentPremiumNum > 0 ? "Deine mögliche Ersparnis pro Jahr" : "Sparpotenzial pro Jahr"}
                     </div>
-                    <div className="text-3xl sm:text-4xl font-bold text-emerald-800 my-1">
+                    <div className="text-3xl sm:text-4xl font-bold text-emerald-400 my-1">
                       bis CHF {maxSavings.toLocaleString("de-CH")}
                     </div>
                     <div className="text-xs text-emerald-400 mt-1">
@@ -1476,11 +1476,11 @@ export function PremiumCalculator() {
                 {groupedResults.length > 0 && (
                   <>
                     {/* Filters */}
-                    <div className="flex flex-wrap gap-3 mb-6">
+                    <div className="flex items-center gap-2 mb-5">
                       <select
                         value={modelFilter}
                         onChange={(e) => { setModelFilter(e.target.value); setExpandedInsurer(null); }}
-                        className="select-field !w-auto"
+                        className="select-field !w-auto text-sm !py-2 !px-3 !pr-8"
                       >
                         <option value="all">Alle Modelle</option>
                         <option value="standard">Standard</option>
@@ -1492,7 +1492,7 @@ export function PremiumCalculator() {
                       <select
                         value={sortOrder}
                         onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-                        className="select-field !w-auto"
+                        className="select-field !w-auto text-sm !py-2 !px-3 !pr-8"
                       >
                         <option value="asc">Günstigste zuerst</option>
                         <option value="desc">Teuerste zuerst</option>
@@ -1500,7 +1500,7 @@ export function PremiumCalculator() {
 
                       <button
                         onClick={() => setShowResults(false)}
-                        className="ml-auto text-sm text-blue-400 font-medium hover:underline"
+                        className="ml-auto text-xs sm:text-sm text-blue-400 font-medium hover:underline whitespace-nowrap"
                       >
                         Angaben ändern
                       </button>
@@ -1518,103 +1518,111 @@ export function PremiumCalculator() {
                         return (
                           <div
                             key={group.insurerId}
-                            className={`rounded-xl border overflow-hidden transition-all ${
+                            className={`rounded-xl border transition-all ${
                               isFirst ? "ring-2 ring-emerald-400 bg-emerald-500/10 border-emerald-500/25" : "border-white/[0.08] bg-white/[0.03]"
                             }`}
                             style={{ animation: `slideUp 0.3s ease-out ${i * 0.03}s both` }}
                           >
                             {/* Main row */}
-                            <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                              {/* Logo */}
-                              {(() => {
-                                const logoUrl = getInsurerLogoUrl(group.insurerName);
-                                const colors = INSURER_COLORS[group.insurerName] || { bg: "#64748b", text: "#fff" };
-                                const initials = getInsurerInitials(group.insurerName);
-                                return (
-                                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden relative"
-                                    style={{ backgroundColor: colors.bg }}
-                                  >
-                                    {logoUrl && (
-                                      <img
-                                        src={logoUrl}
-                                        alt={group.insurerName}
-                                        className="w-10 h-10 object-contain absolute inset-0"
-                                        onError={(e) => {
-                                          (e.target as HTMLImageElement).style.display = "none";
-                                        }}
-                                      />
-                                    )}
-                                    <span className="text-xs font-bold" style={{ color: colors.text }}>
-                                      {initials}
+                            <div className="p-4">
+                              {/* Top: Logo + Name + Price */}
+                              <div className="flex items-start gap-3">
+                                {/* Logo */}
+                                {(() => {
+                                  const logoUrl = getInsurerLogoUrl(group.insurerName);
+                                  const colors = INSURER_COLORS[group.insurerName] || { bg: "#64748b", text: "#fff" };
+                                  const initials = getInsurerInitials(group.insurerName);
+                                  return (
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden relative"
+                                      style={{ backgroundColor: colors.bg }}
+                                    >
+                                      {logoUrl && (
+                                        <img
+                                          src={logoUrl}
+                                          alt={group.insurerName}
+                                          className="w-10 h-10 object-contain absolute inset-0"
+                                          onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = "none";
+                                          }}
+                                        />
+                                      )}
+                                      <span className="text-xs font-bold" style={{ color: colors.text }}>
+                                        {initials}
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
+
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-semibold text-white">{group.insurerName}</span>
+                                    {isFirst && <span className="savings-badge text-xs">✓ Günstigste</span>}
+                                  </div>
+                                  {!isMultiPerson && (
+                                    <div className="text-xs sm:text-sm text-white/50 mt-0.5">
+                                      {MODEL_LABELS[cheapestModel] || cheapestModel} – {cheapestTariff}
+                                    </div>
+                                  )}
+                                  {isMultiPerson && (
+                                    <div className="text-xs text-white/50 mt-0.5">
+                                      {group.persons.map((pt) => `${pt.personLabel}: CHF ${pt.cheapest.p.toFixed(0)}`).join(" · ")}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Price - always top right */}
+                                <div className="text-right shrink-0">
+                                  <div className="text-lg sm:text-xl font-bold">
+                                    <span className="text-xs sm:text-sm font-normal text-white/40">CHF </span>
+                                    {group.totalMonthly.toFixed(2)}
+                                  </div>
+                                  <div className="text-[10px] sm:text-xs text-white/40">
+                                    {isMultiPerson ? "Total/Monat" : "pro Monat"}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Bottom: Savings + Actions */}
+                              <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
+                                {/* Savings */}
+                                {group.savings > 0 && sortOrder === "asc" ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                                    </svg>
+                                    <span className="text-xs sm:text-sm font-semibold text-emerald-400">
+                                      CHF {group.savings.toLocaleString("de-CH")}/Jahr sparen
                                     </span>
                                   </div>
-                                );
-                              })()}
+                                ) : <div />}
 
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-semibold text-white">{group.insurerName}</span>
-                                  {isFirst && <span className="savings-badge text-xs">✓ Günstigste</span>}
-                                </div>
-                                {!isMultiPerson && (
-                                  <div className="text-sm text-white/50">
-                                    {MODEL_LABELS[cheapestModel] || cheapestModel} – {cheapestTariff}
-                                  </div>
-                                )}
-                                {isMultiPerson && (
-                                  <div className="text-sm text-white/50">
-                                    {group.persons.map((pt) => `${pt.personLabel}: CHF ${pt.cheapest.p.toFixed(0)}`).join(" + ")}
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Savings */}
-                              {group.savings > 0 && sortOrder === "asc" && (
-                                <div className="text-right hidden sm:block">
-                                  <div className="text-xs text-emerald-400 font-medium">Ersparnis/Jahr</div>
-                                  <div className="text-sm font-semibold text-emerald-400">
-                                    CHF {group.savings.toLocaleString("de-CH")}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Price */}
-                              <div className="text-right">
-                                <div className="text-xl font-bold">
-                                  <span className="text-sm font-normal text-white/40">CHF </span>
-                                  {group.totalMonthly.toFixed(2)}
-                                </div>
-                                <div className="text-xs text-white/40">
-                                  {isMultiPerson ? "Total/Monat" : "pro Monat"}
-                                </div>
-                              </div>
-
-                              {/* Expand + Offerte → goes to Step 4 */}
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <button
-                                  onClick={() => setExpandedInsurer(isExpanded ? null : group.insurerId)}
-                                  className="p-2 rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white/60 transition-colors"
-                                  title="Alle Tarife anzeigen"
-                                >
-                                  <svg
-                                    className={`w-5 h-5 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                                {/* Actions */}
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => setExpandedInsurer(isExpanded ? null : group.insurerId)}
+                                    className="p-2 rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white/60 transition-colors"
+                                    title="Alle Tarife anzeigen"
                                   >
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={() => setStep(4)}
-                                  className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-400 hover:to-orange-500 transition-colors"
-                                >
-                                  Offerte
-                                </button>
+                                    <svg
+                                      className={`w-5 h-5 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                                    >
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => setStep(4)}
+                                    className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-400 hover:to-orange-500 transition-colors"
+                                  >
+                                    Offerte
+                                  </button>
+                                </div>
                               </div>
                             </div>
 
                             {/* Expanded tariff details */}
                             {isExpanded && (
-                              <div className="border-t border-white/[0.06] bg-white/[0.03] px-4 py-3 animate-fade-in">
+                              <div className="border-t border-white/[0.06] bg-white/[0.03] px-3 sm:px-4 py-3 animate-fade-in">
                                 {group.persons.map((pt, pIdx) => (
                                   <div key={pt.personId}>
                                     {isMultiPerson && (
@@ -1626,17 +1634,17 @@ export function PremiumCalculator() {
                                       {pt.allTariffs.map((tariff, tIdx) => (
                                         <div
                                           key={`${tariff.tn}-${tIdx}`}
-                                          className={`flex items-center justify-between py-1.5 px-3 rounded-lg text-sm ${
-                                            tariff === pt.cheapest ? "bg-emerald-500/10 text-emerald-800" : "text-white/60"
+                                          className={`flex items-center justify-between py-1.5 px-2 sm:px-3 rounded-lg text-xs sm:text-sm gap-2 ${
+                                            tariff === pt.cheapest ? "bg-emerald-500/10 text-emerald-400" : "text-white/60"
                                           }`}
                                         >
-                                          <div>
+                                          <div className="min-w-0">
                                             <span className="font-medium">{tariff.tn}</span>
-                                            <span className="text-white/40 ml-2">
+                                            <span className="text-white/30 ml-1 sm:ml-2 text-[11px] sm:text-xs">
                                               {MODEL_LABELS[tariff.t] || tariff.t}
                                             </span>
                                           </div>
-                                          <span className="font-semibold tabular-nums">
+                                          <span className="font-semibold tabular-nums whitespace-nowrap shrink-0">
                                             CHF {tariff.p.toFixed(2)}
                                           </span>
                                         </div>
