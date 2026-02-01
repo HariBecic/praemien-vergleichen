@@ -90,7 +90,7 @@ export default function Home() {
         </section>
 
         {/* ── Calculator Section ── */}
-        <section id="formular" className="py-16 sm:py-24">
+        <section id="formular" className="py-16 sm:py-24" style={{ scrollMarginTop: "4rem" }}>
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
             <PremiumCalculator />
           </div>
@@ -131,7 +131,7 @@ export default function Home() {
         </section>
 
         {/* ── Benefits ── */}
-        <section id="vorteile" className="py-16 sm:py-24">
+        <section id="vorteile" style={{ scrollMarginTop: "4rem" }} className="py-16 sm:py-24">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
               Warum lohnt sich ein Prämienvergleich?
@@ -191,7 +191,7 @@ export default function Home() {
         </section>
 
         {/* ── How it works ── */}
-        <section id="wie-es-funktionert" className="py-16 sm:py-24">
+        <section id="wie-es-funktionert" style={{ scrollMarginTop: "4rem" }} className="py-16 sm:py-24">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">
               In 3 einfachen Schritten zur günstigeren Krankenkasse
@@ -234,7 +234,7 @@ export default function Home() {
         </section>
 
         {/* ── FAQ ── */}
-        <section id="faq" className="py-16 sm:py-24">
+        <section id="faq" style={{ scrollMarginTop: "4rem" }} className="py-16 sm:py-24">
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
             <p className="text-center text-sm text-white/40 uppercase tracking-wider mb-2">
               Ihre Fragen beantwortet

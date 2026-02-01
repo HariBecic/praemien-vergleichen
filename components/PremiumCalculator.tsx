@@ -418,13 +418,16 @@ export function PremiumCalculator() {
   const plzSearchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
-  // Auto-scroll to active section when step changes
+  // Auto-scroll to active section when step changes (only forward)
+  const prevStepRef = useRef(step);
   useEffect(() => {
+    const goingForward = step > prevStepRef.current;
+    prevStepRef.current = step;
     const el = sectionRefs.current[step];
-    if (el) {
+    if (el && goingForward) {
       setTimeout(() => {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
+      }, 250);
     }
   }, [step]);
 
@@ -962,7 +965,7 @@ export function PremiumCalculator() {
       {/* ══════════════════════════════════════════════════════════════════ */}
       {/* SECTION 1: Situation & Wohnort                                    */}
       {/* ══════════════════════════════════════════════════════════════════ */}
-      <div ref={(el) => { sectionRefs.current[1] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "2rem" }}>
+      <div ref={(el) => { sectionRefs.current[1] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "5.5rem" }}>
         {/* Section header */}
         <div
           className={`flex items-center gap-3 p-5 ${step > 1 ? "cursor-pointer hover:bg-white/[0.02] transition-colors" : ""}`}
@@ -1113,7 +1116,7 @@ export function PremiumCalculator() {
       {/* SECTION 2: Persönliche Angaben                                    */}
       {/* ══════════════════════════════════════════════════════════════════ */}
       {step >= 2 && (
-        <div ref={(el) => { sectionRefs.current[2] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "2rem" }}>
+        <div ref={(el) => { sectionRefs.current[2] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "5.5rem" }}>
           {/* Section header */}
           <div
             className={`flex items-center gap-3 p-5 ${step > 2 ? "cursor-pointer hover:bg-white/[0.02] transition-colors" : ""}`}
@@ -1402,7 +1405,7 @@ export function PremiumCalculator() {
       {/* SECTION 3: Aktuelle Versicherung + Results                        */}
       {/* ══════════════════════════════════════════════════════════════════ */}
       {step >= 3 && (
-        <div ref={(el) => { sectionRefs.current[3] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "2rem" }}>
+        <div ref={(el) => { sectionRefs.current[3] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "5.5rem" }}>
           {/* Section header */}
           {!showResults && (
             <div className="flex items-center gap-3 p-5">
@@ -1813,7 +1816,7 @@ export function PremiumCalculator() {
       {/* SECTION 4: Zusatzversicherung                                     */}
       {/* ══════════════════════════════════════════════════════════════════ */}
       {step >= 4 && (
-        <div ref={(el) => { sectionRefs.current[4] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "2rem" }}>
+        <div ref={(el) => { sectionRefs.current[4] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "5.5rem" }}>
           {/* Section header */}
           <div className="flex items-center gap-3 p-5">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-blue-500 text-white shadow-lg shadow-blue-500/30">
