@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -25,14 +25,18 @@ const BF = "1idc9vLyOz1J1qurgu6";
 
 function InsurerLogo({ name, domain }: { name: string; domain: string }) {
   const [showText, setShowText] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   const handleError = useCallback(() => setShowText(true), []);
 
-  // On load: detect Brandfetch placeholder or square icons (not real logos)
-  const handleLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.target as HTMLImageElement;
+  // Detect Brandfetch placeholder: if loaded image is nearly square (icon/placeholder)
+  // Real wordmark logos are wide (aspect ratio > 2)
+  const handleLoad = useCallback(() => {
+    const img = imgRef.current;
+    if (!img) return;
     const ratio = img.naturalWidth / img.naturalHeight;
-    // Real wordmark logos are wide (ratio > 1.5). Square = icon/placeholder
+    // Brandfetch placeholders and icons are roughly square (ratio ~1)
+    // Real wordmark logos are wide (ratio > 1.8)
     if (ratio < 1.5) {
       setShowText(true);
     }
@@ -40,7 +44,7 @@ function InsurerLogo({ name, domain }: { name: string; domain: string }) {
 
   if (showText) {
     return (
-      <span className="text-[22px] sm:text-[26px] font-semibold text-white/30 whitespace-nowrap tracking-wide">
+      <span className="text-[22px] sm:text-[26px] font-semibold text-white/[0.18] whitespace-nowrap tracking-wide">
         {name}
       </span>
     );
@@ -48,9 +52,11 @@ function InsurerLogo({ name, domain }: { name: string; domain: string }) {
 
   return (
     <img
+      ref={imgRef}
       src={`https://cdn.brandfetch.io/${domain}/logo?c=${BF}`}
       alt={name}
-      className="h-9 sm:h-11 w-auto max-w-[200px] object-contain brightness-0 invert opacity-[0.35] hover:opacity-[0.6] transition-opacity duration-300"
+      style={{ mixBlendMode: "screen" }}
+      className="h-9 sm:h-11 w-auto max-w-[200px] object-contain invert grayscale opacity-[0.4] hover:opacity-[0.7] transition-opacity duration-300"
       loading="lazy"
       onError={handleError}
       onLoad={handleLoad}
@@ -62,16 +68,16 @@ export function InsurerCarousel() {
   const items = [...CAROUSEL_INSURERS, ...CAROUSEL_INSURERS];
 
   return (
-    <div className="mt-10">
-      <div className="relative overflow-hidden">
-        {/* Fade edges - match page background */}
+    <div className="mt-10 relative">
+      <div className="relative overflow-hidden py-6">
+        {/* Fade edges */}
         <div className="absolute left-0 top-0 bottom-0 w-24 sm:w-40 bg-gradient-to-r from-[#0a1128] to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-24 sm:w-40 bg-gradient-to-l from-[#0a1128] to-transparent z-10 pointer-events-none" />
 
         {/* Scrolling track */}
-        <div className="flex items-center gap-14 sm:gap-20 animate-scroll-logos">
+        <div className="flex items-center gap-14 sm:gap-20 animate-scroll-logos px-4">
           {items.map((insurer, i) => (
-            <div key={`${insurer.domain}-${i}`} className="flex-shrink-0 flex items-center justify-center h-11">
+            <div key={`${insurer.domain}-${i}`} className="flex-shrink-0 flex items-center justify-center min-h-[44px]">
               <InsurerLogo name={insurer.name} domain={insurer.domain} />
             </div>
           ))}
