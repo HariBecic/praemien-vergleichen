@@ -331,22 +331,55 @@ export function PremiumCalculator() {
   };
 
   // ─── Lead Submit ───────────────────────────────────────────────────────
+  const [leadLoading, setLeadLoading] = useState(false);
+
   const handleLeadSubmit = async () => {
-    if (!leadConsent) return;
+    if (!leadConsent || !leadName || !leadEmail || !leadPhone) return;
+    setLeadLoading(true);
 
-    // TODO: Replace with actual Supabase/LeadsHub integration
-    // await supabase.from("leads").insert({...})
-    console.log("Lead submitted:", {
-      name: leadName,
-      email: leadEmail,
-      phone: leadPhone,
-      newsletter: leadNewsletter,
-      formState,
-    });
+    try {
+      const person = formState.persons[0];
+      const cheapest = results.length > 0 ? results[0] : null;
 
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 800));
-    setLeadSubmitted(true);
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: leadName,
+          email: leadEmail,
+          phone: leadPhone,
+          plz: formState.plz,
+          ort: formState.ort,
+          canton: formState.canton,
+          birthYear: person?.birthdate?.split("-")[0] || "",
+          ageGroup: person ? getAgeGroup(person.birthdate) : "ERW",
+          franchise: person?.franchise || 0,
+          model: modelFilter,
+          currentInsurer: formState.currentInsurer,
+          currentPremium: formState.currentPremium,
+          cheapestInsurer: cheapest?.insurer || "",
+          cheapestPremium: cheapest?.monthlyPremium || 0,
+          extras: formState.extras,
+          newsletter: leadNewsletter,
+          calculationType: formState.calculationType,
+          personsCount: formState.persons.length,
+        }),
+      });
+
+      if (res.ok) {
+        setLeadSubmitted(true);
+        // Meta Pixel client-side event
+        if (typeof window !== "undefined" && (window as any).fbq) {
+          (window as any).fbq("track", "Lead");
+        }
+      } else {
+        alert("Es gab einen Fehler. Bitte versuche es erneut.");
+      }
+    } catch {
+      alert("Verbindungsfehler. Bitte versuche es erneut.");
+    } finally {
+      setLeadLoading(false);
+    }
   };
 
   // ─── Render ────────────────────────────────────────────────────────────
@@ -614,10 +647,10 @@ export function PremiumCalculator() {
 
                     <button
                       onClick={handleLeadSubmit}
-                      disabled={!leadConsent || !leadName || !leadEmail || !leadPhone}
+                      disabled={!leadConsent || !leadName || !leadEmail || !leadPhone || leadLoading}
                       className="btn-accent w-full py-3.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      Offerte anfordern
+                      {leadLoading ? "Wird gesendet..." : "Offerte anfordern"}
                     </button>
                   </div>
                 </>
