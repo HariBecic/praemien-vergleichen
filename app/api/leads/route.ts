@@ -130,3 +130,48 @@ async function hashSHA256(value: string): Promise<string> {
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ error: "Server-Konfigurationsfehler." }, { status: 500 });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const body = await request.json();
+
+    if (!body.id) {
+      return NextResponse.json({ error: "Lead ID erforderlich" }, { status: 400 });
+    }
+
+    // Fetch existing lead to merge extra_data
+    const { data: existing } = await supabase
+      .from("leads")
+      .select("extra_data")
+      .eq("id", body.id)
+      .single();
+
+    const mergedExtraData = {
+      ...(existing?.extra_data || {}),
+      zusatzversicherungen: body.extras || [],
+    };
+
+    const { error } = await supabase
+      .from("leads")
+      .update({ extra_data: mergedExtraData })
+      .eq("id", body.id);
+
+    if (error) {
+      console.error("Supabase PATCH error:", JSON.stringify(error));
+      return NextResponse.json({ error: "Fehler beim Aktualisieren" }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (err) {
+    console.error("Lead PATCH error:", err);
+    return NextResponse.json({ error: "Serverfehler" }, { status: 500 });
+  }
+}

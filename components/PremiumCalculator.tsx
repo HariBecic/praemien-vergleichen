@@ -400,6 +400,8 @@ export function PremiumCalculator() {
   // Lead modal
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [leadSubmitted, setLeadSubmitted] = useState(false);
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [extrasSubmitted, setExtrasSubmitted] = useState(false);
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
   const [leadPhone, setLeadPhone] = useState("");
@@ -407,7 +409,6 @@ export function PremiumCalculator() {
   const [leadNewsletter, setLeadNewsletter] = useState(false);
   const [leadLoading, setLeadLoading] = useState(false);
   const [leadError, setLeadError] = useState("");
-  const [leadModalMode, setLeadModalMode] = useState<"save" | "offer">("offer");
   const [showCurrentInsurerField, setShowCurrentInsurerField] = useState(false);
 
   // PLZ/Ort combo search
@@ -415,9 +416,6 @@ export function PremiumCalculator() {
   const [plzSuggestions, setPlzSuggestions] = useState<{ plz: string; entry: PlzEntry }[]>([]);
   const [showPlzDropdown, setShowPlzDropdown] = useState(false);
   const plzSearchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Save modal auto-open timer
-  const saveBannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Tooltips
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
@@ -605,14 +603,23 @@ export function PremiumCalculator() {
 
       setPersonRawDataList(results);
       setExpandedInsurer(null);
-      setShowResults(true);
+
+      // If lead already captured, show results directly
+      if (leadSubmitted) {
+        setShowResults(true);
+      } else {
+        // Gate results behind lead form
+        const firstName = formState.persons[0]?.name || "";
+        if (firstName && !leadName) setLeadName(firstName);
+        setShowLeadModal(true);
+      }
     } catch {
       setPersonRawDataList([]);
       setShowResults(true);
     } finally {
       setPremiumLoading(false);
     }
-  }, [formState, loadCantonPremiums]);
+  }, [formState, loadCantonPremiums, leadSubmitted, leadName]);
 
   // ─── Derived: Grouped Results ──────────────────────────────────────────
 
@@ -698,7 +705,11 @@ export function PremiumCalculator() {
       });
 
       if (res.ok) {
+        const data = await res.json();
+        setLeadId(data.id || null);
         setLeadSubmitted(true);
+        setShowLeadModal(false);
+        setShowResults(true);
         if (typeof window !== "undefined" && (window as any).fbq) {
           (window as any).fbq("track", "Lead");
         }
@@ -720,7 +731,6 @@ export function PremiumCalculator() {
     return () => {
       if (plzDebounceRef.current) clearTimeout(plzDebounceRef.current);
       if (plzSearchRef.current) clearTimeout(plzSearchRef.current);
-      if (saveBannerTimerRef.current) clearTimeout(saveBannerTimerRef.current);
     };
   }, []);
 
@@ -801,19 +811,7 @@ export function PremiumCalculator() {
 
   // ─── Auto-open lead modal after 5s on results ─────────────────────
 
-  useEffect(() => {
-    if (showResults && !leadSubmitted && !showLeadModal) {
-      saveBannerTimerRef.current = setTimeout(() => {
-        setLeadModalMode("save");
-        const firstName = formState.persons[0]?.name || "";
-        if (firstName && !leadName) setLeadName(firstName);
-        setShowLeadModal(true);
-      }, 5000);
-    }
-    return () => {
-      if (saveBannerTimerRef.current) clearTimeout(saveBannerTimerRef.current);
-    };
-  }, [showResults, leadSubmitted, showLeadModal]);
+  // Auto-popup removed — lead is now captured before results are shown
 
   // ═══════════════════════════════════════════════════════════════════════
   // RENDER
@@ -825,13 +823,6 @@ export function PremiumCalculator() {
     "Grundversicherung",
     "Zusatzversicherung",
   ];
-
-  const openLeadModal = (mode: "save" | "offer") => {
-    setLeadModalMode(mode);
-    const firstName = formState.persons[0]?.name || "";
-    if (firstName && !leadName) setLeadName(firstName);
-    setShowLeadModal(true);
-  };
 
   const InfoTooltip = ({ id, text }: { id: string; text: string }) => (
     <span className="relative inline-flex">
@@ -1695,7 +1686,7 @@ export function PremiumCalculator() {
         {/* ── STEP 4: Zusatzversicherung + Lead Form ──────────────────── */}
         {step === 4 && (
           <div className="animate-fade-in">
-            {!showLeadModal || leadSubmitted ? (
+            <>
               <>
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-bold mb-2">Wähle, was zählt</h2>
@@ -1774,14 +1765,41 @@ export function PremiumCalculator() {
                     ← Zurück
                   </button>
                   <button
-                    onClick={() => openLeadModal("offer")}
-                    className="btn-accent px-10 py-3.5 rounded-xl text-base"
+                    onClick={async () => {
+                      // Update existing lead with extras
+                      if (leadId && formState.extras.length > 0) {
+                        try {
+                          await fetch("/api/leads", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              id: leadId,
+                              extras: formState.extras,
+                            }),
+                          });
+                        } catch {
+                          // Silent fail — lead already captured
+                        }
+                      }
+                      setExtrasSubmitted(true);
+                    }}
+                    disabled={extrasSubmitted}
+                    className="btn-accent px-10 py-3.5 rounded-xl text-base disabled:opacity-60"
                   >
-                    Jetzt vergleichen
+                    {extrasSubmitted ? "✓ Gesendet" : "Offerte anfordern"}
                   </button>
                 </div>
+
+                {extrasSubmitted && (
+                  <div className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-center animate-fade-in">
+                    <div className="text-emerald-400 font-semibold mb-1">Vielen Dank!</div>
+                    <p className="text-white/50 text-sm">
+                      Deine Zusatzwünsche wurden übermittelt. Wir melden uns in Kürze mit einer persönlichen Offerte.
+                    </p>
+                  </div>
+                )}
               </>
-            ) : null}
+            </>
           </div>
         )}
       </div>
@@ -1789,132 +1807,111 @@ export function PremiumCalculator() {
       {/* ══════════════════════════════════════════════════════════════════ */}
       {/* LEAD MODAL                                                        */}
       {/* ══════════════════════════════════════════════════════════════════ */}
-      {showLeadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+      {showLeadModal && !leadSubmitted && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-[#0f1a3a] border border-white/[0.1] rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => setShowLeadModal(false)}
-              className="absolute top-4 right-4 text-white/40 hover:text-white/60"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
 
-            {!leadSubmitted ? (
-              <>
-                <h3 className="text-xl font-bold mb-1">
-                  {leadModalMode === "save"
-                    ? "Kostenlose Offerte erhalten"
-                    : "Jetzt Vergleichsofferte erhalten"}
-                </h3>
-                <p className="text-sm text-white/50 mb-5">
-                  {leadModalMode === "save"
-                    ? "Erhalte eine persönliche Offerte von geprüften Versicherungsanbietern — kostenlos und unverbindlich."
-                    : "Erhalte eine kostenlose und unverbindliche Offerte basierend auf deinen Angaben."}
-                </p>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-1">
-                      Vor- und Nachname *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Vor- und Nachname"
-                      value={leadName}
-                      onChange={(e) => setLeadName(e.target.value)}
-                      className="input-field"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-1">
-                      E-Mail-Adresse *
-                    </label>
-                    <input
-                      type="email"
-                      placeholder="E-Mail-Adresse"
-                      value={leadEmail}
-                      onChange={(e) => setLeadEmail(e.target.value)}
-                      className="input-field"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-1">
-                      Telefonnummer *
-                    </label>
-                    <div className="flex gap-2">
-                      <span className="input-field !w-20 flex items-center justify-center text-sm text-white/50">
-                        🇨🇭 +41
-                      </span>
-                      <input
-                        type="tel"
-                        placeholder="79 123 45 67"
-                        value={leadPhone}
-                        onChange={(e) => setLeadPhone(e.target.value)}
-                        className="input-field"
-                      />
-                    </div>
-                  </div>
-
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={leadConsent}
-                      onChange={(e) => setLeadConsent(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-white/[0.12] text-blue-400 focus:ring-blue-500"
-                    />
-                    <span className="text-xs text-white/50 leading-relaxed">
-                      <strong>Ich stimme zu,</strong> dass meine Daten verarbeitet und an geprüfte
-                      Versicherungsanbieter weitergegeben werden, um eine persönliche Offerte
-                      zu erhalten. Meine Daten werden vertraulich behandelt.{" "}
-                      <a href="/datenschutz" className="text-blue-400 underline">Datenschutzerklärung</a>.
-                    </span>
-                  </label>
-
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={leadNewsletter}
-                      onChange={(e) => setLeadNewsletter(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-white/[0.12] text-blue-400 focus:ring-blue-500"
-                    />
-                    <span className="text-xs text-white/50 leading-relaxed">
-                      Ja, ich möchte den Newsletter mit Spartipps, Fristen und einfachen
-                      Erklärungen abonnieren.
-                    </span>
-                  </label>
-
-                  {leadError && (
-                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-200 text-sm text-red-700">
-                      {leadError}
-                    </div>
-                  )}
-
-                  <button
-                    onClick={handleLeadSubmit}
-                    disabled={!leadConsent || !leadName || !leadEmail || !leadPhone || leadLoading}
-                    className="btn-accent w-full py-3.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {leadLoading ? "Wird gesendet..." : "Offerte anfordern"}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-6">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold mb-2">Vielen Dank!</h3>
-                <p className="text-white/50 text-sm">
-                  Wir haben deine Anfrage erhalten und melden uns in Kürze bei dir.
-                </p>
-                <p className="text-white/40 text-xs mt-3">
-                  Bei Fragen: <strong className="text-white/60">info@praemien-vergleichen.ch</strong>
-                </p>
+            <div className="text-center mb-5">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mx-auto mb-3">
+                <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
               </div>
-            )}
+              <h3 className="text-xl font-bold">Dein Vergleich ist bereit!</h3>
+              <p className="text-sm text-white/50 mt-1">
+                Gib deine Kontaktdaten ein, um dein persönliches Ergebnis zu sehen und eine Offerte zu erhalten.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-1">
+                  Vor- und Nachname *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Vor- und Nachname"
+                  value={leadName}
+                  onChange={(e) => setLeadName(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-1">
+                  E-Mail-Adresse *
+                </label>
+                <input
+                  type="email"
+                  placeholder="E-Mail-Adresse"
+                  value={leadEmail}
+                  onChange={(e) => setLeadEmail(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-1">
+                  Telefonnummer *
+                </label>
+                <div className="flex gap-2">
+                  <span className="input-field !w-20 flex items-center justify-center text-sm text-white/50">
+                    🇨🇭 +41
+                  </span>
+                  <input
+                    type="tel"
+                    placeholder="79 123 45 67"
+                    value={leadPhone}
+                    onChange={(e) => setLeadPhone(e.target.value)}
+                    className="input-field"
+                  />
+                </div>
+              </div>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={leadConsent}
+                  onChange={(e) => setLeadConsent(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-white/[0.12] text-blue-400 focus:ring-blue-500"
+                />
+                <span className="text-xs text-white/50 leading-relaxed">
+                  <strong>Ich stimme zu,</strong> dass meine Daten verarbeitet und an geprüfte
+                  Versicherungsanbieter weitergegeben werden, um eine persönliche Offerte
+                  zu erhalten. Meine Daten werden vertraulich behandelt.{" "}
+                  <a href="/datenschutz" className="text-blue-400 underline">Datenschutzerklärung</a>.
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={leadNewsletter}
+                  onChange={(e) => setLeadNewsletter(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-white/[0.12] text-blue-400 focus:ring-blue-500"
+                />
+                <span className="text-xs text-white/50 leading-relaxed">
+                  Ja, ich möchte den Newsletter mit Spartipps, Fristen und einfachen
+                  Erklärungen abonnieren.
+                </span>
+              </label>
+
+              {leadError && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+                  {leadError}
+                </div>
+              )}
+
+              <button
+                onClick={handleLeadSubmit}
+                disabled={!leadConsent || !leadName || !leadEmail || !leadPhone || leadLoading}
+                className="btn-accent w-full py-3.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed text-base"
+              >
+                {leadLoading ? "Wird gesendet..." : "Ergebnis anzeigen"}
+              </button>
+
+              <p className="text-[10px] text-white/30 text-center">
+                Kostenlos und unverbindlich · Keine versteckten Kosten
+              </p>
+            </div>
           </div>
         </div>
       )}
