@@ -215,188 +215,50 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Testimonials ── */}
-        <section className="py-16 sm:py-24">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <p className="text-center text-sm text-white/40 uppercase tracking-wider mb-2">
-              Echte Erfahrungen
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">
-              Das sagen unsere Kunden
-            </h2>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              {TESTIMONIALS.map((t) => (
-                <div key={t.name} className="card p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-11 h-11 rounded-full bg-blue-500/15 border border-blue-500/20 flex items-center justify-center font-bold text-blue-400 text-sm">
-                      {t.img}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-white">{t.name}</div>
-                      <div className="text-xs text-white/30">{t.badge}</div>
-                    </div>
-                    <div className="ml-auto text-orange-400 text-sm tracking-wide">
-                      {"★".repeat(t.stars)}
-                    </div>
-                  </div>
-                  <p className="text-sm text-white/50 leading-relaxed italic">
-                    &ldquo;{t.text}&rdquo;
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Benefits ── */}
-        <section id="vorteile" style={{ scrollMarginTop: "4rem" }} className="py-16 sm:py-24">
+        {/* ── Key Facts (Visual Infographic Style) ── */}
+        <section className="py-16 sm:py-24 border-t border-white/[0.06]">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-              Warum lohnt sich ein Prämienvergleich?
+              Krankenkasse Schweiz – Fakten 2026
             </h2>
             <p className="text-center text-white/50 mb-12 max-w-2xl mx-auto">
-              Die gleichen Leistungen, aber unterschiedliche Preise – nutzen Sie das zu Ihrem Vorteil.
+              Die wichtigsten Zahlen zur obligatorischen Krankenversicherung in der Schweiz auf einen Blick.
             </p>
 
-            <div className="grid sm:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                {
-                  title: "Bis zu CHF 2'000 sparen",
-                  desc: "Die Prämien-Unterschiede zwischen Krankenkassen können enorm sein. Mit unserem Vergleich finden Sie garantiert ein günstigeres Angebot.",
-                  icon: (
-                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                    </svg>
-                  ),
-                  color: "from-green-400 to-emerald-500",
-                  glow: "bg-green-500/10",
-                },
-                {
-                  title: "Nur 2 Minuten Zeitaufwand",
-                  desc: "Unser einfacher Fragebogen dauert nur 2 Minuten. Sie erhalten danach eine persönliche Beratung zu den besten Angeboten.",
-                  icon: (
-                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  ),
-                  color: "from-blue-400 to-indigo-500",
-                  glow: "bg-blue-500/10",
-                },
-                {
-                  title: "Unabhängig & Kostenlos",
-                  desc: "Wir sind komplett unabhängig. Unser Service ist für Sie 100% kostenlos.",
-                  icon: (
-                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-                    </svg>
-                  ),
-                  color: "from-orange-400 to-amber-500",
-                  glow: "bg-orange-500/10",
-                },
-              ].map((b) => (
-                <div key={b.title} className="card p-6 text-center group">
-                  <div className={`w-14 h-14 rounded-2xl ${b.glow} flex items-center justify-center mx-auto mb-4 transition-transform group-hover:scale-110`}>
-                    <div className={`bg-gradient-to-br ${b.color} bg-clip-text text-transparent`}>
-                      {b.icon}
-                    </div>
+                { value: "27", label: "Krankenkassen", sub: "zugelassene Versicherer" },
+                { value: "CHF 393", label: "Ø Prämie/Monat", sub: "Erwachsene 2026" },
+                { value: "+4.4%", label: "Prämienanstieg", sub: "gegenüber 2025" },
+                { value: "CHF 2'000", label: "Sparpotenzial", sub: "pro Jahr möglich" },
+              ].map((fact) => (
+                <div key={fact.label} className="text-center p-6 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                  <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent mb-2">
+                    {fact.value}
                   </div>
-                  <h3 className="text-lg font-bold mb-2 text-white">{b.title}</h3>
-                  <p className="text-white/50 text-sm leading-relaxed">{b.desc}</p>
+                  <div className="font-semibold text-white">{fact.label}</div>
+                  <div className="text-xs text-white/40 mt-1">{fact.sub}</div>
                 </div>
               ))}
             </div>
-          </div>
-        </section>
 
-        {/* ── How it works ── */}
-        <section id="wie-es-funktionert" style={{ scrollMarginTop: "4rem" }} className="py-16 sm:py-24">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">
-              In 3 einfachen Schritten zur günstigeren Krankenkasse
-            </h2>
-
-            <div className="grid sm:grid-cols-3 gap-8 sm:gap-6">
-              {[
-                {
-                  step: "1",
-                  title: "Formular ausfüllen",
-                  desc: "Beantworten Sie ein paar kurze Fragen zu Ihrer aktuellen Situation.",
-                },
-                {
-                  step: "2",
-                  title: "Angebote erhalten",
-                  desc: "Sie erhalten passende Prämien-Angebote von verschiedenen Krankenkassen.",
-                },
-                {
-                  step: "3",
-                  title: "Sparen",
-                  desc: "Wählen Sie das beste Angebot und sparen Sie ab sofort bei Ihrer Krankenkasse.",
-                },
-              ].map((item) => (
-                <div key={item.step} className="card p-6 text-center relative">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white text-lg font-bold mb-4 shadow-lg shadow-orange-500/20">
-                    {item.step}
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 text-white">{item.title}</h3>
-                  <p className="text-white/50 leading-relaxed text-sm">{item.desc}</p>
-                  <a
-                    href="#formular"
-                    className="inline-block mt-4 text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors"
-                  >
-                    Jetzt vergleichen →
-                  </a>
+            {/* Info text */}
+            <div className="mt-12 p-6 rounded-xl bg-blue-500/[0.08] border border-blue-500/20">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                  </svg>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── FAQ ── */}
-        <section id="faq" style={{ scrollMarginTop: "4rem" }} className="py-16 sm:py-24">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6">
-            <p className="text-center text-sm text-white/40 uppercase tracking-wider mb-2">
-              Ihre Fragen zur Krankenkasse beantwortet
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10">
-              Häufig gestellte Fragen zur Krankenkasse
-            </h2>
-
-            <div className="space-y-3">
-              {FAQ_ITEMS.map((faq) => (
-                <details key={faq.q} className="card p-5 cursor-pointer group">
-                  <summary className="flex items-center justify-between font-semibold text-white list-none">
-                    {faq.q}
-                    <svg
-                      className="w-5 h-5 text-white/30 group-open:rotate-180 transition-transform flex-shrink-0"
-                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </summary>
-                  <p className="mt-3 text-white/50 leading-relaxed text-sm">{faq.a}</p>
-                </details>
-              ))}
-            </div>
-
-            {/* More info links */}
-            <div className="mt-8 text-center">
-              <p className="text-white/40 text-sm mb-4">
-                Mehr Informationen zu Krankenkassen finden Sie in unserem Ratgeber:
-              </p>
-              <div className="flex flex-wrap justify-center gap-3">
-                <Link href="/ratgeber/krankenkasse-wechseln" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                  Krankenkasse wechseln
-                </Link>
-                <Link href="/ratgeber/franchise-waehlen" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                  Franchise wählen
-                </Link>
-                <Link href="/ratgeber/versicherungsmodelle" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                  Versicherungsmodelle
-                </Link>
-                <Link href="/ratgeber/praemienverbilligung" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                  Prämienverbilligung
-                </Link>
+                <div>
+                  <h3 className="font-semibold text-white mb-1">Wussten Sie?</h3>
+                  <p className="text-sm text-white/60 leading-relaxed">
+                    Die Leistungen der <strong>Grundversicherung (KVG)</strong> sind bei allen 27 Schweizer Krankenkassen
+                    gesetzlich vorgeschrieben und daher <strong>identisch</strong>. Der einzige Unterschied liegt im Preis –
+                    deshalb lohnt sich ein regelmässiger Vergleich. Mit dem Wechsel zur günstigsten Kasse sparen Sie
+                    bis zu CHF 2&apos;000 pro Jahr bei exakt gleichen Leistungen.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -586,50 +448,188 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Key Facts (Visual Infographic Style) ── */}
-        <section className="py-16 sm:py-24 border-t border-white/[0.06]">
+        {/* ── Testimonials ── */}
+        <section className="py-16 sm:py-24">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
-              Krankenkasse Schweiz – Fakten 2026
-            </h2>
-            <p className="text-center text-white/50 mb-12 max-w-2xl mx-auto">
-              Die wichtigsten Zahlen zur obligatorischen Krankenversicherung in der Schweiz auf einen Blick.
+            <p className="text-center text-sm text-white/40 uppercase tracking-wider mb-2">
+              Echte Erfahrungen
             </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">
+              Das sagen unsere Kunden
+            </h2>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { value: "27", label: "Krankenkassen", sub: "zugelassene Versicherer" },
-                { value: "CHF 393", label: "Ø Prämie/Monat", sub: "Erwachsene 2026" },
-                { value: "+4.4%", label: "Prämienanstieg", sub: "gegenüber 2025" },
-                { value: "CHF 2'000", label: "Sparpotenzial", sub: "pro Jahr möglich" },
-              ].map((fact) => (
-                <div key={fact.label} className="text-center p-6 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                  <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent mb-2">
-                    {fact.value}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {TESTIMONIALS.map((t) => (
+                <div key={t.name} className="card p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-11 h-11 rounded-full bg-blue-500/15 border border-blue-500/20 flex items-center justify-center font-bold text-blue-400 text-sm">
+                      {t.img}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white">{t.name}</div>
+                      <div className="text-xs text-white/30">{t.badge}</div>
+                    </div>
+                    <div className="ml-auto text-orange-400 text-sm tracking-wide">
+                      {"★".repeat(t.stars)}
+                    </div>
                   </div>
-                  <div className="font-semibold text-white">{fact.label}</div>
-                  <div className="text-xs text-white/40 mt-1">{fact.sub}</div>
+                  <p className="text-sm text-white/50 leading-relaxed italic">
+                    &ldquo;{t.text}&rdquo;
+                  </p>
                 </div>
               ))}
             </div>
+          </div>
+        </section>
 
-            {/* Info text */}
-            <div className="mt-12 p-6 rounded-xl bg-blue-500/[0.08] border border-blue-500/20">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                  </svg>
+        {/* ── Benefits ── */}
+        <section id="vorteile" style={{ scrollMarginTop: "4rem" }} className="py-16 sm:py-24">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
+              Warum lohnt sich ein Prämienvergleich?
+            </h2>
+            <p className="text-center text-white/50 mb-12 max-w-2xl mx-auto">
+              Die gleichen Leistungen, aber unterschiedliche Preise – nutzen Sie das zu Ihrem Vorteil.
+            </p>
+
+            <div className="grid sm:grid-cols-3 gap-6">
+              {[
+                {
+                  title: "Bis zu CHF 2'000 sparen",
+                  desc: "Die Prämien-Unterschiede zwischen Krankenkassen können enorm sein. Mit unserem Vergleich finden Sie garantiert ein günstigeres Angebot.",
+                  icon: (
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                    </svg>
+                  ),
+                  color: "from-green-400 to-emerald-500",
+                  glow: "bg-green-500/10",
+                },
+                {
+                  title: "Nur 2 Minuten Zeitaufwand",
+                  desc: "Unser einfacher Fragebogen dauert nur 2 Minuten. Sie erhalten danach eine persönliche Beratung zu den besten Angeboten.",
+                  icon: (
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ),
+                  color: "from-blue-400 to-indigo-500",
+                  glow: "bg-blue-500/10",
+                },
+                {
+                  title: "Unabhängig & Kostenlos",
+                  desc: "Wir sind komplett unabhängig. Unser Service ist für Sie 100% kostenlos.",
+                  icon: (
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                    </svg>
+                  ),
+                  color: "from-orange-400 to-amber-500",
+                  glow: "bg-orange-500/10",
+                },
+              ].map((b) => (
+                <div key={b.title} className="card p-6 text-center group">
+                  <div className={`w-14 h-14 rounded-2xl ${b.glow} flex items-center justify-center mx-auto mb-4 transition-transform group-hover:scale-110`}>
+                    <div className={`bg-gradient-to-br ${b.color} bg-clip-text text-transparent`}>
+                      {b.icon}
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold mb-2 text-white">{b.title}</h3>
+                  <p className="text-white/50 text-sm leading-relaxed">{b.desc}</p>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-white mb-1">Wussten Sie?</h3>
-                  <p className="text-sm text-white/60 leading-relaxed">
-                    Die Leistungen der <strong>Grundversicherung (KVG)</strong> sind bei allen 27 Schweizer Krankenkassen
-                    gesetzlich vorgeschrieben und daher <strong>identisch</strong>. Der einzige Unterschied liegt im Preis –
-                    deshalb lohnt sich ein regelmässiger Vergleich. Mit dem Wechsel zur günstigsten Kasse sparen Sie
-                    bis zu CHF 2&apos;000 pro Jahr bei exakt gleichen Leistungen.
-                  </p>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── How it works ── */}
+        <section id="wie-es-funktionert" style={{ scrollMarginTop: "4rem" }} className="py-16 sm:py-24">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">
+              In 3 einfachen Schritten zur günstigeren Krankenkasse
+            </h2>
+
+            <div className="grid sm:grid-cols-3 gap-8 sm:gap-6">
+              {[
+                {
+                  step: "1",
+                  title: "Formular ausfüllen",
+                  desc: "Beantworten Sie ein paar kurze Fragen zu Ihrer aktuellen Situation.",
+                },
+                {
+                  step: "2",
+                  title: "Angebote erhalten",
+                  desc: "Sie erhalten passende Prämien-Angebote von verschiedenen Krankenkassen.",
+                },
+                {
+                  step: "3",
+                  title: "Sparen",
+                  desc: "Wählen Sie das beste Angebot und sparen Sie ab sofort bei Ihrer Krankenkasse.",
+                },
+              ].map((item) => (
+                <div key={item.step} className="card p-6 text-center relative">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white text-lg font-bold mb-4 shadow-lg shadow-orange-500/20">
+                    {item.step}
+                  </div>
+                  <h3 className="text-xl font-bold mb-2 text-white">{item.title}</h3>
+                  <p className="text-white/50 leading-relaxed text-sm">{item.desc}</p>
+                  <a
+                    href="#formular"
+                    className="inline-block mt-4 text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    Jetzt vergleichen →
+                  </a>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ ── */}
+        <section id="faq" style={{ scrollMarginTop: "4rem" }} className="py-16 sm:py-24">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6">
+            <p className="text-center text-sm text-white/40 uppercase tracking-wider mb-2">
+              Ihre Fragen zur Krankenkasse beantwortet
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10">
+              Häufig gestellte Fragen zur Krankenkasse
+            </h2>
+
+            <div className="space-y-3">
+              {FAQ_ITEMS.map((faq) => (
+                <details key={faq.q} className="card p-5 cursor-pointer group">
+                  <summary className="flex items-center justify-between font-semibold text-white list-none">
+                    {faq.q}
+                    <svg
+                      className="w-5 h-5 text-white/30 group-open:rotate-180 transition-transform flex-shrink-0"
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </summary>
+                  <p className="mt-3 text-white/50 leading-relaxed text-sm">{faq.a}</p>
+                </details>
+              ))}
+            </div>
+
+            {/* More info links */}
+            <div className="mt-8 text-center">
+              <p className="text-white/40 text-sm mb-4">
+                Mehr Informationen zu Krankenkassen finden Sie in unserem Ratgeber:
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link href="/ratgeber/krankenkasse-wechseln" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  Krankenkasse wechseln
+                </Link>
+                <Link href="/ratgeber/franchise-waehlen" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  Franchise wählen
+                </Link>
+                <Link href="/ratgeber/versicherungsmodelle" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  Versicherungsmodelle
+                </Link>
+                <Link href="/ratgeber/praemienverbilligung" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  Prämienverbilligung
+                </Link>
               </div>
             </div>
           </div>
