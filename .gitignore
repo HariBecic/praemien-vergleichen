@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.env.local
+.env*.local
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# BAG source files (large, don't commit)
+scripts/*.xlsx
+scripts/*.csv
+
+# Generated data (can be regenerated from source)
+# Uncomment if you want to commit the generated data:
+# data/*.json
