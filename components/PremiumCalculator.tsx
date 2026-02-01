@@ -1573,12 +1573,12 @@ export function PremiumCalculator() {
                                     {isFirst && <span className="savings-badge text-xs">✓ Günstigste</span>}
                                   </div>
                                   {!isMultiPerson && (
-                                    <div className="text-xs sm:text-sm text-white/50 mt-0.5">
+                                    <div className="text-xs text-white/50 mt-0.5 truncate">
                                       {MODEL_LABELS[cheapestModel] || cheapestModel} – {cheapestTariff}
                                     </div>
                                   )}
                                   {isMultiPerson && (
-                                    <div className="text-xs text-white/50 mt-0.5">
+                                    <div className="text-xs text-white/50 mt-0.5 truncate">
                                       {group.persons.map((pt) => `${pt.personLabel}: CHF ${pt.cheapest.p.toFixed(0)}`).join(" · ")}
                                     </div>
                                   )}
@@ -1600,12 +1600,12 @@ export function PremiumCalculator() {
                               <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.04]">
                                 {/* Savings */}
                                 {group.savings > 0 && sortOrder === "asc" ? (
-                                  <div className="flex items-center gap-1.5">
-                                    <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
                                     </svg>
-                                    <span className="text-xs sm:text-sm font-semibold text-emerald-400">
-                                      CHF {group.savings.toLocaleString("de-CH")}/Jahr sparen
+                                    <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">
+                                      –{group.savings.toLocaleString("de-CH")}/J.
                                     </span>
                                   </div>
                                 ) : <div />}
@@ -1648,15 +1648,15 @@ export function PremiumCalculator() {
                                       {pt.allTariffs.map((tariff, tIdx) => (
                                         <div
                                           key={`${tariff.tn}-${tIdx}`}
-                                          className={`flex items-center justify-between py-1.5 px-2 sm:px-3 rounded-lg text-xs sm:text-sm gap-2 ${
+                                          className={`flex items-center justify-between py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm gap-3 ${
                                             tariff === pt.cheapest ? "bg-emerald-500/10 text-emerald-400" : "text-white/60"
                                           }`}
                                         >
-                                          <div className="min-w-0">
-                                            <span className="font-medium">{tariff.tn}</span>
-                                            <span className="text-white/30 ml-1 sm:ml-2 text-[11px] sm:text-xs">
+                                          <div className="min-w-0 overflow-hidden">
+                                            <div className="font-medium truncate">{tariff.tn}</div>
+                                            <div className="text-white/30 text-[10px] sm:text-xs">
                                               {MODEL_LABELS[tariff.t] || tariff.t}
-                                            </span>
+                                            </div>
                                           </div>
                                           <span className="font-semibold tabular-nums whitespace-nowrap shrink-0">
                                             CHF {tariff.p.toFixed(2)}
