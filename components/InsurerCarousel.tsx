@@ -21,21 +21,16 @@ const CAROUSEL_INSURERS: { name: string; domain: string }[] = [
   { name: "Aquilana", domain: "aquilana.ch" },
 ];
 
-// Clearbit Logo API returns full company logos with transparent backgrounds
-function getLogoUrl(domain: string) {
-  return `https://logo.clearbit.com/${domain}?size=200`;
-}
+const BF_CLIENT = "1idc9vLyOz1J1qurgu6";
 
 function InsurerLogo({ name, domain }: { name: string; domain: string }) {
   const [failed, setFailed] = useState(false);
 
-  const handleError = useCallback(() => {
-    setFailed(true);
-  }, []);
+  const handleError = useCallback(() => setFailed(true), []);
 
   if (failed) {
     return (
-      <span className="text-lg sm:text-xl font-semibold text-white/20 tracking-wide whitespace-nowrap">
+      <span className="text-xl sm:text-2xl font-semibold text-white/[0.15] whitespace-nowrap">
         {name}
       </span>
     );
@@ -43,9 +38,9 @@ function InsurerLogo({ name, domain }: { name: string; domain: string }) {
 
   return (
     <img
-      src={getLogoUrl(domain)}
+      src={`https://cdn.brandfetch.io/domain/${domain}?c=${BF_CLIENT}`}
       alt={name}
-      className="h-8 sm:h-10 w-auto max-w-[160px] object-contain brightness-0 invert opacity-30 hover:opacity-60 transition-opacity duration-300"
+      className="h-10 sm:h-12 w-auto max-w-[180px] object-contain brightness-0 invert opacity-[0.2] hover:opacity-[0.5] transition-opacity duration-300"
       loading="lazy"
       onError={handleError}
     />
@@ -57,8 +52,7 @@ export function InsurerCarousel() {
 
   return (
     <div className="mt-10 relative">
-      {/* Carousel container */}
-      <div className="relative overflow-hidden py-4">
+      <div className="relative overflow-hidden py-6">
         {/* Fade edges */}
         <div className="absolute left-0 top-0 bottom-0 w-24 sm:w-40 bg-gradient-to-r from-[#0a1128] to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-24 sm:w-40 bg-gradient-to-l from-[#0a1128] to-transparent z-10 pointer-events-none" />
@@ -66,10 +60,7 @@ export function InsurerCarousel() {
         {/* Scrolling track */}
         <div className="flex items-center gap-14 sm:gap-20 animate-scroll-logos px-4">
           {items.map((insurer, i) => (
-            <div
-              key={`${insurer.domain}-${i}`}
-              className="flex-shrink-0 flex items-center justify-center"
-            >
+            <div key={`${insurer.domain}-${i}`} className="flex-shrink-0">
               <InsurerLogo name={insurer.name} domain={insurer.domain} />
             </div>
           ))}
