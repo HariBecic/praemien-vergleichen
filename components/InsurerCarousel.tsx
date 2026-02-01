@@ -50,12 +50,14 @@ export function InsurerCarousel() {
   const items = [...CAROUSEL_INSURERS, ...CAROUSEL_INSURERS];
 
   return (
-    <div className="mt-8 relative overflow-hidden">
-      {/* Fade edges - transparent gradient, no visible bar */}
-      <div className="absolute left-0 top-0 bottom-0 w-20 sm:w-32 z-10 pointer-events-none bg-gradient-to-r from-[#050a18] via-[#0a1128]/80 to-transparent" />
-      <div className="absolute right-0 top-0 bottom-0 w-20 sm:w-32 z-10 pointer-events-none bg-gradient-to-l from-[#050a18] via-[#0a1128]/80 to-transparent" />
-
-      {/* Scrolling track */}
+    <div className="mt-8 relative overflow-hidden"
+      style={{
+        /* CSS mask: transparent fade on both sides, no colored background needed */
+        maskImage: "linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent)",
+        WebkitMaskImage: "linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent)",
+      }}
+    >
+      {/* Scrolling track - no background, completely transparent */}
       <div className="flex items-center gap-12 sm:gap-16 animate-scroll-logos">
         {items.map((insurer, i) => (
           <div key={`${insurer.domain}-${i}`} className="flex-shrink-0 flex items-center justify-center h-12">
