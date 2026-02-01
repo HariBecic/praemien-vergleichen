@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+// LeadsHub IDs for praemien-vergleichen.ch
+const CATEGORY_ID = "50c84209-9ede-483d-bc12-59d109933004"; // Krankenkasse
+const SOURCE_ID = "95d5f786-ca0d-4dc0-adab-af72190fdd1f";   // praemien-vergleichen.ch
+
 export async function POST(request: NextRequest) {
   try {
-    // Check env vars
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
-      console.error("Missing Supabase env vars:", { url: !!supabaseUrl, key: !!supabaseKey });
       return NextResponse.json(
-        { error: "Server-Konfigurationsfehler. Bitte kontaktiere den Administrator.", debug: "missing_env" },
+        { error: "Server-Konfigurationsfehler.", debug: "missing_env" },
         { status: 500 }
       );
     }
@@ -29,30 +31,35 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Insert lead
-    const insertData = {
-      first_name: body.name.split(" ")[0] || body.name,
-      last_name: body.name.split(" ").slice(1).join(" ") || "",
-      email: body.email,
-      phone: body.phone,
-      plz: body.plz || "",
-      canton: body.canton || "",
-      birth_year: body.birthYear || "",
-      age_group: body.ageGroup || "",
-      franchise: body.franchise || 0,
-      model: body.model || "",
-      current_insurer: body.currentInsurer || null,
-      source: "praemien-vergleichen.ch",
-      cheapest_insurer: body.cheapestInsurer || null,
-      cheapest_premium: body.cheapestPremium || null,
-      extras: body.extras || [],
-      newsletter: body.newsletter || false,
-      status: "new",
-    };
-
+    // Insert into LeadsHub leads table
     const { data, error } = await supabase
-      .from("website_leads")
-      .insert(insertData)
+      .from("leads")
+      .insert({
+        category_id: CATEGORY_ID,
+        source_id: SOURCE_ID,
+        first_name: body.name.split(" ")[0] || body.name,
+        last_name: body.name.split(" ").slice(1).join(" ") || "",
+        email: body.email,
+        phone: body.phone,
+        plz: body.plz || "",
+        ort: body.ort || "",
+        extra_data: {
+          birth_year: body.birthYear || "",
+          age_group: body.ageGroup || "",
+          franchise: body.franchise || 0,
+          model: body.model || "",
+          current_insurer: body.currentInsurer || "",
+          current_premium: body.currentPremium || "",
+          cheapest_insurer: body.cheapestInsurer || "",
+          cheapest_premium: body.cheapestPremium || 0,
+          extras: body.extras || [],
+          newsletter: body.newsletter || false,
+          calculation_type: body.calculationType || "single",
+          persons_count: body.personsCount || 1,
+          canton: body.canton || "",
+        },
+        status: "new",
+      })
       .select()
       .single();
 
@@ -64,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ─── Meta Conversions API (server-side event tracking) ────────────
+    // ─── Meta Conversions API ────────────────────────────────────────
     if (process.env.META_ACCESS_TOKEN && process.env.META_PIXEL_ID) {
       try {
         const eventData = {
