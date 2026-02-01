@@ -117,6 +117,42 @@ const AGE_LABELS: Record<string, string> = {
   ERW: "Erwachsene/r",
 };
 
+const INSURER_DOMAINS: Record<string, string> = {
+  "Agrisano": "agrisano.ch",
+  "Aquilana": "aquilana.ch",
+  "Assura": "assura.ch",
+  "Atupri": "atupri.ch",
+  "Avenir": "groupemutuel.ch",
+  "Birchmeier": "birchmeier-kk.ch",
+  "CSS": "css.ch",
+  "Concordia": "concordia.ch",
+  "EGK": "egk.ch",
+  "Galenos": "galenos.ch",
+  "Helsana": "helsana.ch",
+  "KPT": "kpt.ch",
+  "Luzerner Hinterland": "luzernerhinderland.ch",
+  "Mutuel": "groupemutuel.ch",
+  "Philos": "groupemutuel.ch",
+  "SLKK": "slkk.ch",
+  "SWICA": "swica.ch",
+  "Sanitas": "sanitas.com",
+  "Steffisburg": "kksteffisburg.ch",
+  "Sumiswalder": "sumiswalder.ch",
+  "Sympany": "sympany.ch",
+  "Visana": "visana.ch",
+  "Wädenswil": "kkw.ch",
+  "rhenusana": "rhenusana.ch",
+  "sana24": "sana24.ch",
+  "vita surselva": "vitasurselva.ch",
+  "ÖKK": "oekk.ch",
+};
+
+function getInsurerLogoUrl(insurerName: string): string | null {
+  const domain = INSURER_DOMAINS[insurerName];
+  if (!domain) return null;
+  return `https://cdn.brandfetch.io/domain/${domain}?c=1idc9vLyOz1`;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1371,17 +1407,38 @@ export function PremiumCalculator() {
                           >
                             {/* Main row */}
                             <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                              <div
-                                className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                                  isFirst
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : i < 3 && sortOrder === "asc"
-                                    ? "bg-[#0f4c5c]/10 text-[#0f4c5c]"
-                                    : "bg-stone-100 text-stone-400"
-                                }`}
-                              >
-                                {i + 1}
-                              </div>
+                              {/* Logo */}
+                              {(() => {
+                                const logoUrl = getInsurerLogoUrl(group.insurerName);
+                                return logoUrl ? (
+                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden bg-white border ${
+                                    isFirst ? "border-emerald-200" : "border-stone-200"
+                                  }`}>
+                                    <img
+                                      src={logoUrl}
+                                      alt={group.insurerName}
+                                      className="w-8 h-8 object-contain"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = "none";
+                                        const parent = target.parentElement;
+                                        if (parent) {
+                                          parent.textContent = group.insurerName.slice(0, 2).toUpperCase();
+                                          parent.className = `w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                                            isFirst ? "bg-emerald-100 text-emerald-700" : "bg-stone-100 text-stone-500"
+                                          }`;
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                                    isFirst ? "bg-emerald-100 text-emerald-700" : "bg-stone-100 text-stone-500"
+                                  }`}>
+                                    {group.insurerName.slice(0, 2).toUpperCase()}
+                                  </div>
+                                );
+                              })()}
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
