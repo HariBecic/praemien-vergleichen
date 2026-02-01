@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --color-primary: #0f4c5c;
@@ -10,57 +12,49 @@
 html { scroll-behavior: smooth; }
 ::selection { background-color: #0f4c5c20; }
 
-/* ── Buttons ── */
-.btn-primary {
-  @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl
-         font-semibold text-white bg-[#0f4c5c] transition-all duration-200
-         shadow-lg shadow-[#0f4c5c]/20 hover:bg-[#1a6b7a]
-         hover:shadow-xl hover:-translate-y-0.5
-         active:translate-y-0 active:shadow-md
-         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f4c5c] focus-visible:ring-offset-2;
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl
+           font-semibold text-white bg-[#0f4c5c] transition-all duration-200
+           shadow-lg hover:bg-[#1a6b7a] hover:shadow-xl hover:-translate-y-0.5
+           active:translate-y-0 active:shadow-md;
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl
+           font-semibold text-white bg-[#e36414] transition-all duration-200
+           shadow-lg hover:bg-[#fb8b24] hover:shadow-xl hover:-translate-y-0.5
+           active:translate-y-0 active:shadow-md;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+
+  .card-elevated {
+    @apply bg-white rounded-2xl shadow-md border border-stone-100;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl bg-white border border-stone-300
+           text-stone-900 placeholder:text-stone-400 transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-[#0f4c5c]/30 focus:border-[#0f4c5c]
+           hover:border-stone-400;
+  }
+
+  .select-field {
+    @apply w-full px-4 py-3 rounded-xl bg-white border border-stone-300
+           text-stone-900 cursor-pointer transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-[#0f4c5c]/30 focus:border-[#0f4c5c]
+           hover:border-stone-400;
+  }
+
+  .savings-badge {
+    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full
+           text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200;
+  }
 }
 
-.btn-accent {
-  @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl
-         font-semibold text-white bg-[#e36414] transition-all duration-200
-         shadow-lg shadow-[#e36414]/20 hover:bg-[#fb8b24]
-         hover:shadow-xl hover:-translate-y-0.5
-         active:translate-y-0 active:shadow-md;
-}
-
-/* ── Cards ── */
-.card {
-  @apply bg-white rounded-2xl border border-stone-200/80 shadow-sm hover:shadow-md transition-shadow duration-200;
-}
-
-.card-elevated {
-  @apply bg-white rounded-2xl shadow-md shadow-stone-900/5 border border-stone-100;
-}
-
-/* ── Form Elements ── */
-.input-field {
-  @apply w-full px-4 py-3 rounded-xl bg-white border border-stone-300
-         text-stone-900 placeholder:text-stone-400 transition-all duration-150
-         focus:outline-none focus:ring-2 focus:ring-[#0f4c5c]/30 focus:border-[#0f4c5c]
-         hover:border-stone-400;
-}
-
-.select-field {
-  @apply w-full px-4 py-3 rounded-xl bg-white border border-stone-300
-         text-stone-900 appearance-none cursor-pointer transition-all duration-150
-         focus:outline-none focus:ring-2 focus:ring-[#0f4c5c]/30 focus:border-[#0f4c5c]
-         hover:border-stone-400 pr-10;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2378716c' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-}
-
-.savings-badge {
-  @apply inline-flex items-center gap-1 px-3 py-1 rounded-full
-         text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200;
-}
-
-/* ── Animations ── */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
