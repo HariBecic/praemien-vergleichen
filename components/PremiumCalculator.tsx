@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -35,16 +35,18 @@ interface FormState {
   extras: string[];
 }
 
-interface PremiumEntry {
+interface PlzEntry {
+  c: string; // canton
   r: number; // region
-  a: string; // age group (KIN/JUG/ERW)
-  f: number; // franchise
-  u: number; // with accident (1/0)
-  i: string; // insurer nr
-  n: string; // insurer name
-  t: string; // tariff name
-  m: string; // model (standard/hausarzt/hmo/telmed/other)
-  p: number; // monthly premium
+  o: string; // ort
+}
+
+interface PremiumRawEntry {
+  id: number;
+  n: string;  // insurer name
+  t: string;  // tariff type (standard/hausarzt/hmo/telmed)
+  tn: string; // tariff name
+  p: number;  // monthly premium
 }
 
 interface Result {
@@ -57,13 +59,19 @@ interface Result {
   savings: number;
 }
 
+// Canton premium data: { "1": { "ERW-OHN-2500": [...entries] } }
+type CantonData = Record<string, Record<string, PremiumRawEntry[]>>;
+
+// PLZ data: { "8001": [{ c, r, o }] }
+type PlzData = Record<string, PlzEntry[]>;
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const FRANCHISES_ADULT = [300, 500, 1000, 1500, 2000, 2500];
 const FRANCHISES_CHILD = [0, 100, 200, 300, 400, 500, 600];
 
 const CURRENT_INSURERS = [
-  "CSS", "Sanitas", "Swica", "Helsana", "Visana", "Concordia",
+  "CSS", "Sanitas", "SWICA", "Helsana", "Visana", "Concordia",
   "Assura", "Groupe Mutuel", "KPT", "Atupri", "ÖKK", "Sympany", "Andere",
 ];
 
@@ -83,89 +91,9 @@ const MODEL_LABELS: Record<string, string> = {
   hausarzt: "Hausarzt",
   hmo: "HMO",
   telmed: "Telmed",
-  other: "Andere",
 };
 
-// ─── Demo Data Generator (replace with real BAG data) ────────────────────────
-
-function getDemoResults(
-  canton: string,
-  region: number,
-  ageGroup: string,
-  franchise: number,
-  withAccident: boolean,
-  modelFilter: string
-): Result[] {
-  const insurers = [
-    { nr: "572", name: "Assura" },
-    { nr: "215", name: "CSS" },
-    { nr: "577", name: "Helsana" },
-    { nr: "585", name: "Swica" },
-    { nr: "534", name: "Groupe Mutuel" },
-    { nr: "326", name: "Concordia" },
-    { nr: "568", name: "Visana" },
-    { nr: "582", name: "Sanitas" },
-    { nr: "602", name: "KPT" },
-    { nr: "597", name: "Atupri" },
-    { nr: "578", name: "ÖKK" },
-    { nr: "526", name: "EGK" },
-    { nr: "521", name: "Sympany" },
-    { nr: "581", name: "Aquilana" },
-    { nr: "590", name: "Agrisano" },
-  ];
-
-  const models = modelFilter === "all"
-    ? ["standard", "hausarzt", "hmo", "telmed"]
-    : [modelFilter];
-
-  const basePremium =
-    ageGroup === "KIN" ? 120 : ageGroup === "JUG" ? 280 : 380;
-  const cantonFactor = (canton.charCodeAt(0) % 10) / 10 + 0.8;
-  const franchiseDiscount = (franchise - 300) * 0.08;
-  const accidentBonus = withAccident ? 0 : -15;
-
-  const results: Result[] = [];
-
-  for (const ins of insurers) {
-    for (const model of models) {
-      const modelDiscount =
-        model === "standard" ? 0 :
-        model === "hausarzt" ? 25 :
-        model === "hmo" ? 40 : 30;
-
-      const v = (parseInt(ins.nr) * 7 + canton.charCodeAt(0)) % 60 - 30;
-      const monthly = Math.max(
-        Math.round(
-          (basePremium * cantonFactor - franchiseDiscount - modelDiscount + accidentBonus + v) * 100
-        ) / 100,
-        80
-      );
-
-      results.push({
-        insurer: ins.name,
-        insurerNr: ins.nr,
-        model,
-        modelName: `${ins.name} ${MODEL_LABELS[model] || model}`,
-        monthlyPremium: monthly,
-        yearlyPremium: monthly * 12,
-        savings: 0,
-      });
-    }
-  }
-
-  results.sort((a, b) => a.monthlyPremium - b.monthlyPremium);
-
-  if (results.length > 0) {
-    const max = results[results.length - 1].monthlyPremium;
-    results.forEach((r) => {
-      r.savings = Math.round((max - r.monthlyPremium) * 12);
-    });
-  }
-
-  return results;
-}
-
-// ─── Helper: Get age group from birthdate ────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getAgeGroup(birthdate: string): "KIN" | "JUG" | "ERW" {
   if (!birthdate) return "ERW";
@@ -196,6 +124,45 @@ function createPerson(id?: string): Person {
   };
 }
 
+function buildLookupKey(
+  ageGroup: string,
+  withAccident: boolean,
+  franchise: number
+): string {
+  return `${ageGroup}-${withAccident ? "MIT" : "OHN"}-${franchise}`;
+}
+
+function mapToResults(
+  entries: PremiumRawEntry[],
+  modelFilter: string
+): Result[] {
+  let filtered = entries;
+  if (modelFilter !== "all") {
+    filtered = entries.filter((e) => e.t === modelFilter);
+  }
+
+  const results: Result[] = filtered.map((e) => ({
+    insurer: e.n,
+    insurerNr: String(e.id),
+    model: e.t,
+    modelName: e.tn,
+    monthlyPremium: e.p,
+    yearlyPremium: Math.round(e.p * 12 * 100) / 100,
+    savings: 0,
+  }));
+
+  results.sort((a, b) => a.monthlyPremium - b.monthlyPremium);
+
+  if (results.length > 0) {
+    const max = results[results.length - 1].monthlyPremium;
+    results.forEach((r) => {
+      r.savings = Math.round((max - r.monthlyPremium) * 12);
+    });
+  }
+
+  return results;
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function PremiumCalculator() {
@@ -213,13 +180,25 @@ export function PremiumCalculator() {
     extras: [],
   });
 
+  // Data loading
+  const plzDataRef = useRef<PlzData | null>(null);
+  const premiumCacheRef = useRef<Record<string, CantonData>>({});
+  const [plzLoading, setPlzLoading] = useState(false);
+  const [premiumLoading, setPremiumLoading] = useState(false);
+
+  // PLZ lookup state
+  const [plzEntries, setPlzEntries] = useState<PlzEntry[]>([]);
+  const [plzError, setPlzError] = useState("");
+  const [showPlzSelect, setShowPlzSelect] = useState(false);
+
   // Results state
-  const [results, setResults] = useState<Result[]>([]);
+  const [allResults, setAllResults] = useState<Result[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [modelFilter, setModelFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [leadSubmitted, setLeadSubmitted] = useState(false);
+  const [rawEntries, setRawEntries] = useState<PremiumRawEntry[]>([]);
 
   // Lead form
   const [leadName, setLeadName] = useState("");
@@ -227,80 +206,194 @@ export function PremiumCalculator() {
   const [leadPhone, setLeadPhone] = useState("");
   const [leadConsent, setLeadConsent] = useState(false);
   const [leadNewsletter, setLeadNewsletter] = useState(false);
+  const [leadLoading, setLeadLoading] = useState(false);
 
-  // ─── PLZ Lookup (simplified – integrate real regions.json) ──────────────
-  const handlePlzChange = useCallback((plz: string) => {
-    setFormState((prev) => ({ ...prev, plz }));
-
-    // TODO: Load from data/regions.json
-    // For now, derive canton from PLZ (simplified mapping)
-    if (plz.length === 4) {
-      const num = parseInt(plz);
-      let canton = "";
-      let ort = "";
-      // Simplified PLZ → Canton mapping (replace with real regions.json lookup)
-      if (num >= 8000 && num <= 8999) { canton = "ZH"; ort = "Zürich"; }
-      else if (num >= 3000 && num <= 3999) { canton = "BE"; ort = "Bern"; }
-      else if (num >= 6000 && num <= 6099) { canton = "LU"; ort = "Luzern"; }
-      else if (num >= 4000 && num <= 4099) { canton = "BS"; ort = "Basel"; }
-      else if (num >= 9000 && num <= 9499) { canton = "SG"; ort = "St. Gallen"; }
-      else if (num >= 5000 && num <= 5999) { canton = "AG"; ort = "Aargau"; }
-      else if (num >= 6300 && num <= 6399) { canton = "ZG"; ort = "Zug"; }
-      else if (num >= 1000 && num <= 1999) { canton = "VD"; ort = "Waadt"; }
-      else if (num >= 1200 && num <= 1299) { canton = "GE"; ort = "Genf"; }
-      else if (num >= 6500 && num <= 6999) { canton = "TI"; ort = "Tessin"; }
-      else if (num >= 7000 && num <= 7999) { canton = "GR"; ort = "Graubünden"; }
-      else if (num >= 2000 && num <= 2999) { canton = "NE"; ort = "Neuenburg"; }
-      else { canton = "ZH"; ort = "Region"; }
-
-      setFormState((prev) => ({ ...prev, canton, ort, region: 0 }));
+  // ─── Load PLZ Data ──────────────────────────────────────────────────────
+  const loadPlzData = useCallback(async (): Promise<PlzData> => {
+    if (plzDataRef.current) return plzDataRef.current;
+    setPlzLoading(true);
+    try {
+      const res = await fetch("/data/plz-regions.json");
+      if (!res.ok) throw new Error("PLZ data not found");
+      const data: PlzData = await res.json();
+      plzDataRef.current = data;
+      return data;
+    } catch (err) {
+      console.error("Failed to load PLZ data:", err);
+      throw err;
+    } finally {
+      setPlzLoading(false);
     }
   }, []);
 
+  // ─── Load Premium Data for Canton ───────────────────────────────────────
+  const loadCantonPremiums = useCallback(
+    async (canton: string): Promise<CantonData> => {
+      if (premiumCacheRef.current[canton]) {
+        return premiumCacheRef.current[canton];
+      }
+      setPremiumLoading(true);
+      try {
+        const res = await fetch(`/data/premiums/${canton}.json`);
+        if (!res.ok) throw new Error(`Premium data for ${canton} not found`);
+        const data: CantonData = await res.json();
+        premiumCacheRef.current[canton] = data;
+        return data;
+      } catch (err) {
+        console.error(`Failed to load premiums for ${canton}:`, err);
+        throw err;
+      } finally {
+        setPremiumLoading(false);
+      }
+    },
+    []
+  );
+
+  // ─── PLZ Lookup ─────────────────────────────────────────────────────────
+  const handlePlzChange = useCallback(
+    async (plz: string) => {
+      setFormState((prev) => ({ ...prev, plz }));
+      setPlzError("");
+      setShowPlzSelect(false);
+
+      if (plz.length < 4) {
+        setFormState((prev) => ({ ...prev, plz, canton: "", ort: "", region: 0 }));
+        setPlzEntries([]);
+        return;
+      }
+
+      if (plz.length === 4) {
+        try {
+          const data = await loadPlzData();
+          const entries = data[plz];
+
+          if (!entries || entries.length === 0) {
+            setPlzError("PLZ nicht gefunden. Bitte prüfe deine Eingabe.");
+            setFormState((prev) => ({ ...prev, canton: "", ort: "", region: 0 }));
+            setPlzEntries([]);
+            return;
+          }
+
+          setPlzEntries(entries);
+
+          if (entries.length === 1) {
+            setFormState((prev) => ({
+              ...prev,
+              canton: entries[0].c,
+              ort: entries[0].o,
+              region: entries[0].r,
+            }));
+          } else {
+            setFormState((prev) => ({
+              ...prev,
+              canton: entries[0].c,
+              ort: entries[0].o,
+              region: entries[0].r,
+            }));
+            setShowPlzSelect(true);
+          }
+        } catch {
+          setPlzError("Fehler beim Laden der PLZ-Daten.");
+        }
+      }
+    },
+    [loadPlzData]
+  );
+
+  const handlePlzEntrySelect = useCallback(
+    (index: number) => {
+      const entry = plzEntries[index];
+      if (entry) {
+        setFormState((prev) => ({
+          ...prev,
+          canton: entry.c,
+          ort: entry.o,
+          region: entry.r,
+        }));
+      }
+    },
+    [plzEntries]
+  );
+
   // ─── Calculate Results ─────────────────────────────────────────────────
-  const calculateResults = useCallback(() => {
+  const calculateResults = useCallback(async () => {
     const person = formState.persons[0];
     const ageGroup = getAgeGroup(person.birthdate);
+    const key = buildLookupKey(ageGroup, person.withAccident, person.franchise);
 
-    const res = getDemoResults(
-      formState.canton,
-      formState.region,
-      ageGroup,
-      person.franchise,
-      person.withAccident,
-      modelFilter
-    );
-    setResults(res);
-    setShowResults(true);
-  }, [formState, modelFilter]);
+    try {
+      const cantonData = await loadCantonPremiums(formState.canton);
+      const regionStr = String(formState.region);
+      const regionData = cantonData[regionStr];
 
-  // ─── Sorted/filtered results ───────────────────────────────────────────
+      if (!regionData) {
+        setAllResults([]);
+        setRawEntries([]);
+        setShowResults(true);
+        return;
+      }
+
+      const entries = regionData[key];
+
+      if (!entries || entries.length === 0) {
+        setAllResults([]);
+        setRawEntries([]);
+        setShowResults(true);
+        return;
+      }
+
+      setRawEntries(entries);
+      const results = mapToResults(entries, modelFilter);
+      setAllResults(results);
+      setShowResults(true);
+    } catch {
+      setAllResults([]);
+      setRawEntries([]);
+      setShowResults(true);
+    }
+  }, [formState, modelFilter, loadCantonPremiums]);
+
+  // ─── Display results (re-filter when model/sort changes) ──────────────
   const displayResults = useMemo(() => {
-    let filtered = [...results];
-    if (modelFilter !== "all") {
-      filtered = filtered.filter((r) => r.model === modelFilter);
-    }
-    if (sortOrder === "desc") {
-      filtered.reverse();
-    }
-    return filtered;
-  }, [results, modelFilter, sortOrder]);
+    let results = modelFilter === "all"
+      ? [...allResults]
+      : mapToResults(rawEntries, modelFilter);
 
-  const maxSavings = results.length > 0
-    ? results[0].savings
-    : 0;
+    if (sortOrder === "desc") {
+      results.reverse();
+    }
+    return results;
+  }, [allResults, rawEntries, modelFilter, sortOrder]);
+
+  const maxSavings = useMemo(() => {
+    if (displayResults.length === 0) return 0;
+    const sorted = [...displayResults].sort((a, b) => a.monthlyPremium - b.monthlyPremium);
+    return sorted[0].savings;
+  }, [displayResults]);
+
+  // ─── Handle model filter change ───────────────────────────────────────
+  const handleModelFilterChange = useCallback(
+    (newFilter: string) => {
+      setModelFilter(newFilter);
+      if (rawEntries.length > 0) {
+        const results = mapToResults(rawEntries, newFilter);
+        setAllResults(results);
+      }
+    },
+    [rawEntries]
+  );
 
   // ─── Step Validation ───────────────────────────────────────────────────
   const canProceed = (currentStep: number): boolean => {
     switch (currentStep) {
       case 1:
-        return formState.plz.length === 4 && formState.canton !== "";
+        return formState.plz.length === 4 && formState.canton !== "" && !plzError;
       case 2:
         return formState.persons.every((p) => p.birthdate !== "");
       case 3:
-        return true; // optional
+        return true;
       case 4:
-        return true; // optional
+        return true;
       default:
         return false;
     }
@@ -310,9 +403,7 @@ export function PremiumCalculator() {
   const updatePerson = (id: string, updates: Partial<Person>) => {
     setFormState((prev) => ({
       ...prev,
-      persons: prev.persons.map((p) =>
-        p.id === id ? { ...p, ...updates } : p
-      ),
+      persons: prev.persons.map((p) => (p.id === id ? { ...p, ...updates } : p)),
     }));
   };
 
@@ -331,15 +422,16 @@ export function PremiumCalculator() {
   };
 
   // ─── Lead Submit ───────────────────────────────────────────────────────
-  const [leadLoading, setLeadLoading] = useState(false);
-
   const handleLeadSubmit = async () => {
     if (!leadConsent || !leadName || !leadEmail || !leadPhone) return;
     setLeadLoading(true);
 
     try {
       const person = formState.persons[0];
-      const cheapest = results.length > 0 ? results[0] : null;
+      const cheapest =
+        displayResults.length > 0
+          ? [...displayResults].sort((a, b) => a.monthlyPremium - b.monthlyPremium)[0]
+          : null;
 
       const res = await fetch("/api/leads", {
         method: "POST",
@@ -368,7 +460,6 @@ export function PremiumCalculator() {
 
       if (res.ok) {
         setLeadSubmitted(true);
-        // Meta Pixel client-side event
         if (typeof window !== "undefined" && (window as any).fbq) {
           (window as any).fbq("track", "Lead");
         }
@@ -384,7 +475,6 @@ export function PremiumCalculator() {
 
   // ─── Render ────────────────────────────────────────────────────────────
 
-  // Step indicator
   const StepIndicator = () => (
     <div className="flex items-center justify-center gap-2 mb-8">
       {[
@@ -412,15 +502,17 @@ export function PremiumCalculator() {
               s.n
             )}
           </button>
-          <span className={`hidden sm:inline ml-2 text-xs font-medium ${
-            step === s.n ? "text-[#0f4c5c]" : "text-stone-400"
-          }`}>
+          <span
+            className={`hidden sm:inline ml-2 text-xs font-medium ${
+              step === s.n ? "text-[#0f4c5c]" : "text-stone-400"
+            }`}
+          >
             {s.label}
           </span>
           {i < 3 && (
-            <div className={`w-8 sm:w-12 h-0.5 mx-2 ${
-              step > s.n ? "bg-emerald-300" : "bg-stone-200"
-            }`} />
+            <div
+              className={`w-8 sm:w-12 h-0.5 mx-2 ${step > s.n ? "bg-emerald-300" : "bg-stone-200"}`}
+            />
           )}
         </div>
       ))}
@@ -431,13 +523,38 @@ export function PremiumCalculator() {
   // RESULTS VIEW
   // ───────────────────────────────────────────────────────────────────────
   if (showResults) {
+    const person = formState.persons[0];
+    const ageGroup = person ? getAgeGroup(person.birthdate) : "ERW";
+    const ageLabel =
+      ageGroup === "KIN"
+        ? "Kind"
+        : ageGroup === "JUG"
+        ? "Junger Erwachsener"
+        : "Erwachsene/r";
+
     return (
       <div className="animate-fade-in">
+        {premiumLoading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-[#0f4c5c]/20 border-t-[#0f4c5c] rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-stone-600 font-medium">Prämien werden geladen...</p>
+              <p className="text-stone-400 text-sm mt-1">Offizielle BAG-Daten 2026</p>
+            </div>
+          </div>
+        )}
+
         <h2 className="text-2xl font-bold text-center mb-2">
-          Vergleiche deine Ergebnisse
+          Dein Prämienvergleich 2026
         </h2>
-        <p className="text-center text-stone-500 mb-6">
-          {formState.ort} ({formState.canton}) • {formState.persons.length} Person{formState.persons.length > 1 ? "en" : ""}
+        <p className="text-center text-stone-500 mb-1">
+          {formState.plz} {formState.ort} ({formState.canton}) • Region{" "}
+          {formState.region} • {ageLabel} • Franchise CHF{" "}
+          {person?.franchise?.toLocaleString("de-CH")}
+        </p>
+        <p className="text-center text-xs text-stone-400 mb-6">
+          Quelle: Bundesamt für Gesundheit (BAG) •{" "}
+          {person?.withAccident ? "Mit" : "Ohne"} Unfalldeckung
         </p>
 
         {/* Savings highlight */}
@@ -449,116 +566,128 @@ export function PremiumCalculator() {
             <div className="text-3xl sm:text-4xl font-bold text-emerald-800 my-1">
               bis CHF {maxSavings.toLocaleString("de-CH")}
             </div>
+            <div className="text-xs text-emerald-600 mt-1">
+              {displayResults.length} Tarife von{" "}
+              {new Set(displayResults.map((r) => r.insurer)).size} Versicherern
+            </div>
+          </div>
+        )}
+
+        {displayResults.length === 0 && !premiumLoading && (
+          <div className="text-center py-10">
+            <p className="text-stone-500 text-lg">Keine Ergebnisse gefunden.</p>
+            <p className="text-stone-400 text-sm mt-2">
+              Bitte prüfe deine Angaben oder versuche einen anderen Filter.
+            </p>
           </div>
         )}
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <select
-            value={modelFilter}
-            onChange={(e) => {
-              setModelFilter(e.target.value);
-              // Recalculate with new filter
-              const person = formState.persons[0];
-              const ageGroup = getAgeGroup(person.birthdate);
-              const res = getDemoResults(
-                formState.canton, formState.region, ageGroup,
-                person.franchise, person.withAccident, e.target.value
-              );
-              setResults(res);
-            }}
-            className="select-field !w-auto"
-          >
-            <option value="all">Alle Modelle</option>
-            <option value="standard">Standard</option>
-            <option value="hausarzt">Hausarzt</option>
-            <option value="hmo">HMO</option>
-            <option value="telmed">Telmed</option>
-          </select>
+        {displayResults.length > 0 && (
+          <>
+            <div className="flex flex-wrap gap-3 mb-6">
+              <select
+                value={modelFilter}
+                onChange={(e) => handleModelFilterChange(e.target.value)}
+                className="select-field !w-auto"
+              >
+                <option value="all">Alle Modelle</option>
+                <option value="standard">Standard</option>
+                <option value="hausarzt">Hausarzt</option>
+                <option value="hmo">HMO</option>
+                <option value="telmed">Telmed</option>
+              </select>
 
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-            className="select-field !w-auto"
-          >
-            <option value="asc">Niedrig bis hoch</option>
-            <option value="desc">Hoch bis niedrig</option>
-          </select>
-
-          <button
-            onClick={() => { setShowResults(false); setStep(1); }}
-            className="ml-auto text-sm text-[#0f4c5c] font-medium hover:underline"
-          >
-            Angaben bearbeiten
-          </button>
-        </div>
-
-        {/* Result list */}
-        <div className="space-y-2">
-          {displayResults.slice(0, 15).map((result, i) => (
-            <div
-              key={`${result.insurerNr}-${result.model}`}
-              className={`card p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 ${
-                i === 0 && sortOrder === "asc"
-                  ? "ring-2 ring-emerald-400 bg-emerald-50/30"
-                  : ""
-              }`}
-              style={{ animation: `slideUp 0.3s ease-out ${i * 0.03}s both` }}
-            >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                i === 0 && sortOrder === "asc"
-                  ? "bg-emerald-100 text-emerald-700"
-                  : i < 3
-                  ? "bg-[#0f4c5c]/10 text-[#0f4c5c]"
-                  : "bg-stone-100 text-stone-400"
-              }`}>
-                {i + 1}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold">{result.insurer}</span>
-                  {i === 0 && sortOrder === "asc" && (
-                    <span className="savings-badge text-xs">✓ Günstigste</span>
-                  )}
-                </div>
-                <div className="text-sm text-stone-500">
-                  {MODEL_LABELS[result.model] || result.model}
-                  {result.modelName && ` – ${result.modelName}`}
-                </div>
-              </div>
-
-              {result.savings > 0 && sortOrder === "asc" && (
-                <div className="text-right hidden sm:block">
-                  <div className="text-xs text-emerald-600 font-medium">Ersparnis/Jahr</div>
-                  <div className="text-sm font-semibold text-emerald-700">
-                    CHF {result.savings.toLocaleString("de-CH")}
-                  </div>
-                </div>
-              )}
-
-              <div className="text-right">
-                <div className="text-xl font-bold">
-                  <span className="text-sm font-normal text-stone-400">CHF </span>
-                  {result.monthlyPremium.toFixed(2)}
-                </div>
-                <div className="text-xs text-stone-400">pro Monat</div>
-              </div>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+                className="select-field !w-auto"
+              >
+                <option value="asc">Günstigste zuerst</option>
+                <option value="desc">Teuerste zuerst</option>
+              </select>
 
               <button
-                onClick={() => setShowLeadModal(true)}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-[#e36414] text-white hover:bg-[#fb8b24] transition-colors flex-shrink-0"
+                onClick={() => {
+                  setShowResults(false);
+                  setStep(1);
+                }}
+                className="ml-auto text-sm text-[#0f4c5c] font-medium hover:underline"
               >
-                Offerte
+                Angaben bearbeiten
               </button>
             </div>
-          ))}
-        </div>
 
-        {displayResults.length > 15 && (
-          <p className="text-center text-stone-400 text-sm mt-4">
-            + {displayResults.length - 15} weitere Ergebnisse
-          </p>
+            {/* Result list */}
+            <div className="space-y-2">
+              {displayResults.slice(0, 20).map((result, i) => (
+                <div
+                  key={`${result.insurerNr}-${result.model}-${result.modelName}`}
+                  className={`card p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 ${
+                    i === 0 && sortOrder === "asc"
+                      ? "ring-2 ring-emerald-400 bg-emerald-50/30"
+                      : ""
+                  }`}
+                  style={{ animation: `slideUp 0.3s ease-out ${i * 0.03}s both` }}
+                >
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                      i === 0 && sortOrder === "asc"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : i < 3
+                        ? "bg-[#0f4c5c]/10 text-[#0f4c5c]"
+                        : "bg-stone-100 text-stone-400"
+                    }`}
+                  >
+                    {i + 1}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold">{result.insurer}</span>
+                      {i === 0 && sortOrder === "asc" && (
+                        <span className="savings-badge text-xs">✓ Günstigste</span>
+                      )}
+                    </div>
+                    <div className="text-sm text-stone-500">
+                      {MODEL_LABELS[result.model] || result.model}
+                      {result.modelName && ` – ${result.modelName}`}
+                    </div>
+                  </div>
+
+                  {result.savings > 0 && sortOrder === "asc" && (
+                    <div className="text-right hidden sm:block">
+                      <div className="text-xs text-emerald-600 font-medium">Ersparnis/Jahr</div>
+                      <div className="text-sm font-semibold text-emerald-700">
+                        CHF {result.savings.toLocaleString("de-CH")}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="text-right">
+                    <div className="text-xl font-bold">
+                      <span className="text-sm font-normal text-stone-400">CHF </span>
+                      {result.monthlyPremium.toFixed(2)}
+                    </div>
+                    <div className="text-xs text-stone-400">pro Monat</div>
+                  </div>
+
+                  <button
+                    onClick={() => setShowLeadModal(true)}
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-[#e36414] text-white hover:bg-[#fb8b24] transition-colors flex-shrink-0"
+                  >
+                    Offerte
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {displayResults.length > 20 && (
+              <p className="text-center text-stone-400 text-sm mt-4">
+                + {displayResults.length - 20} weitere Tarife verfügbar
+              </p>
+            )}
+          </>
         )}
 
         {/* Lead Modal */}
@@ -622,9 +751,8 @@ export function PremiumCalculator() {
                         className="mt-0.5 w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
                       />
                       <span className="text-xs text-stone-500 leading-relaxed">
-                        Ich stimme zu, dass meine personenbezogenen Daten verarbeitet
-                        werden, um eine Offerte zu erhalten. Meine Daten werden
-                        vertraulich behandelt.{" "}
+                        Ich stimme zu, dass meine personenbezogenen Daten verarbeitet werden, um eine
+                        Offerte zu erhalten. Meine Daten werden vertraulich behandelt.{" "}
                         <a href="/datenschutz" className="text-[#0f4c5c] underline">
                           Datenschutzerklärung
                         </a>
@@ -640,8 +768,8 @@ export function PremiumCalculator() {
                         className="mt-0.5 w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
                       />
                       <span className="text-xs text-stone-500 leading-relaxed">
-                        Ja, ich möchte den Newsletter mit Spartipps, Fristen und
-                        einfachen Erklärungen abonnieren.
+                        Ja, ich möchte den Newsletter mit Spartipps, Fristen und einfachen
+                        Erklärungen abonnieren.
                       </span>
                     </label>
 
@@ -666,7 +794,8 @@ export function PremiumCalculator() {
                     Wir haben deine Anfrage erhalten und melden uns in Kürze bei dir.
                   </p>
                   <p className="text-stone-400 text-xs mt-3">
-                    Bei Fragen erreichst du uns unter:<br />
+                    Bei Fragen erreichst du uns unter:
+                    <br />
                     <strong className="text-stone-600">info@praemien-vergleichen.ch</strong>
                   </p>
                 </div>
@@ -746,17 +875,55 @@ export function PremiumCalculator() {
                 maxLength={4}
                 pattern="[0-9]*"
                 inputMode="numeric"
-                placeholder="PLZ / Ort"
+                placeholder="PLZ eingeben"
                 value={formState.plz}
                 onChange={(e) => handlePlzChange(e.target.value.replace(/\D/g, ""))}
-                className="input-field text-lg"
+                className={`input-field text-lg ${plzError ? "!border-red-400" : ""}`}
               />
-              {formState.ort && (
+              {plzLoading && (
+                <span className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-stone-300 border-t-[#0f4c5c] rounded-full animate-spin" />
+                </span>
+              )}
+              {!plzLoading && formState.ort && (
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-stone-400">
                   {formState.ort} ({formState.canton})
                 </span>
               )}
             </div>
+
+            {plzError && <p className="text-red-500 text-sm mt-2">{plzError}</p>}
+
+            {/* Multi-region selector */}
+            {showPlzSelect && plzEntries.length > 1 && (
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                  Deine PLZ umfasst mehrere Gemeinden. Bitte wähle:
+                </label>
+                <select
+                  value={`${formState.canton}-${formState.region}-${formState.ort}`}
+                  onChange={(e) => {
+                    const idx = plzEntries.findIndex(
+                      (entry) => `${entry.c}-${entry.r}-${entry.o}` === e.target.value
+                    );
+                    if (idx >= 0) handlePlzEntrySelect(idx);
+                  }}
+                  className="select-field"
+                >
+                  {plzEntries.map((entry, idx) => (
+                    <option key={idx} value={`${entry.c}-${entry.r}-${entry.o}`}>
+                      {entry.o} – Kanton {entry.c}, Region {entry.r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {formState.canton && !showPlzSelect && formState.plz.length === 4 && (
+              <p className="text-xs text-stone-400 mt-2">
+                Prämienregion: {formState.canton}-{formState.region}
+              </p>
+            )}
           </div>
 
           {/* Next */}
@@ -775,9 +942,7 @@ export function PremiumCalculator() {
       {/* ── STEP 2: Persönliche Angaben ── */}
       {step === 2 && (
         <div className="animate-fade-in">
-          <h2 className="text-xl font-bold text-center mb-6">
-            Persönliche Angaben
-          </h2>
+          <h2 className="text-xl font-bold text-center mb-6">Persönliche Angaben</h2>
 
           <div className="space-y-6">
             {formState.persons.map((person, idx) => {
@@ -787,9 +952,7 @@ export function PremiumCalculator() {
               return (
                 <div key={person.id} className="p-4 rounded-xl bg-stone-50 border border-stone-200">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-stone-700">
-                      Person {idx + 1}
-                    </h3>
+                    <h3 className="font-semibold text-stone-700">Person {idx + 1}</h3>
                     {idx > 0 && (
                       <button
                         onClick={() => removePerson(person.id)}
@@ -823,23 +986,17 @@ export function PremiumCalculator() {
                       type="text"
                       placeholder="Vor- und Nachname"
                       value={person.name}
-                      onChange={(e) =>
-                        updatePerson(person.id, { name: e.target.value })
-                      }
+                      onChange={(e) => updatePerson(person.id, { name: e.target.value })}
                       className="input-field"
                     />
 
                     {/* Birthdate */}
                     <div>
-                      <label className="block text-xs text-stone-500 mb-1">
-                        Geburtsdatum *
-                      </label>
+                      <label className="block text-xs text-stone-500 mb-1">Geburtsdatum *</label>
                       <input
                         type="date"
                         value={person.birthdate}
-                        onChange={(e) =>
-                          updatePerson(person.id, { birthdate: e.target.value })
-                        }
+                        onChange={(e) => updatePerson(person.id, { birthdate: e.target.value })}
                         className="input-field"
                         required
                       />
@@ -847,15 +1004,11 @@ export function PremiumCalculator() {
 
                     {/* Franchise */}
                     <div>
-                      <label className="block text-xs text-stone-500 mb-1">
-                        Franchise *
-                      </label>
+                      <label className="block text-xs text-stone-500 mb-1">Franchise *</label>
                       <select
                         value={person.franchise}
                         onChange={(e) =>
-                          updatePerson(person.id, {
-                            franchise: parseInt(e.target.value),
-                          })
+                          updatePerson(person.id, { franchise: parseInt(e.target.value) })
                         }
                         className="select-field"
                       >
@@ -876,9 +1029,7 @@ export function PremiumCalculator() {
                         type="checkbox"
                         checked={person.withAccident}
                         onChange={(e) =>
-                          updatePerson(person.id, {
-                            withAccident: e.target.checked,
-                          })
+                          updatePerson(person.id, { withAccident: e.target.checked })
                         }
                         className="w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
                       />
@@ -890,9 +1041,7 @@ export function PremiumCalculator() {
                         type="checkbox"
                         checked={person.isNewToSwitzerland}
                         onChange={(e) =>
-                          updatePerson(person.id, {
-                            isNewToSwitzerland: e.target.checked,
-                          })
+                          updatePerson(person.id, { isNewToSwitzerland: e.target.checked })
                         }
                         className="w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
                       />
@@ -902,15 +1051,11 @@ export function PremiumCalculator() {
 
                   {person.isNewToSwitzerland && (
                     <div className="mt-3">
-                      <label className="block text-xs text-stone-500 mb-1">
-                        Einreisedatum
-                      </label>
+                      <label className="block text-xs text-stone-500 mb-1">Einreisedatum</label>
                       <input
                         type="date"
                         value={person.entryDate}
-                        onChange={(e) =>
-                          updatePerson(person.id, { entryDate: e.target.value })
-                        }
+                        onChange={(e) => updatePerson(person.id, { entryDate: e.target.value })}
                         className="input-field max-w-xs"
                       />
                     </div>
@@ -968,10 +1113,7 @@ export function PremiumCalculator() {
               <select
                 value={formState.currentInsurer}
                 onChange={(e) =>
-                  setFormState((prev) => ({
-                    ...prev,
-                    currentInsurer: e.target.value,
-                  }))
+                  setFormState((prev) => ({ ...prev, currentInsurer: e.target.value }))
                 }
                 className="select-field"
               >
@@ -994,10 +1136,7 @@ export function PremiumCalculator() {
                   placeholder="z.B. 450"
                   value={formState.currentPremium}
                   onChange={(e) =>
-                    setFormState((prev) => ({
-                      ...prev,
-                      currentPremium: e.target.value,
-                    }))
+                    setFormState((prev) => ({ ...prev, currentPremium: e.target.value }))
                   }
                   className="input-field"
                 />
@@ -1020,10 +1159,7 @@ export function PremiumCalculator() {
                   <button
                     key={pref.value}
                     onClick={() =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        preference: pref.value,
-                      }))
+                      setFormState((prev) => ({ ...prev, preference: pref.value }))
                     }
                     className={`p-3 rounded-xl text-center text-sm font-medium border-2 transition-all ${
                       formState.preference === pref.value
@@ -1047,11 +1183,13 @@ export function PremiumCalculator() {
               Zurück
             </button>
             <button
-              onClick={() => {
-                calculateResults();
-              }}
-              className="btn-accent px-8 py-3 rounded-xl"
+              onClick={calculateResults}
+              disabled={premiumLoading}
+              className="btn-accent px-8 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
             >
+              {premiumLoading && (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              )}
               Ergebnis anzeigen
             </button>
           </div>
@@ -1061,9 +1199,7 @@ export function PremiumCalculator() {
       {/* ── STEP 4: Zusatzversicherung ── */}
       {step === 4 && (
         <div className="animate-fade-in">
-          <h2 className="text-xl font-bold text-center mb-2">
-            Wähle, was zählt
-          </h2>
+          <h2 className="text-xl font-bold text-center mb-2">Wähle, was zählt</h2>
           <p className="text-center text-stone-500 text-sm mb-6">
             Welche Zusatzleistungen sind dir wichtig?
           </p>
@@ -1101,7 +1237,8 @@ export function PremiumCalculator() {
             </button>
             <button
               onClick={calculateResults}
-              className="btn-accent px-8 py-3 rounded-xl"
+              disabled={premiumLoading}
+              className="btn-accent px-8 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Jetzt vergleichen
             </button>
