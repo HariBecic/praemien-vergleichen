@@ -427,6 +427,39 @@ export function PremiumCalculator() {
     }
   }, [step]);
 
+  // Auto-advance Step 2 → 3 when all persons have required fields
+  const step2AutoAdvancedRef = useRef(false);
+  const step2WasEditingRef = useRef(false);
+  const prevStepRef = useRef(step);
+  useEffect(() => {
+    // Track if user explicitly went back to step 2 (editing)
+    if (prevStepRef.current > 2 && step === 2) {
+      step2WasEditingRef.current = true;
+    }
+    if (step !== 2) {
+      step2AutoAdvancedRef.current = false;
+      step2WasEditingRef.current = false;
+    }
+    prevStepRef.current = step;
+  }, [step]);
+  useEffect(() => {
+    if (step !== 2) return;
+    if (step2AutoAdvancedRef.current) return;
+    // Don't auto-advance if user explicitly returned to edit
+    if (step2WasEditingRef.current) return;
+    const allComplete = formState.persons.every(
+      (p) => p.name.trim() !== "" && p.birthYear !== "" && p.franchise > -1
+    );
+    if (allComplete) {
+      step2AutoAdvancedRef.current = true;
+      setTimeout(() => setStep(3), 400);
+    }
+  }, [step, formState.persons]);
+
+  // Auto-calculate results when Step 3 has insurer selected (or "keine")
+  const step3AutoCalcRef = useRef(false);
+  const calculateResultsRef = useRef<() => void>(() => {});
+
   // Tooltips
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   // Custom franchise dropdown
@@ -632,6 +665,20 @@ export function PremiumCalculator() {
       setPremiumLoading(false);
     }
   }, [formState, loadCantonPremiums, leadSubmitted, leadName]);
+
+  // Keep ref in sync
+  calculateResultsRef.current = calculateResults;
+
+  // Auto-calculate when insurer is selected in Step 3
+  useEffect(() => {
+    if (step !== 3 || showResults) { step3AutoCalcRef.current = false; return; }
+    if (step3AutoCalcRef.current) return;
+    const hasInsurer = formState.currentInsurer !== "";
+    if (hasInsurer) {
+      step3AutoCalcRef.current = true;
+      setTimeout(() => calculateResultsRef.current(), 400);
+    }
+  }, [step, showResults, formState.currentInsurer]);
 
   // ─── Derived: Grouped Results ──────────────────────────────────────────
 
@@ -913,8 +960,7 @@ export function PremiumCalculator() {
   // RENDER
   // ═══════════════════════════════════════════════════════════════════════
 
-  const CALC_TYPE_LABELS_S: Record<string, string> = { single: "Einzelperson", couple: "Paar", family: "Familie", unborn: "Ungeborenes Kind" };
-  void CALC_TYPE_LABELS_S; // step labels moved inline into sections
+  // Step labels moved inline into sections
 
   const InfoTooltip = ({ id, text }: { id: string; text: string }) => (
     <span className="relative inline-flex">
@@ -941,7 +987,11 @@ export function PremiumCalculator() {
   const CALC_TYPE_LABELS: Record<string, string> = { single: "Einzelperson", couple: "Paar", family: "Familie", unborn: "Ungeborenes Kind" };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4">
+    <div className="max-w-3xl mx-auto relative">
+      {/* Vertical connector line */}
+      <div className="absolute left-[2.15rem] top-12 bottom-12 w-0.5 bg-gradient-to-b from-blue-500/30 via-blue-500/10 to-transparent pointer-events-none z-0 hidden sm:block" />
+
+      <div className="space-y-3 relative z-10">
       {/* Loading overlay */}
       {premiumLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050a18]/80 backdrop-blur-sm">
@@ -983,7 +1033,7 @@ export function PremiumCalculator() {
 
         {/* Section content */}
         {step === 1 && (
-          <div className="px-5 pb-6 sm:px-8 sm:pb-8 animate-fade-in">
+          <div className="px-5 pb-6 sm:px-8 sm:pb-8 animate-slide-down">
             <h2 className="text-xl font-bold text-center mb-6">
               Für wen möchtest du jetzt Prämien berechnen?
             </h2>
@@ -1137,7 +1187,7 @@ export function PremiumCalculator() {
 
           {/* Section content */}
           {step === 2 && (
-            <div className="px-5 pb-6 sm:px-8 sm:pb-8 animate-fade-in">
+            <div className="px-5 pb-6 sm:px-8 sm:pb-8 animate-slide-down">
               <div className="space-y-6">
                 {formState.persons.map((person, idx) => {
                 const ageGroup = getAgeGroup(person.birthYear);
@@ -1376,15 +1426,17 @@ export function PremiumCalculator() {
               )}
             </div>
 
-            <div className="mt-8 flex justify-end">
-              <button
-                onClick={() => setStep(3)}
-                disabled={!canProceed(2)}
-                className="btn-accent px-10 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                Weiter
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-              </button>
+            <div className="mt-6 flex justify-center">
+              {canProceed(2) ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    Alle Angaben vollständig
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-white/30">Fülle alle Pflichtfelder aus um fortzufahren</p>
+              )}
             </div>
             </div>
           )}
@@ -1425,6 +1477,8 @@ export function PremiumCalculator() {
                       value={formState.currentInsurer}
                       onChange={(e) => {
                         const val = e.target.value;
+                        step3AutoCalcRef.current = false;
+                        setShowResults(false);
                         setFormState((prev) => ({
                           ...prev,
                           currentInsurer: val,
@@ -1506,18 +1560,23 @@ export function PremiumCalculator() {
                   </div>
                 </div>
 
-                <div className="mt-8 flex justify-end">
-                  <button
-                    onClick={calculateResults}
-                    disabled={premiumLoading}
-                    className="btn-accent px-8 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    {premiumLoading && (
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                {formState.currentInsurer !== "" && (
+                  <div className="mt-6 flex justify-center">
+                    {premiumLoading ? (
+                      <div className="flex items-center gap-2 text-white/40 text-sm">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-blue-500 rounded-full animate-spin" />
+                        Prämien werden berechnet...
+                      </div>
+                    ) : (
+                      <button
+                        onClick={calculateResults}
+                        className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                      >
+                        ↻ Neu berechnen
+                      </button>
                     )}
-                    Ergebnis anzeigen
-                  </button>
-                </div>
+                  </div>
+                )}
                 </div>
               ) : (
               /* ── INLINE RESULTS ── */
@@ -1817,7 +1876,7 @@ export function PremiumCalculator() {
           </div>
 
           {step === 4 && (
-            <div className="px-5 pb-6 sm:px-8 sm:pb-8 animate-fade-in">
+            <div className="px-5 pb-6 sm:px-8 sm:pb-8 animate-slide-down">
               <>
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-bold mb-2">Wähle, was zählt</h2>
@@ -1936,6 +1995,8 @@ export function PremiumCalculator() {
           )}
         </div>
       )}
+
+      </div>{/* end space-y-3 */}
 
       {/* ══════════════════════════════════════════════════════════════════ */}
       {/* LEAD MODAL                                                        */}

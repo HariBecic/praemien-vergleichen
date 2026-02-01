@@ -155,6 +155,7 @@ html { scroll-behavior: smooth; }
 /* ── Animations ── */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 2000px; } }
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.15); }
   50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.25); }
@@ -162,6 +163,7 @@ html { scroll-behavior: smooth; }
 
 .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
 .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+.animate-slide-down { animation: slideDown 0.5s ease-out forwards; overflow: hidden; }
 .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
 
 /* ── Scrollbar (dark) ── */
