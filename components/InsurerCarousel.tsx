@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -23,26 +23,28 @@ const CAROUSEL_INSURERS: { name: string; domain: string }[] = [
 
 const BF = "1idc9vLyOz1J1qurgu6";
 
-// Brandfetch Logo API — type "logo" returns full wordmark with transparent bg
-// Format: /{domain}/logo (NOT /domain/{domain} which returns favicon icons)
-const URLS = (d: string) => [
-  `https://cdn.brandfetch.io/${d}/logo?c=${BF}`,          // Full wordmark logo
-  `https://cdn.brandfetch.io/${d}/symbol?c=${BF}`,        // Symbol/mark
-  `https://cdn.brandfetch.io/${d}/w/400/logo?c=${BF}`,    // Logo with width param
-];
-
 function InsurerLogo({ name, domain }: { name: string; domain: string }) {
-  const [attempt, setAttempt] = useState(0);
-  const urls = URLS(domain);
+  const [showText, setShowText] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
-  const handleError = useCallback(() => {
-    setAttempt((a) => a + 1);
+  const handleError = useCallback(() => setShowText(true), []);
+
+  // Detect Brandfetch placeholder: if loaded image is nearly square (icon/placeholder)
+  // Real wordmark logos are wide (aspect ratio > 2)
+  const handleLoad = useCallback(() => {
+    const img = imgRef.current;
+    if (!img) return;
+    const ratio = img.naturalWidth / img.naturalHeight;
+    // Brandfetch placeholders and icons are roughly square (ratio ~1)
+    // Real wordmark logos are wide (ratio > 1.8)
+    if (ratio < 1.5) {
+      setShowText(true);
+    }
   }, []);
 
-  // All image URLs failed → show text
-  if (attempt >= urls.length) {
+  if (showText) {
     return (
-      <span className="text-xl sm:text-2xl font-semibold text-white/[0.18] whitespace-nowrap tracking-wide">
+      <span className="text-[22px] sm:text-[26px] font-semibold text-white/[0.18] whitespace-nowrap tracking-wide">
         {name}
       </span>
     );
@@ -50,11 +52,14 @@ function InsurerLogo({ name, domain }: { name: string; domain: string }) {
 
   return (
     <img
-      src={urls[attempt]}
+      ref={imgRef}
+      src={`https://cdn.brandfetch.io/${domain}/logo?c=${BF}`}
       alt={name}
-      className="h-9 sm:h-11 w-auto max-w-[180px] object-contain brightness-0 invert opacity-[0.22] hover:opacity-[0.5] transition-opacity duration-300"
+      style={{ mixBlendMode: "screen" }}
+      className="h-9 sm:h-11 w-auto max-w-[200px] object-contain invert grayscale opacity-[0.4] hover:opacity-[0.7] transition-opacity duration-300"
       loading="lazy"
       onError={handleError}
+      onLoad={handleLoad}
     />
   );
 }
