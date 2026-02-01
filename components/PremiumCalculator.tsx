@@ -287,6 +287,8 @@ export function PremiumCalculator() {
   const [leadNewsletter, setLeadNewsletter] = useState(false);
   const [leadLoading, setLeadLoading] = useState(false);
   const [leadError, setLeadError] = useState("");
+  const [leadModalMode, setLeadModalMode] = useState<"save" | "offer">("offer");
+  const [showCurrentInsurerField, setShowCurrentInsurerField] = useState(false);
 
   // ─── Data Loading ───────────────────────────────────────────────────────
 
@@ -590,803 +592,937 @@ export function PremiumCalculator() {
   // RENDER
   // ═══════════════════════════════════════════════════════════════════════
 
-  const StepIndicator = () => (
-    <div className="flex items-center justify-center gap-2 mb-8">
-      {[
-        { n: 1, label: "Wohnort" },
-        { n: 2, label: "Personen" },
-        { n: 3, label: "Präferenzen" },
-        { n: 4, label: "Zusatz" },
-      ].map((s, i) => (
-        <div key={s.n} className="flex items-center">
+  const STEP_LABELS = [
+    "Situation & Wohnort",
+    "Persönliche Angaben",
+    "Grundversicherung",
+    "Zusatzversicherung",
+  ];
+
+  const openLeadModal = (mode: "save" | "offer") => {
+    setLeadModalMode(mode);
+    const firstName = formState.persons[0]?.name || "";
+    if (firstName && !leadName) setLeadName(firstName);
+    setShowLeadModal(true);
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto">
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* STEP INDICATOR (miavita-style)                                    */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      <div className="flex items-start justify-center mb-8 px-2">
+        {STEP_LABELS.map((label, i) => {
+          const n = i + 1;
+          const isActive = step === n;
+          const isCompleted = step > n;
+          return (
+            <div key={n} className="flex items-start flex-1 min-w-0">
+              <div className="flex flex-col items-center flex-1 min-w-0">
+                <button
+                  onClick={() => isCompleted && setStep(n)}
+                  disabled={!isCompleted}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all border-2 flex-shrink-0 ${
+                    isActive || isCompleted
+                      ? "border-[#0f4c5c] bg-[#0f4c5c] text-white"
+                      : "border-stone-300 bg-white text-stone-400"
+                  } ${isCompleted ? "cursor-pointer hover:bg-[#1a6b7a]" : ""}`}
+                >
+                  {isCompleted ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  ) : (
+                    n
+                  )}
+                </button>
+                <span
+                  className={`hidden sm:block text-xs mt-2 text-center leading-tight ${
+                    isActive ? "text-[#0f4c5c] font-semibold" : isCompleted ? "text-[#0f4c5c]" : "text-stone-400"
+                  }`}
+                >
+                  {label}
+                </span>
+              </div>
+              {i < 3 && (
+                <div className={`h-0.5 w-full mt-5 ${isCompleted ? "bg-[#0f4c5c]" : "bg-stone-200"}`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Save Progress Link ── */}
+      {step >= 2 && !leadSubmitted && (
+        <div className="text-center mb-4">
           <button
-            onClick={() => s.n < step && setStep(s.n)}
-            className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-              step === s.n
-                ? "bg-[#0f4c5c] text-white shadow-lg shadow-[#0f4c5c]/20"
-                : step > s.n
-                ? "bg-emerald-100 text-emerald-700 cursor-pointer hover:bg-emerald-200"
-                : "bg-stone-100 text-stone-400"
-            }`}
+            onClick={() => openLeadModal("save")}
+            className="inline-flex items-center gap-1.5 text-sm text-[#0f4c5c]/70 hover:text-[#0f4c5c] transition-colors"
           >
-            {step > s.n ? (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-            ) : (
-              s.n
-            )}
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+            </svg>
+            Fortschritt speichern
           </button>
-          <span className={`hidden sm:inline ml-2 text-xs font-medium ${step === s.n ? "text-[#0f4c5c]" : "text-stone-400"}`}>
-            {s.label}
-          </span>
-          {i < 3 && <div className={`w-8 sm:w-12 h-0.5 mx-2 ${step > s.n ? "bg-emerald-300" : "bg-stone-200"}`} />}
         </div>
-      ))}
-    </div>
-  );
+      )}
 
-  // ═══════════════════════════════════════════════════════════════════════
-  // RESULTS VIEW
-  // ═══════════════════════════════════════════════════════════════════════
-
-  if (showResults) {
-    const summaryParts: string[] = [
-      `${formState.plz} ${formState.ort} (${formState.canton})`,
-    ];
-    if (isMultiPerson) {
-      summaryParts.push(`${formState.persons.length} Personen`);
-    } else {
-      const p = formState.persons[0];
-      const ag = p ? getAgeGroup(p.birthYear) : "ERW";
-      summaryParts.push(AGE_LABELS[ag] || ag);
-      summaryParts.push(`Franchise CHF ${p?.franchise?.toLocaleString("de-CH")}`);
-    }
-
-    return (
-      <div className="animate-fade-in">
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* MAIN CARD                                                         */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      <div className="card-elevated p-6 sm:p-8">
+        {/* Loading overlay */}
         {premiumLoading && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
             <div className="text-center">
               <div className="w-12 h-12 border-4 border-[#0f4c5c]/20 border-t-[#0f4c5c] rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-stone-600 font-medium">Prämien werden geladen...</p>
+              <p className="text-stone-600 font-medium">Prämien werden berechnet...</p>
             </div>
           </div>
         )}
 
-        <h2 className="text-2xl font-bold text-center mb-2">
-          Dein Prämienvergleich 2026
-        </h2>
-        <p className="text-center text-stone-500 mb-1">{summaryParts.join(" • ")}</p>
-        <p className="text-center text-xs text-stone-400 mb-6">
-          Offizielle Daten: Bundesamt für Gesundheit (BAG)
-        </p>
+        {/* ── STEP 1: Situation & Wohnort ──────────────────────────────── */}
+        {step === 1 && (
+          <div className="animate-fade-in">
+            <h2 className="text-xl font-bold text-center mb-6">
+              Für wen möchtest du jetzt Prämien berechnen?
+            </h2>
 
-        {/* Multi-person summary */}
-        {isMultiPerson && (
-          <div className="flex flex-wrap gap-2 justify-center mb-4">
-            {personRawDataList.map((pd, i) => (
-              <span key={pd.personId} className="text-xs bg-stone-100 text-stone-600 px-3 py-1 rounded-full">
-                Person {i + 1}: {AGE_LABELS[pd.ageGroup]} • Fr. {formState.persons[i]?.franchise}
-              </span>
-            ))}
-          </div>
-        )}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+              {(
+                [
+                  { value: "single", label: "Einzelperson", icon: (
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
+                    </svg>
+                  )},
+                  { value: "couple", label: "Paar", icon: (
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                    </svg>
+                  )},
+                  { value: "family", label: "Familie", icon: (
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                    </svg>
+                  )},
+                  { value: "unborn", label: "Ungeborenes Kind", icon: (
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
+                  )},
+                ] as const
+              ).map((type) => (
+                <button
+                  key={type.value}
+                  onClick={() => {
+                    let persons: Person[];
+                    switch (type.value) {
+                      case "couple":
+                        persons = [createPerson("p1"), createPerson("p2")];
+                        break;
+                      case "family":
+                        persons = [createPerson("p1"), createPerson("p2"), createPerson("p3")];
+                        break;
+                      default:
+                        persons = [createPerson("p1")];
+                    }
+                    setFormState((prev) => ({ ...prev, calculationType: type.value, persons }));
+                  }}
+                  className={`flex flex-col items-center gap-2 p-5 rounded-xl border-2 transition-all ${
+                    formState.calculationType === type.value
+                      ? "border-[#0f4c5c] bg-[#0f4c5c]/5 text-[#0f4c5c]"
+                      : "border-stone-200 hover:border-stone-300 text-stone-500"
+                  }`}
+                >
+                  {type.icon}
+                  <span className="text-sm font-medium">{type.label}</span>
+                </button>
+              ))}
+            </div>
 
-        {/* Savings highlight */}
-        {maxSavings > 0 && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 mb-6 text-center">
-            <div className="text-sm font-medium text-emerald-700">
-              {currentPremiumNum > 0 ? "Deine mögliche Ersparnis pro Jahr" : "Sparpotenzial pro Jahr"}
-            </div>
-            <div className="text-3xl sm:text-4xl font-bold text-emerald-800 my-1">
-              bis CHF {maxSavings.toLocaleString("de-CH")}
-            </div>
-            <div className="text-xs text-emerald-600 mt-1">
-              {uniqueInsurerCount} Versicherer verglichen
-              {currentPremiumNum > 0 && (
-                <> • aktuell CHF {currentPremiumNum.toFixed(0)}/Mt.</>
+            <div className="max-w-sm mx-auto">
+              <h3 className="font-semibold mb-1">Prämienregion wählen</h3>
+              <p className="text-sm text-stone-500 mb-3">Die Prämien ändern sich je nach Region</p>
+              <div className="relative">
+                <input
+                  type="text"
+                  maxLength={4}
+                  pattern="[0-9]*"
+                  inputMode="numeric"
+                  placeholder="PLZ eingeben"
+                  value={formState.plz}
+                  onChange={(e) => handlePlzChange(e.target.value.replace(/\D/g, ""))}
+                  className={`input-field text-lg ${plzError ? "!border-red-400" : ""}`}
+                />
+                {plzLoading && (
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-stone-300 border-t-[#0f4c5c] rounded-full animate-spin" />
+                  </span>
+                )}
+                {!plzLoading && formState.ort && (
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-stone-400">
+                    {formState.ort} ({formState.canton})
+                  </span>
+                )}
+              </div>
+
+              {plzError && <p className="text-red-500 text-sm mt-2">{plzError}</p>}
+
+              {showPlzSelect && plzEntries.length > 1 && (
+                <div className="mt-3">
+                  <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                    Deine PLZ umfasst mehrere Gemeinden:
+                  </label>
+                  <select
+                    value={`${formState.canton}-${formState.region}-${formState.ort}`}
+                    onChange={(e) => {
+                      const idx = plzEntries.findIndex(
+                        (entry) => `${entry.c}-${entry.r}-${entry.o}` === e.target.value
+                      );
+                      if (idx >= 0) handlePlzEntrySelect(idx);
+                    }}
+                    className="select-field"
+                  >
+                    {plzEntries.map((entry, idx) => (
+                      <option key={idx} value={`${entry.c}-${entry.r}-${entry.o}`}>
+                        {entry.o} – Kanton {entry.c}, Region {entry.r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {formState.canton && !showPlzSelect && formState.plz.length === 4 && (
+                <p className="text-xs text-stone-400 mt-2">
+                  Prämienregion: {formState.canton}-{formState.region}
+                </p>
               )}
             </div>
-          </div>
-        )}
 
-        {groupedResults.length === 0 && !premiumLoading && (
-          <div className="text-center py-10">
-            <p className="text-stone-500 text-lg">Keine Ergebnisse gefunden.</p>
-            <p className="text-stone-400 text-sm mt-2">
-              Bitte prüfe deine Angaben oder versuche einen anderen Filter.
-            </p>
-          </div>
-        )}
-
-        {groupedResults.length > 0 && (
-          <>
-            {/* Filters */}
-            <div className="flex flex-wrap gap-3 mb-6">
-              <select
-                value={modelFilter}
-                onChange={(e) => { setModelFilter(e.target.value); setExpandedInsurer(null); }}
-                className="select-field !w-auto"
-              >
-                <option value="all">Alle Modelle</option>
-                <option value="standard">Standard</option>
-                <option value="hausarzt">Hausarzt</option>
-                <option value="hmo">HMO</option>
-                <option value="telmed">Telmed</option>
-              </select>
-
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-                className="select-field !w-auto"
-              >
-                <option value="asc">Günstigste zuerst</option>
-                <option value="desc">Teuerste zuerst</option>
-              </select>
-
+            <div className="mt-8 flex justify-center">
               <button
-                onClick={() => { setShowResults(false); setStep(1); }}
-                className="ml-auto text-sm text-[#0f4c5c] font-medium hover:underline"
+                onClick={() => setStep(2)}
+                disabled={!canProceed(1)}
+                className="btn-accent px-10 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Angaben ändern
+                Weiter
               </button>
             </div>
+          </div>
+        )}
 
-            {/* Grouped insurer results */}
-            <div className="space-y-2">
-              {groupedResults.map((group, i) => {
-                const isExpanded = expandedInsurer === group.insurerId;
-                const isFirst = i === 0 && sortOrder === "asc";
-                // For single person, show the cheapest tariff info
-                const primaryPerson = group.persons[0];
-                const cheapestModel = primaryPerson?.cheapest.t || "";
-                const cheapestTariff = primaryPerson?.cheapest.tn || "";
+        {/* ── STEP 2: Persönliche Angaben ──────────────────────────────── */}
+        {step === 2 && (
+          <div className="animate-fade-in">
+            <h2 className="text-xl font-bold text-center mb-6">Persönliche Angaben ergänzen</h2>
+
+            <div className="space-y-6">
+              {formState.persons.map((person, idx) => {
+                const ageGroup = getAgeGroup(person.birthYear);
+                const franchises = getFranchisesForAge(ageGroup);
 
                 return (
-                  <div
-                    key={group.insurerId}
-                    className={`card overflow-hidden transition-all ${
-                      isFirst ? "ring-2 ring-emerald-400 bg-emerald-50/30" : ""
-                    }`}
-                    style={{ animation: `slideUp 0.3s ease-out ${i * 0.03}s both` }}
-                  >
-                    {/* Main row */}
-                    <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                      <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                          isFirst
-                            ? "bg-emerald-100 text-emerald-700"
-                            : i < 3 && sortOrder === "asc"
-                            ? "bg-[#0f4c5c]/10 text-[#0f4c5c]"
-                            : "bg-stone-100 text-stone-400"
-                        }`}
-                      >
-                        {i + 1}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-stone-900">{group.insurerName}</span>
-                          {isFirst && <span className="savings-badge text-xs">✓ Günstigste</span>}
-                        </div>
-                        {!isMultiPerson && (
-                          <div className="text-sm text-stone-500">
-                            {MODEL_LABELS[cheapestModel] || cheapestModel} – {cheapestTariff}
-                          </div>
+                  <div key={person.id} className="p-5 rounded-xl bg-stone-50 border border-stone-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-stone-700">
+                        Person {idx + 1}
+                        {person.birthYear && (
+                          <span className="text-xs font-normal text-stone-400 ml-2">
+                            ({AGE_LABELS[ageGroup]})
+                          </span>
                         )}
-                        {isMultiPerson && (
-                          <div className="text-sm text-stone-500">
-                            {group.persons.map((pt) => `${pt.personLabel}: CHF ${pt.cheapest.p.toFixed(0)}`).join(" + ")}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Savings */}
-                      {group.savings > 0 && sortOrder === "asc" && (
-                        <div className="text-right hidden sm:block">
-                          <div className="text-xs text-emerald-600 font-medium">Ersparnis/Jahr</div>
-                          <div className="text-sm font-semibold text-emerald-700">
-                            CHF {group.savings.toLocaleString("de-CH")}
-                          </div>
-                        </div>
+                      </h3>
+                      {idx > 0 && (
+                        <button
+                          onClick={() => removePerson(person.id)}
+                          className="text-sm text-red-500 hover:text-red-700"
+                        >
+                          Entfernen
+                        </button>
                       )}
+                    </div>
 
-                      {/* Price */}
-                      <div className="text-right">
-                        <div className="text-xl font-bold">
-                          <span className="text-sm font-normal text-stone-400">CHF </span>
-                          {group.totalMonthly.toFixed(2)}
-                        </div>
-                        <div className="text-xs text-stone-400">
-                          {isMultiPerson ? "Total/Monat" : "pro Monat"}
-                        </div>
-                      </div>
-
-                      {/* Expand + Offerte */}
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => setExpandedInsurer(isExpanded ? null : group.insurerId)}
-                          className="p-2 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
-                          title="Alle Tarife anzeigen"
-                        >
-                          <svg
-                            className={`w-5 h-5 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    {/* Gender */}
+                    <div className="mb-4">
+                      <label className="block text-xs text-stone-500 mb-2">Geschlecht</label>
+                      <div className="flex gap-2">
+                        {(
+                          [
+                            { value: "m", label: "Männlich", icon: (
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
+                              </svg>
+                            )},
+                            { value: "f", label: "Weiblich", icon: (
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
+                              </svg>
+                            )},
+                          ] as const
+                        ).map((g) => (
+                          <button
+                            key={g.value}
+                            onClick={() => updatePerson(person.id, { gender: g.value })}
+                            className={`flex items-center gap-2 flex-1 py-2.5 px-3 rounded-lg text-sm font-medium border transition-all ${
+                              person.gender === g.value
+                                ? "border-[#0f4c5c] bg-[#0f4c5c]/5 text-[#0f4c5c]"
+                                : "border-stone-200 text-stone-500 hover:border-stone-300"
+                            }`}
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => {
-                            const firstName = formState.persons[0]?.name || "";
-                            if (firstName && !leadName) setLeadName(firstName);
-                            setShowLeadModal(true);
-                          }}
-                          className="px-4 py-2 rounded-lg text-sm font-medium bg-[#e36414] text-white hover:bg-[#fb8b24] transition-colors"
-                        >
-                          Offerte
-                        </button>
+                            {g.icon}
+                            {g.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
-                    {/* Expanded tariff details */}
-                    {isExpanded && (
-                      <div className="border-t border-stone-100 bg-stone-50/50 px-4 py-3 animate-fade-in">
-                        {group.persons.map((pt, pIdx) => (
-                          <div key={pt.personId}>
-                            {isMultiPerson && (
-                              <div className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2 mt-2 first:mt-0">
-                                {pt.personLabel} ({AGE_LABELS[pt.ageGroup]})
-                              </div>
-                            )}
-                            <div className="space-y-1">
-                              {pt.allTariffs.map((tariff, tIdx) => (
-                                <div
-                                  key={`${tariff.tn}-${tIdx}`}
-                                  className={`flex items-center justify-between py-1.5 px-3 rounded-lg text-sm ${
-                                    tariff === pt.cheapest ? "bg-emerald-50 text-emerald-800" : "text-stone-600"
-                                  }`}
-                                >
-                                  <div>
-                                    <span className="font-medium">{tariff.tn}</span>
-                                    <span className="text-stone-400 ml-2">
-                                      {MODEL_LABELS[tariff.t] || tariff.t}
-                                    </span>
-                                  </div>
-                                  <span className="font-semibold tabular-nums">
-                                    CHF {tariff.p.toFixed(2)}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                            {pIdx < group.persons.length - 1 && (
-                              <div className="border-b border-stone-200 my-2" />
-                            )}
-                          </div>
-                        ))}
+                    <div className="grid sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs text-stone-500 mb-1">Vor- und Nachname *</label>
+                        <input
+                          type="text"
+                          placeholder="Vor- und Nachname"
+                          value={person.name}
+                          onChange={(e) => updatePerson(person.id, { name: e.target.value })}
+                          className="input-field"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs text-stone-500 mb-1">Jahrgang *</label>
+                        <select
+                          value={person.birthYear}
+                          onChange={(e) => updatePerson(person.id, { birthYear: e.target.value })}
+                          className="select-field"
+                        >
+                          <option value="">Jahr wählen</option>
+                          {Array.from({ length: 107 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                            <option key={y} value={String(y)}>{y}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs text-stone-500 mb-1">Franchise *</label>
+                        <select
+                          value={franchises.includes(person.franchise) ? person.franchise : ""}
+                          onChange={(e) => updatePerson(person.id, { franchise: parseInt(e.target.value) })}
+                          className="select-field"
+                        >
+                          <option value="">Wählen</option>
+                          {franchises.map((f) => (
+                            <option key={f} value={f}>
+                              CHF {f.toLocaleString("de-CH")}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-6 mt-4">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
+                        <div className={`relative w-10 h-5 rounded-full transition-colors ${person.withAccident ? "bg-[#0f4c5c]" : "bg-stone-300"}`}>
+                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${person.withAccident ? "translate-x-5" : "translate-x-0.5"}`} />
+                          <input type="checkbox" checked={person.withAccident} onChange={(e) => updatePerson(person.id, { withAccident: e.target.checked })} className="sr-only" />
+                        </div>
+                        Unfalldeckung einschliessen
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
+                        <div className={`relative w-10 h-5 rounded-full transition-colors ${person.isNewToSwitzerland ? "bg-[#0f4c5c]" : "bg-stone-300"}`}>
+                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${person.isNewToSwitzerland ? "translate-x-5" : "translate-x-0.5"}`} />
+                          <input type="checkbox" checked={person.isNewToSwitzerland} onChange={(e) => updatePerson(person.id, { isNewToSwitzerland: e.target.checked })} className="sr-only" />
+                        </div>
+                        Neu in der Schweiz
+                      </label>
+                    </div>
+
+                    {person.isNewToSwitzerland && (
+                      <div className="mt-3">
+                        <label className="block text-xs text-stone-500 mb-1">Einreisedatum</label>
+                        <input
+                          type="date"
+                          value={person.entryDate}
+                          onChange={(e) => updatePerson(person.id, { entryDate: e.target.value })}
+                          className="input-field max-w-xs"
+                        />
                       </div>
                     )}
                   </div>
                 );
               })}
             </div>
-          </>
+
+            <div className="flex flex-col gap-2 mt-4">
+              <button
+                onClick={addPerson}
+                className="text-sm font-medium text-[#0f4c5c] hover:text-[#1a6b7a] flex items-center gap-2"
+              >
+                <span className="w-6 h-6 rounded-full bg-[#0f4c5c]/10 flex items-center justify-center text-[#0f4c5c]">+</span>
+                Personen hinzufügen
+              </button>
+            </div>
+
+            <div className="mt-8 flex justify-between">
+              <button onClick={() => setStep(1)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
+                Zurück
+              </button>
+              <button
+                onClick={() => setStep(3)}
+                disabled={!canProceed(2)}
+                className="btn-accent px-10 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Weiter
+              </button>
+            </div>
+          </div>
         )}
 
-        {/* ── Lead Modal ── */}
-        {showLeadModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
-              <button
-                onClick={() => setShowLeadModal(false)}
-                className="absolute top-4 right-4 text-stone-400 hover:text-stone-600"
-              >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+        {/* ── STEP 3: Grundversicherung (Preferences + Inline Results) ─ */}
+        {step === 3 && (
+          <div className="animate-fade-in">
+            {!showResults ? (
+              <>
+                <h2 className="text-xl font-bold text-center mb-2">Stell deine Präferenzen ein</h2>
+                <p className="text-center text-stone-500 text-sm mb-6">
+                  Personalisiere deine Ergebnisse mit unseren Empfehlungen und Angeboten – entdecke potenzielle Ersparnisse oder zusätzliche Vorteile.
+                </p>
 
-              {!leadSubmitted ? (
-                <>
-                  <h3 className="text-xl font-bold mb-1">Jetzt Vergleichsofferte erhalten</h3>
-                  <p className="text-sm text-stone-500 mb-5">
-                    Erhalte eine kostenlose und unverbindliche Offerte basierend auf deinen Angaben.
-                  </p>
-                  <div className="space-y-3">
+                <div className="max-w-md mx-auto space-y-6">
+                  {/* Aktuelle Versicherung (collapsible) */}
+                  <div>
+                    {!showCurrentInsurerField ? (
+                      <button
+                        onClick={() => setShowCurrentInsurerField(true)}
+                        className="flex items-center gap-2 text-sm font-medium text-[#0f4c5c] hover:text-[#1a6b7a]"
+                      >
+                        <span className="w-6 h-6 rounded-full bg-[#0f4c5c]/10 flex items-center justify-center text-[#0f4c5c]">+</span>
+                        Aktuelle Versicherung hinzufügen
+                      </button>
+                    ) : (
+                      <div className="space-y-3 p-4 rounded-xl bg-stone-50 border border-stone-200">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-medium text-stone-700">Aktuelle Krankenkasse</label>
+                          <button
+                            onClick={() => {
+                              setShowCurrentInsurerField(false);
+                              setFormState((prev) => ({ ...prev, currentInsurer: "", currentPremium: "" }));
+                            }}
+                            className="text-xs text-stone-400 hover:text-stone-600"
+                          >
+                            Entfernen
+                          </button>
+                        </div>
+                        <select
+                          value={formState.currentInsurer}
+                          onChange={(e) => setFormState((prev) => ({ ...prev, currentInsurer: e.target.value }))}
+                          className="select-field"
+                        >
+                          <option value="">Wählen...</option>
+                          {CURRENT_INSURERS.map((ins) => (
+                            <option key={ins} value={ins}>{ins}</option>
+                          ))}
+                        </select>
+                        {formState.currentInsurer && (
+                          <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                              Aktuelle Monatsprämie CHF {isMultiPerson ? "(Total)" : ""}
+                            </label>
+                            <input
+                              type="number"
+                              placeholder={isMultiPerson ? "z.B. 900" : "z.B. 450"}
+                              value={formState.currentPremium}
+                              onChange={(e) => setFormState((prev) => ({ ...prev, currentPremium: e.target.value }))}
+                              className="input-field"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Preference buttons */}
+                  <div>
+                    <label className="block text-sm font-medium text-stone-700 mb-3">
+                      Passe deine Ergebnisse an, wähle deine Präferenzen:
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(
+                        [
+                          { value: "cheapest", label: "Günstigste" },
+                          { value: "recommended", label: "Unsere Empfehlungen" },
+                          { value: "offers", label: "Sonderangebote" },
+                        ] as const
+                      ).map((pref) => (
+                        <button
+                          key={pref.value}
+                          onClick={() => setFormState((prev) => ({ ...prev, preference: pref.value }))}
+                          className={`p-3 rounded-xl text-center text-sm font-medium border-2 transition-all ${
+                            formState.preference === pref.value
+                              ? "border-[#0f4c5c] bg-[#0f4c5c] text-white"
+                              : "border-stone-200 hover:border-stone-300 text-stone-600"
+                          }`}
+                        >
+                          {pref.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 flex justify-between">
+                  <button onClick={() => setStep(2)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
+                    Zurück
+                  </button>
+                  <button
+                    onClick={calculateResults}
+                    disabled={premiumLoading}
+                    className="btn-accent px-8 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {premiumLoading && (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    )}
+                    Ergebnis anzeigen
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* ── INLINE RESULTS ── */
+              <>
+                {(() => {
+                  const summaryParts: string[] = [
+                    `${formState.plz} ${formState.ort} (${formState.canton})`,
+                  ];
+                  if (isMultiPerson) {
+                    summaryParts.push(`${formState.persons.length} Personen`);
+                  } else {
+                    const p = formState.persons[0];
+                    const ag = p ? getAgeGroup(p.birthYear) : "ERW";
+                    summaryParts.push(AGE_LABELS[ag] || ag);
+                    summaryParts.push(`Franchise CHF ${p?.franchise?.toLocaleString("de-CH")}`);
+                  }
+
+                  return (
+                    <>
+                      <h2 className="text-2xl font-bold text-center mb-2">
+                        Dein Prämienvergleich 2026
+                      </h2>
+                      <p className="text-center text-stone-500 mb-1">{summaryParts.join(" • ")}</p>
+                      <p className="text-center text-xs text-stone-400 mb-6">
+                        Offizielle Daten: Bundesamt für Gesundheit (BAG)
+                      </p>
+                    </>
+                  );
+                })()}
+
+                {/* Multi-person summary */}
+                {isMultiPerson && (
+                  <div className="flex flex-wrap gap-2 justify-center mb-4">
+                    {personRawDataList.map((pd, i) => (
+                      <span key={pd.personId} className="text-xs bg-stone-100 text-stone-600 px-3 py-1 rounded-full">
+                        Person {i + 1}: {AGE_LABELS[pd.ageGroup]} • Fr. {formState.persons[i]?.franchise}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Savings highlight */}
+                {maxSavings > 0 && (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 mb-6 text-center">
+                    <div className="text-sm font-medium text-emerald-700">
+                      {currentPremiumNum > 0 ? "Deine mögliche Ersparnis pro Jahr" : "Sparpotenzial pro Jahr"}
+                    </div>
+                    <div className="text-3xl sm:text-4xl font-bold text-emerald-800 my-1">
+                      bis CHF {maxSavings.toLocaleString("de-CH")}
+                    </div>
+                    <div className="text-xs text-emerald-600 mt-1">
+                      {uniqueInsurerCount} Versicherer verglichen
+                      {currentPremiumNum > 0 && (
+                        <> • aktuell CHF {currentPremiumNum.toFixed(0)}/Mt.</>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {groupedResults.length === 0 && !premiumLoading && (
+                  <div className="text-center py-10">
+                    <p className="text-stone-500 text-lg">Keine Ergebnisse gefunden.</p>
+                    <p className="text-stone-400 text-sm mt-2">
+                      Bitte prüfe deine Angaben oder versuche einen anderen Filter.
+                    </p>
+                  </div>
+                )}
+
+                {groupedResults.length > 0 && (
+                  <>
+                    {/* Filters */}
+                    <div className="flex flex-wrap gap-3 mb-6">
+                      <select
+                        value={modelFilter}
+                        onChange={(e) => { setModelFilter(e.target.value); setExpandedInsurer(null); }}
+                        className="select-field !w-auto"
+                      >
+                        <option value="all">Alle Modelle</option>
+                        <option value="standard">Standard</option>
+                        <option value="hausarzt">Hausarzt</option>
+                        <option value="hmo">HMO</option>
+                        <option value="telmed">Telmed</option>
+                      </select>
+
+                      <select
+                        value={sortOrder}
+                        onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+                        className="select-field !w-auto"
+                      >
+                        <option value="asc">Günstigste zuerst</option>
+                        <option value="desc">Teuerste zuerst</option>
+                      </select>
+
+                      <button
+                        onClick={() => setShowResults(false)}
+                        className="ml-auto text-sm text-[#0f4c5c] font-medium hover:underline"
+                      >
+                        Angaben ändern
+                      </button>
+                    </div>
+
+                    {/* Grouped insurer results */}
+                    <div className="space-y-2">
+                      {groupedResults.map((group, i) => {
+                        const isExpanded = expandedInsurer === group.insurerId;
+                        const isFirst = i === 0 && sortOrder === "asc";
+                        const primaryPerson = group.persons[0];
+                        const cheapestModel = primaryPerson?.cheapest.t || "";
+                        const cheapestTariff = primaryPerson?.cheapest.tn || "";
+
+                        return (
+                          <div
+                            key={group.insurerId}
+                            className={`rounded-xl border overflow-hidden transition-all ${
+                              isFirst ? "ring-2 ring-emerald-400 bg-emerald-50/30 border-emerald-200" : "border-stone-200 bg-white"
+                            }`}
+                            style={{ animation: `slideUp 0.3s ease-out ${i * 0.03}s both` }}
+                          >
+                            {/* Main row */}
+                            <div className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                              <div
+                                className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                                  isFirst
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : i < 3 && sortOrder === "asc"
+                                    ? "bg-[#0f4c5c]/10 text-[#0f4c5c]"
+                                    : "bg-stone-100 text-stone-400"
+                                }`}
+                              >
+                                {i + 1}
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-semibold text-stone-900">{group.insurerName}</span>
+                                  {isFirst && <span className="savings-badge text-xs">✓ Günstigste</span>}
+                                </div>
+                                {!isMultiPerson && (
+                                  <div className="text-sm text-stone-500">
+                                    {MODEL_LABELS[cheapestModel] || cheapestModel} – {cheapestTariff}
+                                  </div>
+                                )}
+                                {isMultiPerson && (
+                                  <div className="text-sm text-stone-500">
+                                    {group.persons.map((pt) => `${pt.personLabel}: CHF ${pt.cheapest.p.toFixed(0)}`).join(" + ")}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Savings */}
+                              {group.savings > 0 && sortOrder === "asc" && (
+                                <div className="text-right hidden sm:block">
+                                  <div className="text-xs text-emerald-600 font-medium">Ersparnis/Jahr</div>
+                                  <div className="text-sm font-semibold text-emerald-700">
+                                    CHF {group.savings.toLocaleString("de-CH")}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Price */}
+                              <div className="text-right">
+                                <div className="text-xl font-bold">
+                                  <span className="text-sm font-normal text-stone-400">CHF </span>
+                                  {group.totalMonthly.toFixed(2)}
+                                </div>
+                                <div className="text-xs text-stone-400">
+                                  {isMultiPerson ? "Total/Monat" : "pro Monat"}
+                                </div>
+                              </div>
+
+                              {/* Expand + Offerte */}
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <button
+                                  onClick={() => setExpandedInsurer(isExpanded ? null : group.insurerId)}
+                                  className="p-2 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
+                                  title="Alle Tarife anzeigen"
+                                >
+                                  <svg
+                                    className={`w-5 h-5 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => openLeadModal("offer")}
+                                  className="px-4 py-2 rounded-lg text-sm font-medium bg-[#e36414] text-white hover:bg-[#fb8b24] transition-colors"
+                                >
+                                  Offerte
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Expanded tariff details */}
+                            {isExpanded && (
+                              <div className="border-t border-stone-100 bg-stone-50/50 px-4 py-3 animate-fade-in">
+                                {group.persons.map((pt, pIdx) => (
+                                  <div key={pt.personId}>
+                                    {isMultiPerson && (
+                                      <div className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2 mt-2 first:mt-0">
+                                        {pt.personLabel} ({AGE_LABELS[pt.ageGroup]})
+                                      </div>
+                                    )}
+                                    <div className="space-y-1">
+                                      {pt.allTariffs.map((tariff, tIdx) => (
+                                        <div
+                                          key={`${tariff.tn}-${tIdx}`}
+                                          className={`flex items-center justify-between py-1.5 px-3 rounded-lg text-sm ${
+                                            tariff === pt.cheapest ? "bg-emerald-50 text-emerald-800" : "text-stone-600"
+                                          }`}
+                                        >
+                                          <div>
+                                            <span className="font-medium">{tariff.tn}</span>
+                                            <span className="text-stone-400 ml-2">
+                                              {MODEL_LABELS[tariff.t] || tariff.t}
+                                            </span>
+                                          </div>
+                                          <span className="font-semibold tabular-nums">
+                                            CHF {tariff.p.toFixed(2)}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    {pIdx < group.persons.length - 1 && (
+                                      <div className="border-b border-stone-200 my-2" />
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+
+                {/* Navigation from results */}
+                <div className="mt-8 flex justify-center">
+                  <button
+                    onClick={() => setStep(4)}
+                    className="btn-accent px-10 py-3 rounded-xl"
+                  >
+                    Weiter
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── STEP 4: Zusatzversicherung ───────────────────────────────── */}
+        {step === 4 && (
+          <div className="animate-fade-in">
+            <h2 className="text-xl font-bold text-center mb-2 uppercase tracking-wide">Wähle, was zählt</h2>
+            <p className="text-center text-stone-500 text-sm mb-8">
+              Welche Zusatzleistungen sind dir wichtig?
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {EXTRA_OPTIONS.map((opt) => {
+                const isSelected = formState.extras.includes(opt.id);
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => {
+                      setFormState((prev) => ({
+                        ...prev,
+                        extras: prev.extras.includes(opt.id)
+                          ? prev.extras.filter((e) => e !== opt.id)
+                          : [...prev.extras, opt.id],
+                      }));
+                    }}
+                    className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left min-h-[120px] ${
+                      isSelected
+                        ? "border-[#0f4c5c] bg-[#0f4c5c]/5"
+                        : "border-stone-200 hover:border-stone-300 bg-white"
+                    }`}
+                  >
+                    <span className="text-2xl">{opt.icon}</span>
+                    <span className={`text-sm font-medium leading-tight ${isSelected ? "text-[#0f4c5c]" : "text-stone-700"}`}>
+                      {opt.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-10 flex justify-between items-center">
+              <button onClick={() => setStep(3)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
+                Zurück
+              </button>
+              <button
+                onClick={() => openLeadModal("offer")}
+                className="btn-accent px-10 py-3.5 rounded-xl text-base"
+              >
+                Jetzt Wechseln
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* LEAD MODAL                                                        */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {showLeadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowLeadModal(false)}
+              className="absolute top-4 right-4 text-stone-400 hover:text-stone-600"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {!leadSubmitted ? (
+              <>
+                <h3 className="text-xl font-bold mb-1 uppercase tracking-wide">
+                  {leadModalMode === "save"
+                    ? "Speichere deinen Fortschritt"
+                    : "Jetzt Vergleichsofferte erhalten"}
+                </h3>
+                <p className="text-sm text-stone-500 mb-5">
+                  {leadModalMode === "save"
+                    ? "Du erhältst eine E-Mail mit einem Link, damit du deine Ergebnisse bei deinem nächsten Besuch einfach abrufen kannst."
+                    : "Erhalte eine kostenlose und unverbindliche Offerte basierend auf deinen Angaben."}
+                </p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1">
+                      Vor- und Nachname *
+                    </label>
                     <input
                       type="text"
-                      placeholder="Vor- und Nachname *"
+                      placeholder="Vor- und Nachname"
                       value={leadName}
                       onChange={(e) => setLeadName(e.target.value)}
                       className="input-field"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1">
+                      E-Mail-Adresse *
+                    </label>
                     <input
                       type="email"
-                      placeholder="E-Mail-Adresse *"
+                      placeholder="E-Mail-Adresse"
                       value={leadEmail}
                       onChange={(e) => setLeadEmail(e.target.value)}
                       className="input-field"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1">
+                      Telefonnummer *
+                    </label>
                     <div className="flex gap-2">
                       <span className="input-field !w-20 flex items-center justify-center text-sm text-stone-500">
                         🇨🇭 +41
                       </span>
                       <input
                         type="tel"
-                        placeholder="Telefonnummer *"
+                        placeholder="79 123 45 67"
                         value={leadPhone}
                         onChange={(e) => setLeadPhone(e.target.value)}
                         className="input-field"
                       />
                     </div>
-
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={leadConsent}
-                        onChange={(e) => setLeadConsent(e.target.checked)}
-                        className="mt-0.5 w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
-                      />
-                      <span className="text-xs text-stone-500 leading-relaxed">
-                        Ich stimme zu, dass meine Daten verarbeitet und an geprüfte
-                        Versicherungsberater weitergegeben werden, um eine persönliche Offerte
-                        zu erhalten.{" "}
-                        <a href="/datenschutz" className="text-[#0f4c5c] underline">Datenschutzerklärung</a>.
-                      </span>
-                    </label>
-
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={leadNewsletter}
-                        onChange={(e) => setLeadNewsletter(e.target.checked)}
-                        className="mt-0.5 w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
-                      />
-                      <span className="text-xs text-stone-500 leading-relaxed">
-                        Ja, ich möchte den Newsletter mit Spartipps und Fristen abonnieren.
-                      </span>
-                    </label>
-
-                    {leadError && (
-                      <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
-                        {leadError}
-                      </div>
-                    )}
-
-                    <button
-                      onClick={handleLeadSubmit}
-                      disabled={!leadConsent || !leadName || !leadEmail || !leadPhone || leadLoading}
-                      className="btn-accent w-full py-3.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      {leadLoading ? "Wird gesendet..." : "Offerte anfordern"}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-6">
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Vielen Dank!</h3>
-                  <p className="text-stone-500 text-sm">
-                    Wir haben deine Anfrage erhalten und melden uns in Kürze bei dir.
-                  </p>
-                  <p className="text-stone-400 text-xs mt-3">
-                    Bei Fragen: <strong className="text-stone-600">info@praemien-vergleichen.ch</strong>
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // FORM STEPS
-  // ═══════════════════════════════════════════════════════════════════════
-
-  return (
-    <div className="card-elevated p-6 sm:p-8">
-      <StepIndicator />
-
-      {/* ── STEP 1: Wohnort ── */}
-      {step === 1 && (
-        <div className="animate-fade-in">
-          <h2 className="text-xl font-bold text-center mb-6">
-            Für wen möchtest du Prämien berechnen?
-          </h2>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-            {(
-              [
-                { value: "single", label: "Einzelperson", icon: "👤" },
-                { value: "couple", label: "Paar", icon: "👥" },
-                { value: "family", label: "Familie", icon: "👨‍👩‍👧" },
-                { value: "unborn", label: "Ungeborenes Kind", icon: "👶" },
-              ] as const
-            ).map((type) => (
-              <button
-                key={type.value}
-                onClick={() => {
-                  let persons: Person[];
-                  switch (type.value) {
-                    case "couple":
-                      persons = [createPerson("p1"), createPerson("p2")];
-                      break;
-                    case "family":
-                      persons = [createPerson("p1"), createPerson("p2"), createPerson("p3")];
-                      break;
-                    default:
-                      persons = [createPerson("p1")];
-                  }
-                  setFormState((prev) => ({ ...prev, calculationType: type.value, persons }));
-                }}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                  formState.calculationType === type.value
-                    ? "border-[#0f4c5c] bg-[#0f4c5c]/5"
-                    : "border-stone-200 hover:border-stone-300"
-                }`}
-              >
-                <span className="text-2xl">{type.icon}</span>
-                <span className="text-sm font-medium">{type.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="max-w-sm mx-auto">
-            <h3 className="font-semibold mb-1">Prämienregion wählen</h3>
-            <p className="text-sm text-stone-500 mb-3">Die Prämien ändern sich je nach Region</p>
-            <div className="relative">
-              <input
-                type="text"
-                maxLength={4}
-                pattern="[0-9]*"
-                inputMode="numeric"
-                placeholder="PLZ eingeben"
-                value={formState.plz}
-                onChange={(e) => handlePlzChange(e.target.value.replace(/\D/g, ""))}
-                className={`input-field text-lg ${plzError ? "!border-red-400" : ""}`}
-              />
-              {plzLoading && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <div className="w-4 h-4 border-2 border-stone-300 border-t-[#0f4c5c] rounded-full animate-spin" />
-                </span>
-              )}
-              {!plzLoading && formState.ort && (
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-stone-400">
-                  {formState.ort} ({formState.canton})
-                </span>
-              )}
-            </div>
-
-            {plzError && <p className="text-red-500 text-sm mt-2">{plzError}</p>}
-
-            {showPlzSelect && plzEntries.length > 1 && (
-              <div className="mt-3">
-                <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                  Deine PLZ umfasst mehrere Gemeinden:
-                </label>
-                <select
-                  value={`${formState.canton}-${formState.region}-${formState.ort}`}
-                  onChange={(e) => {
-                    const idx = plzEntries.findIndex(
-                      (entry) => `${entry.c}-${entry.r}-${entry.o}` === e.target.value
-                    );
-                    if (idx >= 0) handlePlzEntrySelect(idx);
-                  }}
-                  className="select-field"
-                >
-                  {plzEntries.map((entry, idx) => (
-                    <option key={idx} value={`${entry.c}-${entry.r}-${entry.o}`}>
-                      {entry.o} – Kanton {entry.c}, Region {entry.r}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {formState.canton && !showPlzSelect && formState.plz.length === 4 && (
-              <p className="text-xs text-stone-400 mt-2">
-                Prämienregion: {formState.canton}-{formState.region}
-              </p>
-            )}
-          </div>
-
-          <div className="mt-8 flex justify-end">
-            <button
-              onClick={() => setStep(2)}
-              disabled={!canProceed(1)}
-              className="btn-accent px-8 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Weiter
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── STEP 2: Persönliche Angaben ── */}
-      {step === 2 && (
-        <div className="animate-fade-in">
-          <h2 className="text-xl font-bold text-center mb-6">Persönliche Angaben</h2>
-
-          <div className="space-y-6">
-            {formState.persons.map((person, idx) => {
-              const ageGroup = getAgeGroup(person.birthYear);
-              const franchises = getFranchisesForAge(ageGroup);
-
-              return (
-                <div key={person.id} className="p-4 rounded-xl bg-stone-50 border border-stone-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-stone-700">
-                      Person {idx + 1}
-                      {person.birthYear && (
-                        <span className="text-xs font-normal text-stone-400 ml-2">
-                          ({AGE_LABELS[ageGroup]})
-                        </span>
-                      )}
-                    </h3>
-                    {idx > 0 && (
-                      <button
-                        onClick={() => removePerson(person.id)}
-                        className="text-sm text-red-500 hover:text-red-700"
-                      >
-                        Entfernen
-                      </button>
-                    )}
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <div className="flex gap-2">
-                      {(["m", "f"] as const).map((g) => (
-                        <button
-                          key={g}
-                          onClick={() => updatePerson(person.id, { gender: g })}
-                          className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-all ${
-                            person.gender === g
-                              ? "border-[#0f4c5c] bg-[#0f4c5c]/5 text-[#0f4c5c]"
-                              : "border-stone-200 text-stone-500 hover:border-stone-300"
-                          }`}
-                        >
-                          {g === "m" ? "Männlich" : "Weiblich"}
-                        </button>
-                      ))}
-                    </div>
-
+                  <label className="flex items-start gap-3 cursor-pointer">
                     <input
-                      type="text"
-                      placeholder="Vor- und Nachname"
-                      value={person.name}
-                      onChange={(e) => updatePerson(person.id, { name: e.target.value })}
-                      className="input-field"
+                      type="checkbox"
+                      checked={leadConsent}
+                      onChange={(e) => setLeadConsent(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
                     />
+                    <span className="text-xs text-stone-500 leading-relaxed">
+                      <strong>Ich stimme zu,</strong> dass meine Daten verarbeitet und an geprüfte
+                      Versicherungsberater weitergegeben werden, um eine persönliche Offerte
+                      zu erhalten. Meine Daten werden vertraulich behandelt.{" "}
+                      <a href="/datenschutz" className="text-[#0f4c5c] underline">Datenschutzerklärung</a>.
+                    </span>
+                  </label>
 
-                    <div>
-                      <label className="block text-xs text-stone-500 mb-1">Jahrgang *</label>
-                      <select
-                        value={person.birthYear}
-                        onChange={(e) => updatePerson(person.id, { birthYear: e.target.value })}
-                        className="select-field"
-                      >
-                        <option value="">Jahr wählen</option>
-                        {Array.from({ length: 107 }, (_, i) => new Date().getFullYear() - i).map((y) => (
-                          <option key={y} value={String(y)}>{y}</option>
-                        ))}
-                      </select>
-                    </div>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={leadNewsletter}
+                      onChange={(e) => setLeadNewsletter(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
+                    />
+                    <span className="text-xs text-stone-500 leading-relaxed">
+                      Ja, ich möchte den Newsletter mit Spartipps, Fristen und einfachen
+                      Erklärungen abonnieren.
+                    </span>
+                  </label>
 
-                    <div>
-                      <label className="block text-xs text-stone-500 mb-1">Franchise *</label>
-                      <select
-                        value={franchises.includes(person.franchise) ? person.franchise : ""}
-                        onChange={(e) => updatePerson(person.id, { franchise: parseInt(e.target.value) })}
-                        className="select-field"
-                      >
-                        <option value="">Wählen</option>
-                        {franchises.map((f) => (
-                          <option key={f} value={f}>
-                            CHF {f.toLocaleString("de-CH")}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-4 mt-3">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm">
-                      <input
-                        type="checkbox"
-                        checked={person.withAccident}
-                        onChange={(e) => updatePerson(person.id, { withAccident: e.target.checked })}
-                        className="w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
-                      />
-                      Unfalldeckung einschliessen
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer text-sm">
-                      <input
-                        type="checkbox"
-                        checked={person.isNewToSwitzerland}
-                        onChange={(e) => updatePerson(person.id, { isNewToSwitzerland: e.target.checked })}
-                        className="w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
-                      />
-                      Neu in der Schweiz
-                    </label>
-                  </div>
-
-                  {person.isNewToSwitzerland && (
-                    <div className="mt-3">
-                      <label className="block text-xs text-stone-500 mb-1">Einreisedatum</label>
-                      <input
-                        type="date"
-                        value={person.entryDate}
-                        onChange={(e) => updatePerson(person.id, { entryDate: e.target.value })}
-                        className="input-field max-w-xs"
-                      />
+                  {leadError && (
+                    <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                      {leadError}
                     </div>
                   )}
+
+                  <button
+                    onClick={handleLeadSubmit}
+                    disabled={!leadConsent || !leadName || !leadEmail || !leadPhone || leadLoading}
+                    className="btn-accent w-full py-3.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {leadLoading
+                      ? "Wird gesendet..."
+                      : leadModalMode === "save"
+                      ? "Jetzt speichern"
+                      : "Offerte anfordern"}
+                  </button>
                 </div>
-              );
-            })}
-          </div>
-
-          <div className="flex flex-wrap gap-3 mt-4">
-            <button
-              onClick={addPerson}
-              className="text-sm font-medium text-[#0f4c5c] hover:text-[#1a6b7a] flex items-center gap-1"
-            >
-              <span className="text-lg">+</span> Person hinzufügen
-            </button>
-          </div>
-
-          <div className="mt-8 flex justify-between">
-            <button onClick={() => setStep(1)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
-              Zurück
-            </button>
-            <button
-              onClick={() => setStep(3)}
-              disabled={!canProceed(2)}
-              className="btn-accent px-8 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Weiter
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── STEP 3: Präferenzen ── */}
-      {step === 3 && (
-        <div className="animate-fade-in">
-          <h2 className="text-xl font-bold text-center mb-2">Stell deine Präferenzen ein</h2>
-          <p className="text-center text-stone-500 text-sm mb-6">
-            Personalisiere deine Ergebnisse
-          </p>
-
-          <div className="max-w-md mx-auto space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                Aktuelle Krankenkasse
-              </label>
-              <select
-                value={formState.currentInsurer}
-                onChange={(e) => setFormState((prev) => ({ ...prev, currentInsurer: e.target.value }))}
-                className="select-field"
-              >
-                <option value="">Wählen... (optional)</option>
-                {CURRENT_INSURERS.map((ins) => (
-                  <option key={ins} value={ins}>{ins}</option>
-                ))}
-              </select>
-            </div>
-
-            {formState.currentInsurer && (
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                  Aktuelle Monatsprämie CHF {isMultiPerson ? "(Total für alle Personen)" : ""}
-                </label>
-                <input
-                  type="number"
-                  placeholder={isMultiPerson ? "z.B. 900" : "z.B. 450"}
-                  value={formState.currentPremium}
-                  onChange={(e) => setFormState((prev) => ({ ...prev, currentPremium: e.target.value }))}
-                  className="input-field"
-                />
+              </>
+            ) : (
+              <div className="text-center py-6">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold mb-2">Vielen Dank!</h3>
+                <p className="text-stone-500 text-sm">
+                  {leadModalMode === "save"
+                    ? "Dein Fortschritt wurde gespeichert. Wir melden uns bei dir."
+                    : "Wir haben deine Anfrage erhalten und melden uns in Kürze bei dir."}
+                </p>
+                <p className="text-stone-400 text-xs mt-3">
+                  Bei Fragen: <strong className="text-stone-600">info@praemien-vergleichen.ch</strong>
+                </p>
               </div>
             )}
-
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-3">
-                Wähle deine Präferenz:
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    { value: "cheapest", label: "Günstigste", icon: "💰" },
-                    { value: "recommended", label: "Empfehlung", icon: "⭐" },
-                    { value: "offers", label: "Angebote", icon: "🎁" },
-                  ] as const
-                ).map((pref) => (
-                  <button
-                    key={pref.value}
-                    onClick={() => setFormState((prev) => ({ ...prev, preference: pref.value }))}
-                    className={`p-3 rounded-xl text-center text-sm font-medium border-2 transition-all ${
-                      formState.preference === pref.value
-                        ? "border-[#0f4c5c] bg-[#0f4c5c]/5 text-[#0f4c5c]"
-                        : "border-stone-200 hover:border-stone-300 text-stone-600"
-                    }`}
-                  >
-                    <span className="text-lg block mb-1">{pref.icon}</span>
-                    {pref.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 flex justify-between">
-            <button onClick={() => setStep(2)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
-              Zurück
-            </button>
-            <button
-              onClick={calculateResults}
-              disabled={premiumLoading}
-              className="btn-accent px-8 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {premiumLoading && (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              )}
-              Ergebnis anzeigen
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── STEP 4: Zusatzversicherung ── */}
-      {step === 4 && (
-        <div className="animate-fade-in">
-          <h2 className="text-xl font-bold text-center mb-2">Wähle, was zählt</h2>
-          <p className="text-center text-stone-500 text-sm mb-6">
-            Welche Zusatzleistungen sind dir wichtig?
-          </p>
-
-          <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
-            {EXTRA_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => {
-                  setFormState((prev) => ({
-                    ...prev,
-                    extras: prev.extras.includes(opt.id)
-                      ? prev.extras.filter((e) => e !== opt.id)
-                      : [...prev.extras, opt.id],
-                  }));
-                }}
-                className={`p-3 rounded-xl text-left text-sm border-2 transition-all flex items-center gap-2 ${
-                  formState.extras.includes(opt.id)
-                    ? "border-[#0f4c5c] bg-[#0f4c5c]/5"
-                    : "border-stone-200 hover:border-stone-300"
-                }`}
-              >
-                <span className="text-lg">{opt.icon}</span>
-                <span className="font-medium">{opt.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-8 flex justify-between">
-            <button onClick={() => setStep(3)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
-              Zurück
-            </button>
-            <button
-              onClick={calculateResults}
-              disabled={premiumLoading}
-              className="btn-accent px-8 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Jetzt vergleichen
-            </button>
           </div>
         </div>
       )}
