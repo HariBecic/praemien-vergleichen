@@ -286,6 +286,7 @@ export function PremiumCalculator() {
   const [leadConsent, setLeadConsent] = useState(false);
   const [leadNewsletter, setLeadNewsletter] = useState(false);
   const [leadLoading, setLeadLoading] = useState(false);
+  const [leadError, setLeadError] = useState("");
 
   // ─── Data Loading ───────────────────────────────────────────────────────
 
@@ -527,6 +528,7 @@ export function PremiumCalculator() {
   const handleLeadSubmit = async () => {
     if (!leadConsent || !leadName || !leadEmail || !leadPhone) return;
     setLeadLoading(true);
+    setLeadError("");
 
     try {
       const person = formState.persons[0];
@@ -565,10 +567,12 @@ export function PremiumCalculator() {
           (window as any).fbq("track", "Lead");
         }
       } else {
-        alert("Es gab einen Fehler. Bitte versuche es erneut.");
+        const errData = await res.json().catch(() => null);
+        const debugInfo = errData?.debug ? ` (${errData.debug})` : "";
+        setLeadError(`${errData?.error || "Unbekannter Fehler"}${debugInfo}`);
       }
     } catch {
-      alert("Verbindungsfehler. Bitte versuche es erneut.");
+      setLeadError("Verbindungsfehler. Bitte prüfe deine Internetverbindung.");
     } finally {
       setLeadLoading(false);
     }
@@ -943,6 +947,12 @@ export function PremiumCalculator() {
                         Ja, ich möchte den Newsletter mit Spartipps und Fristen abonnieren.
                       </span>
                     </label>
+
+                    {leadError && (
+                      <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                        {leadError}
+                      </div>
+                    )}
 
                     <button
                       onClick={handleLeadSubmit}

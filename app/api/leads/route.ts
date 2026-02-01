@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Server-side Supabase client (with service role for writes)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export async function POST(request: NextRequest) {
   try {
+    // Check env vars
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Missing Supabase env vars:", { url: !!supabaseUrl, key: !!supabaseKey });
+      return NextResponse.json(
+        { error: "Server-Konfigurationsfehler. Bitte kontaktiere den Administrator.", debug: "missing_env" },
+        { status: 500 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
     const body = await request.json();
 
     // Validate required fields
@@ -23,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert lead
-    const { data, error } = await supabase.from("website_leads").insert({
+    const insertData = {
       first_name: body.name.split(" ")[0] || body.name,
       last_name: body.name.split(" ").slice(1).join(" ") || "",
       email: body.email,
@@ -41,15 +48,23 @@ export async function POST(request: NextRequest) {
       extras: body.extras || [],
       newsletter: body.newsletter || false,
       status: "new",
-    }).select().single();
+    };
+
+    const { data, error } = await supabase
+      .from("website_leads")
+      .insert(insertData)
+      .select()
+      .single();
 
     if (error) {
-      console.error("Supabase error:", error);
-      return NextResponse.json({ error: "Fehler beim Speichern" }, { status: 500 });
+      console.error("Supabase error:", JSON.stringify(error));
+      return NextResponse.json(
+        { error: "Fehler beim Speichern", debug: error.message, code: error.code },
+        { status: 500 }
+      );
     }
 
     // ─── Meta Conversions API (server-side event tracking) ────────────
-    // This sends a Lead event to Facebook for better attribution
     if (process.env.META_ACCESS_TOKEN && process.env.META_PIXEL_ID) {
       try {
         const eventData = {
@@ -59,13 +74,13 @@ export async function POST(request: NextRequest) {
             action_source: "website",
             event_source_url: "https://praemien-vergleichen.ch",
             user_data: {
-              em: [hashSHA256(body.email.toLowerCase().trim())],
-              ph: [hashSHA256(body.phone.replace(/\D/g, ""))],
-              fn: [hashSHA256(body.name.split(" ")[0].toLowerCase().trim())],
-              ln: [hashSHA256(body.name.split(" ").slice(1).join(" ").toLowerCase().trim())],
-              ct: [hashSHA256(body.ort?.toLowerCase().trim() || "")],
-              zp: [hashSHA256(body.plz || "")],
-              country: [hashSHA256("ch")],
+              em: [await hashSHA256(body.email.toLowerCase().trim())],
+              ph: [await hashSHA256(body.phone.replace(/\D/g, ""))],
+              fn: [await hashSHA256(body.name.split(" ")[0].toLowerCase().trim())],
+              ln: [await hashSHA256(body.name.split(" ").slice(1).join(" ").toLowerCase().trim())],
+              ct: [await hashSHA256(body.ort?.toLowerCase().trim() || "")],
+              zp: [await hashSHA256(body.plz || "")],
+              country: [await hashSHA256("ch")],
             },
             custom_data: {
               canton: body.canton,
@@ -74,7 +89,6 @@ export async function POST(request: NextRequest) {
               lead_source: "praemien-vergleichen.ch",
             },
           }],
-          // test_event_code: "TEST12345", // Uncomment for testing
         };
 
         await fetch(
@@ -87,18 +101,19 @@ export async function POST(request: NextRequest) {
         );
       } catch (metaError) {
         console.error("Meta CAPI error:", metaError);
-        // Don't fail the request if Meta tracking fails
       }
     }
 
     return NextResponse.json({ success: true, id: data.id }, { status: 201 });
   } catch (err) {
     console.error("Lead error:", err);
-    return NextResponse.json({ error: "Serverfehler" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Serverfehler", debug: String(err) },
+      { status: 500 }
+    );
   }
 }
 
-// Simple SHA-256 hash for Meta CAPI (server-side)
 async function hashSHA256(value: string): Promise<string> {
   if (!value) return "";
   const encoder = new TextEncoder();
