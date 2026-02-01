@@ -405,8 +405,8 @@ export function PremiumCalculator() {
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
   const [leadPhone, setLeadPhone] = useState("");
-  const [leadConsent, setLeadConsent] = useState(false);
-  const [leadNewsletter, setLeadNewsletter] = useState(false);
+  const [leadConsent, setLeadConsent] = useState(true);
+  const [leadNewsletter, setLeadNewsletter] = useState(true);
   const [leadLoading, setLeadLoading] = useState(false);
   const [leadError, setLeadError] = useState("");
 
@@ -1595,6 +1595,7 @@ export function PremiumCalculator() {
                       {groupedResults.map((group, i) => {
                         const isExpanded = expandedInsurer === group.insurerId;
                         const isFirst = i === 0 && sortOrder === "asc";
+                        const isCurrentInsurer = formState.currentInsurer && formState.currentInsurer !== "keine" && group.insurerName === formState.currentInsurer;
                         const primaryPerson = group.persons[0];
                         const cheapestModel = primaryPerson?.cheapest.t || "";
                         const cheapestTariff = primaryPerson?.cheapest.tn || "";
@@ -1603,7 +1604,9 @@ export function PremiumCalculator() {
                           <div
                             key={group.insurerId}
                             className={`rounded-xl border transition-all ${
-                              isFirst ? "ring-2 ring-emerald-400 bg-emerald-500/10 border-emerald-500/25" : "border-white/[0.08] bg-white/[0.03]"
+                              isFirst ? "ring-2 ring-emerald-400 bg-emerald-500/10 border-emerald-500/25"
+                              : isCurrentInsurer ? "ring-2 ring-blue-400/60 bg-blue-500/5 border-blue-500/20"
+                              : "border-white/[0.08] bg-white/[0.03]"
                             }`}
                             style={{ animation: `slideUp 0.3s ease-out ${i * 0.03}s both` }}
                           >
@@ -1641,6 +1644,7 @@ export function PremiumCalculator() {
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <span className="font-semibold text-white">{group.insurerName}</span>
                                     {isFirst && <span className="savings-badge text-xs">✓ Günstigste</span>}
+                                    {isCurrentInsurer && <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 font-medium whitespace-nowrap">Deine Kasse</span>}
                                   </div>
                                   {!isMultiPerson && (
                                     <div className="text-xs text-white/50 mt-0.5 truncate">
