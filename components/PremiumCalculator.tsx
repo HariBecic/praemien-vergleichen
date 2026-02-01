@@ -688,6 +688,9 @@ export function PremiumCalculator() {
         withAccident: p.withAccident,
       }));
 
+      console.log("[LEAD POST] sending", personsData.length, "persons:", personsData);
+      console.log("[LEAD POST] extras at submit time:", formState.extras);
+
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -713,6 +716,7 @@ export function PremiumCalculator() {
 
       if (res.ok) {
         const data = await res.json();
+        console.log("[LEAD POST] success, id:", data.id);
         setLeadId(data.id || null);
         setLeadSubmitted(true);
         setShowLeadModal(false);
@@ -1776,7 +1780,8 @@ export function PremiumCalculator() {
                       // Update existing lead with extras
                       if (leadId && formState.extras.length > 0) {
                         try {
-                          await fetch("/api/leads", {
+                          console.log("[EXTRAS PATCH] leadId:", leadId, "extras:", formState.extras);
+                          const res = await fetch("/api/leads", {
                             method: "PATCH",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
@@ -1784,9 +1789,13 @@ export function PremiumCalculator() {
                               extras: formState.extras,
                             }),
                           });
-                        } catch {
-                          // Silent fail — lead already captured
+                          const result = await res.json();
+                          console.log("[EXTRAS PATCH] result:", result);
+                        } catch (err) {
+                          console.error("[EXTRAS PATCH] error:", err);
                         }
+                      } else {
+                        console.log("[EXTRAS PATCH] skipped — leadId:", leadId, "extras:", formState.extras);
                       }
                       setExtrasSubmitted(true);
                     }}

@@ -35,6 +35,9 @@ export async function POST(request: NextRequest) {
     const persons = body.persons || [];
     const firstPerson = persons[0] || {};
 
+    console.log("[LEAD POST] persons count:", persons.length, "persons:", JSON.stringify(persons));
+    console.log("[LEAD POST] extras:", JSON.stringify(body.extras));
+
     const { data, error } = await supabase
       .from("leads")
       .insert({
@@ -57,7 +60,6 @@ export async function POST(request: NextRequest) {
           guenstigste_praemie: body.cheapestPremium || 0,
           zusatzversicherungen: body.extras || [],
           newsletter: body.newsletter || false,
-          // All persons with full details
           personen: persons.map((p: any, i: number) => ({
             name: p.name || `Person ${i + 1}`,
             geschlecht: p.gender || "",
@@ -66,7 +68,6 @@ export async function POST(request: NextRequest) {
             franchise: p.franchise || 0,
             unfalldeckung: p.withAccident || false,
           })),
-          // Keep flat fields for backward compat (first person)
           jahrgang: firstPerson.birthYear || "",
           altersgruppe: firstPerson.ageGroup || "",
           franchise: firstPerson.franchise || 0,
@@ -75,6 +76,8 @@ export async function POST(request: NextRequest) {
       })
       .select()
       .single();
+
+    console.log("[LEAD POST] result id:", data?.id, "error:", error);
 
     if (error) {
       console.error("Supabase error:", JSON.stringify(error));
@@ -160,12 +163,16 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Lead ID erforderlich" }, { status: 400 });
     }
 
+    console.log("[LEAD PATCH] id:", body.id, "extras:", JSON.stringify(body.extras));
+
     // Fetch existing lead to merge extra_data
     const { data: existing } = await supabase
       .from("leads")
       .select("extra_data")
       .eq("id", body.id)
       .single();
+
+    console.log("[LEAD PATCH] existing extra_data keys:", existing ? Object.keys(existing.extra_data || {}) : "NOT FOUND");
 
     const mergedExtraData = {
       ...(existing?.extra_data || {}),
@@ -176,6 +183,8 @@ export async function PATCH(request: NextRequest) {
       .from("leads")
       .update({ extra_data: mergedExtraData })
       .eq("id", body.id);
+
+    console.log("[LEAD PATCH] update error:", error);
 
     if (error) {
       console.error("Supabase PATCH error:", JSON.stringify(error));
