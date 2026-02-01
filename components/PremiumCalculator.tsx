@@ -10,6 +10,7 @@ interface Person {
   id: string;
   gender: "m" | "f" | "k" | "";
   name: string;
+  birthDate: string;
   birthYear: string;
   franchise: number;
   withAccident: boolean;
@@ -250,6 +251,7 @@ function createPerson(id?: string): Person {
     id: id || `p-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     gender: "",
     name: "",
+    birthDate: "",
     birthYear: "",
     franchise: DEFAULT_FRANCHISE_ADULT,
     withAccident: false,
@@ -264,6 +266,7 @@ function createUnbornPerson(id?: string): Person {
     id: id || `p-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     gender: "k",
     name: "Baby",
+    birthDate: `01.01.${currentYear}`,
     birthYear: String(currentYear),
     franchise: DEFAULT_FRANCHISE_CHILD,
     withAccident: true,
@@ -552,8 +555,18 @@ export function PremiumCalculator() {
         if (p.id !== id) return p;
         const updated = { ...p, ...updates };
 
+        // Auto-derive birthYear from birthDate (DD.MM.YYYY → YYYY)
+        if (updates.birthDate !== undefined) {
+          const parts = updated.birthDate.split(".");
+          if (parts.length === 3 && parts[2].length === 4) {
+            updated.birthYear = parts[2];
+          } else {
+            updated.birthYear = "";
+          }
+        }
+
         // Auto-reset franchise when age group changes
-        if (updates.birthYear !== undefined) {
+        if (updates.birthDate !== undefined || updates.birthYear !== undefined) {
           const oldAgeGroup = getAgeGroup(p.birthYear);
           const newAgeGroup = getAgeGroup(updated.birthYear);
           if (oldAgeGroup !== newAgeGroup) {
@@ -675,7 +688,7 @@ export function PremiumCalculator() {
         return formState.canton !== "" && formState.ort !== "" && !plzError;
       case 2:
         return formState.persons.every(
-          (p) => p.birthYear !== "" && p.franchise > -1
+          (p) => p.birthDate.length === 10 && p.birthYear !== "" && p.franchise > -1
         );
       case 3:
         return true;
@@ -702,6 +715,7 @@ export function PremiumCalculator() {
       const personsData = formState.persons.map((p, i) => ({
         name: p.name || `Person ${i + 1}`,
         gender: p.gender,
+        birthDate: p.birthDate,
         birthYear: p.birthYear,
         ageGroup: getAgeGroup(p.birthYear),
         franchise: p.franchise,
@@ -1238,24 +1252,30 @@ export function PremiumCalculator() {
                       </div>
 
                       <div>
-                        <label className="block text-xs text-white/50 mb-1">Jahrgang *</label>
+                        <label className="block text-xs text-white/50 mb-1">Geburtsdatum *</label>
                         <input
                           type="text"
                           inputMode="numeric"
-                          maxLength={4}
-                          placeholder="z.B. 1990"
-                          value={person.birthYear}
+                          placeholder="TT.MM.JJJJ"
+                          value={person.birthDate}
                           onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-                            updatePerson(person.id, { birthYear: val });
+                            let v = e.target.value.replace(/[^\d.]/g, "");
+                            const digits = v.replace(/\./g, "");
+                            if (digits.length >= 5) {
+                              v = digits.slice(0, 2) + "." + digits.slice(2, 4) + "." + digits.slice(4, 8);
+                            } else if (digits.length >= 3) {
+                              v = digits.slice(0, 2) + "." + digits.slice(2);
+                            }
+                            updatePerson(person.id, { birthDate: v });
                           }}
-                          className={`input-field ${
-                            person.birthYear.length === 4 && (parseInt(person.birthYear) < 1920 || parseInt(person.birthYear) > new Date().getFullYear())
+                          maxLength={10}
+                          className={`input-field max-w-[11rem] ${
+                            person.birthYear && (parseInt(person.birthYear) < 1920 || parseInt(person.birthYear) > new Date().getFullYear())
                               ? "!border-red-500/40"
                               : ""
                           }`}
                         />
-                        {person.birthYear.length === 4 && (
+                        {person.birthYear && person.birthDate.length === 10 && (
                           <p className="text-xs text-white/40 mt-1">
                             {AGE_LABELS[getAgeGroup(person.birthYear)]} ({new Date().getFullYear() - parseInt(person.birthYear)} J.)
                           </p>

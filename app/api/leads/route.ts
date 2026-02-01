@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
           personen: persons.map((p: any, i: number) => ({
             name: p.name || `Person ${i + 1}`,
             geschlecht: p.gender || "",
+            geburtsdatum: p.birthDate || "",
             jahrgang: p.birthYear || "",
             altersgruppe: p.ageGroup || "",
             franchise: p.franchise || 0,
