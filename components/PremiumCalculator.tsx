@@ -94,14 +94,47 @@ const CURRENT_INSURERS = [
 ];
 
 const EXTRA_OPTIONS = [
-  { id: "doctor", label: "Freie Arzt- und Spitalwahl", icon: "🏥" },
-  { id: "complementary", label: "Komplementärmedizin", icon: "🌿" },
-  { id: "comfort", label: "Komfort im Spital", icon: "🛏️" },
-  { id: "transport", label: "Transport und Rettung im Ausland", icon: "🚁" },
-  { id: "glasses", label: "Brillen und Kontaktlinsen", icon: "👓" },
-  { id: "fitness", label: "Fitness und Prävention", icon: "💪" },
-  { id: "dental", label: "Zahnversicherung", icon: "🦷" },
-  { id: "life", label: "Lebensversicherung / Tod und Invalidität", icon: "🛡️" },
+  { id: "doctor", label: "Freie Arzt- und Spitalwahl", desc: "Wähle deinen Arzt und dein Spital frei", icon: (
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+    </svg>
+  ), color: "from-blue-400 to-cyan-400" },
+  { id: "complementary", label: "Komplementärmedizin", desc: "Akupunktur, Homöopathie & mehr", icon: (
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+    </svg>
+  ), color: "from-emerald-400 to-teal-400" },
+  { id: "comfort", label: "Komfort im Spital", desc: "Halbprivat oder Privat-Abteilung", icon: (
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+    </svg>
+  ), color: "from-violet-400 to-purple-400" },
+  { id: "transport", label: "Transport & Rettung", desc: "Ambulanz, Helikopter & Ausland", icon: (
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+    </svg>
+  ), color: "from-orange-400 to-amber-400" },
+  { id: "glasses", label: "Brillen & Kontaktlinsen", desc: "Beiträge an Sehhilfen", icon: (
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  ), color: "from-sky-400 to-blue-400" },
+  { id: "fitness", label: "Fitness & Prävention", desc: "Fitnessbeiträge & Gesundheit", icon: (
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+    </svg>
+  ), color: "from-pink-400 to-rose-400" },
+  { id: "dental", label: "Zahnversicherung", desc: "Zahnbehandlung & Dentalhygiene", icon: (
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+    </svg>
+  ), color: "from-cyan-400 to-teal-400" },
+  { id: "life", label: "Lebensversicherung", desc: "Tod- & Invaliditätsabsicherung", icon: (
+    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+    </svg>
+  ), color: "from-amber-400 to-yellow-400" },
 ];
 
 const MODEL_LABELS: Record<string, string> = {
@@ -1594,10 +1627,12 @@ export function PremiumCalculator() {
           <div className="animate-fade-in">
             {!showLeadModal || leadSubmitted ? (
               <>
-                <h2 className="text-xl font-bold text-center mb-2">Wähle, was zählt</h2>
-                <p className="text-center text-white/50 text-sm mb-8">
-                  Welche Zusatzleistungen sind dir wichtig?
-                </p>
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold mb-2">Wähle, was zählt</h2>
+                  <p className="text-white/40 text-sm">
+                    Welche Zusatzleistungen sind dir wichtig? (optional)
+                  </p>
+                </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {EXTRA_OPTIONS.map((opt) => {
@@ -1613,24 +1648,60 @@ export function PremiumCalculator() {
                               : [...prev.extras, opt.id],
                           }));
                         }}
-                        className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left min-h-[120px] ${
+                        className={`group relative flex flex-col items-start p-4 rounded-xl border transition-all text-left overflow-hidden ${
                           isSelected
-                            ? "border-blue-500 bg-blue-500/10"
-                            : "border-white/[0.08] hover:border-white/[0.12] bg-white/[0.03]"
+                            ? "border-blue-500/50 bg-blue-500/10 shadow-lg shadow-blue-500/10"
+                            : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.15]"
                         }`}
                       >
-                        <span className="text-2xl">{opt.icon}</span>
-                        <span className={`text-sm font-medium leading-tight ${isSelected ? "text-blue-400" : "text-white/80"}`}>
+                        {/* Selection indicator */}
+                        {isSelected && (
+                          <div className="absolute top-2.5 right-2.5">
+                            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Icon with gradient bg */}
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110 ${
+                          isSelected
+                            ? `bg-gradient-to-br ${opt.color} text-white`
+                            : "bg-white/[0.06] text-white/50"
+                        }`}>
+                          {opt.icon}
+                        </div>
+
+                        {/* Label */}
+                        <span className={`text-sm font-semibold leading-tight mb-1 ${
+                          isSelected ? "text-white" : "text-white/70"
+                        }`}>
                           {opt.label}
+                        </span>
+
+                        {/* Description */}
+                        <span className="text-[11px] leading-snug text-white/30">
+                          {opt.desc}
                         </span>
                       </button>
                     );
                   })}
                 </div>
 
-                <div className="mt-10 flex justify-between items-center">
-                  <button onClick={() => setStep(3)} className="text-sm font-medium text-white/50 hover:text-white/80 px-4 py-2">
-                    Zurück
+                {/* Selected count */}
+                {formState.extras.length > 0 && (
+                  <div className="mt-4 text-center">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400 font-medium">
+                      {formState.extras.length} ausgewählt
+                    </span>
+                  </div>
+                )}
+
+                <div className="mt-8 flex justify-between items-center">
+                  <button onClick={() => setStep(3)} className="text-sm font-medium text-white/40 hover:text-white/70 px-4 py-2 transition-colors">
+                    ← Zurück
                   </button>
                   <button
                     onClick={() => openLeadModal("offer")}
