@@ -748,6 +748,28 @@ export function PremiumCalculator() {
 
   // ─── PLZ/Ort combo search ─────────────────────────────────────────────
 
+  const handlePlzSuggestionSelect = useCallback(
+    (plz: string, entry: PlzEntry, autoAdvance = true) => {
+      setPlzQuery(`${plz} ${entry.o}`);
+      setShowPlzDropdown(false);
+      setPlzSuggestions([]);
+      setFormState((prev) => ({
+        ...prev,
+        plz,
+        canton: entry.c,
+        ort: entry.o,
+        region: entry.r,
+      }));
+      // Preload canton data
+      loadCantonPremiums(entry.c).catch(() => {});
+      // Auto-advance to Step 2 after short delay for visual feedback
+      if (autoAdvance) {
+        setTimeout(() => setStep(2), 300);
+      }
+    },
+    [loadCantonPremiums]
+  );
+
   const handlePlzQueryChange = useCallback(
     async (query: string) => {
       setPlzQuery(query);
@@ -756,6 +778,10 @@ export function PremiumCalculator() {
       if (query.length < 2) {
         setPlzSuggestions([]);
         setShowPlzDropdown(false);
+        // Reset if user clears
+        if (query.length === 0) {
+          setFormState((prev) => ({ ...prev, plz: "", canton: "", ort: "", region: 0 }));
+        }
         return;
       }
 
@@ -792,6 +818,12 @@ export function PremiumCalculator() {
             return a.entry.o.localeCompare(b.entry.o);
           });
 
+          // Auto-select: if full 4-digit PLZ with exactly 1 result
+          if (isNumeric && query.length === 4 && results.length === 1) {
+            handlePlzSuggestionSelect(results[0].plz, results[0].entry, true);
+            return;
+          }
+
           setPlzSuggestions(results);
           setShowPlzDropdown(results.length > 0);
         } catch {
@@ -800,25 +832,7 @@ export function PremiumCalculator() {
         }
       }, 200);
     },
-    [loadPlzData]
-  );
-
-  const handlePlzSuggestionSelect = useCallback(
-    (plz: string, entry: PlzEntry) => {
-      setPlzQuery(`${plz} ${entry.o}`);
-      setShowPlzDropdown(false);
-      setPlzSuggestions([]);
-      setFormState((prev) => ({
-        ...prev,
-        plz,
-        canton: entry.c,
-        ort: entry.o,
-        region: entry.r,
-      }));
-      // Preload canton data
-      loadCantonPremiums(entry.c).catch(() => {});
-    },
-    [loadCantonPremiums]
+    [loadPlzData, handlePlzSuggestionSelect]
   );
 
   // ─── Auto-calculate current premium from BAG data ──────────────────
@@ -1100,13 +1114,17 @@ export function PremiumCalculator() {
             </div>
 
             <div className="mt-8 flex justify-center">
-              <button
-                onClick={() => setStep(2)}
-                disabled={!canProceed(1)}
-                className="btn-accent px-10 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Weiter
-              </button>
+              {formState.canton ? (
+                <button
+                  onClick={() => setStep(2)}
+                  className="btn-accent px-10 py-3 rounded-xl flex items-center gap-2"
+                >
+                  Weiter
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                </button>
+              ) : (
+                <p className="text-xs text-white/30">Gib deine PLZ oder deinen Ort ein um fortzufahren</p>
+              )}
             </div>
           </div>
         )}
