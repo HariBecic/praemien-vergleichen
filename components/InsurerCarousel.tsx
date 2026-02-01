@@ -30,14 +30,17 @@ function InsurerLogo({ name, domain }: { name: string; domain: string }) {
   if (failed) return null;
 
   return (
-    <div className="flex-shrink-0 flex items-center justify-center">
+    <div className="flex-shrink-0 flex items-center gap-3 opacity-50 hover:opacity-80 transition-opacity duration-300">
       <img
-        src={`https://img.logo.dev/${domain}?token=${TOKEN}&format=png&size=240`}
+        src={`https://img.logo.dev/${domain}?token=${TOKEN}&format=png&size=80&retina=true`}
         alt={name}
-        className="h-14 sm:h-16 w-auto max-w-[200px] object-contain grayscale opacity-40 hover:grayscale-0 hover:opacity-80 transition-all duration-300"
+        className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg object-contain"
         loading="lazy"
         onError={handleError}
       />
+      <span className="text-white/60 text-base sm:text-lg font-medium whitespace-nowrap">
+        {name}
+      </span>
     </div>
   );
 }
