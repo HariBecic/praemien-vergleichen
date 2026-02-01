@@ -421,6 +421,8 @@ export function PremiumCalculator() {
 
   // Tooltips
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  // Custom franchise dropdown
+  const [openFranchiseId, setOpenFranchiseId] = useState<string | null>(null);
 
   // ─── Data Loading ───────────────────────────────────────────────────────
 
@@ -836,16 +838,17 @@ export function PremiumCalculator() {
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === id ? null : id); }}
-        className="w-5 h-5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-white/50 text-xs font-bold flex items-center justify-center ml-1 transition-colors"
+        className="w-5 h-5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-white/40 text-[10px] font-bold flex items-center justify-center ml-1.5 transition-colors shrink-0"
       >
         i
       </button>
       {activeTooltip === id && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setActiveTooltip(null)} />
-          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-xl bg-white/[0.08] text-white text-xs leading-relaxed shadow-xl">
+          <div className="absolute z-50 bottom-full right-0 mb-2 w-72 p-3.5 rounded-xl text-white text-xs leading-relaxed shadow-2xl"
+               style={{ background: 'rgba(15, 26, 58, 0.98)', border: '1px solid rgba(255,255,255,0.12)' }}>
             {text}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-white/[0.08]" />
+            <div className="absolute top-full right-3 -mt-px border-4 border-transparent" style={{ borderTopColor: 'rgba(15, 26, 58, 0.98)' }} />
           </div>
         </>
       )}
@@ -1156,18 +1159,50 @@ export function PremiumCalculator() {
 
                       <div>
                         <label className="block text-xs text-white/50 mb-1">Franchise *</label>
-                        <select
-                          value={franchises.includes(person.franchise) ? person.franchise : ""}
-                          onChange={(e) => updatePerson(person.id, { franchise: parseInt(e.target.value) })}
-                          className="select-field"
-                        >
-                          <option value="">Wählen</option>
-                          {franchises.map((f) => (
-                            <option key={f} value={f}>
-                              CHF {f.toLocaleString("de-CH")}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setOpenFranchiseId(openFranchiseId === person.id ? null : person.id)}
+                            className="input-field w-full text-left flex items-center justify-between"
+                          >
+                            <span className={franchises.includes(person.franchise) ? "text-white" : "text-white/40"}>
+                              {franchises.includes(person.franchise) ? `CHF ${person.franchise.toLocaleString("de-CH")}` : "Wählen"}
+                            </span>
+                            <svg className={`w-4 h-4 text-white/40 transition-transform ${openFranchiseId === person.id ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                            </svg>
+                          </button>
+                          {openFranchiseId === person.id && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setOpenFranchiseId(null)} />
+                              <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl"
+                                   style={{ background: 'rgba(15, 26, 58, 0.98)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                {franchises.map((f) => (
+                                  <button
+                                    key={f}
+                                    type="button"
+                                    onClick={() => {
+                                      updatePerson(person.id, { franchise: f });
+                                      setOpenFranchiseId(null);
+                                    }}
+                                    className={`w-full px-4 py-2.5 text-sm text-left transition-colors flex items-center justify-between ${
+                                      person.franchise === f
+                                        ? "bg-blue-500/15 text-blue-400"
+                                        : "text-white/70 hover:bg-white/[0.06] hover:text-white"
+                                    }`}
+                                  >
+                                    <span>CHF {f.toLocaleString("de-CH")}</span>
+                                    {person.franchise === f && (
+                                      <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                      </svg>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
 
