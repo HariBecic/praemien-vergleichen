@@ -595,7 +595,7 @@ export function PremiumCalculator() {
 
         results.push({
           personId: person.id,
-          personLabel: formState.persons.length > 1 ? `Person ${i + 1}` : "",
+          personLabel: formState.persons.length > 1 ? (person.name || `Person ${i + 1}`) : "",
           ageGroup,
           franchise: person.franchise,
           withAccident: person.withAccident,
