@@ -1,91 +1,77 @@
 "use client";
 
-const INSURERS = [
-  "Helsana",
-  "CSS",
-  "SWICA",
-  "Concordia",
-  "Visana",
-  "KPT",
-  "Groupe Mutuel",
-  "Sanitas",
-  "Assura",
-  "Atupri",
-  "Sympany",
-  "ÖKK",
-  "EGK",
+import { useState, useCallback } from "react";
+
+/* eslint-disable @next/next/no-img-element */
+
+const CAROUSEL_INSURERS: { name: string; domain: string }[] = [
+  { name: "Helsana", domain: "helsana.ch" },
+  { name: "Sanitas", domain: "sanitas.com" },
+  { name: "SWICA", domain: "swica.ch" },
+  { name: "Concordia", domain: "concordia.ch" },
+  { name: "Assura", domain: "assura.ch" },
+  { name: "CSS", domain: "css.ch" },
+  { name: "Visana", domain: "visana.ch" },
+  { name: "KPT", domain: "kpt.ch" },
+  { name: "Atupri", domain: "atupri.ch" },
+  { name: "Sympany", domain: "sympany.ch" },
+  { name: "ÖKK", domain: "oekk.ch" },
+  { name: "EGK", domain: "egk.ch" },
+  { name: "Groupe Mutuel", domain: "groupemutuel.ch" },
+  { name: "Aquilana", domain: "aquilana.ch" },
 ];
 
-export function InsurerCarousel() {
-  // Duplicate for seamless loop
-  const items = [...INSURERS, ...INSURERS];
+// Clearbit Logo API returns full company logos with transparent backgrounds
+function getLogoUrl(domain: string) {
+  return `https://logo.clearbit.com/${domain}?size=200`;
+}
+
+function InsurerLogo({ name, domain }: { name: string; domain: string }) {
+  const [failed, setFailed] = useState(false);
+
+  const handleError = useCallback(() => {
+    setFailed(true);
+  }, []);
+
+  if (failed) {
+    return (
+      <span className="text-lg sm:text-xl font-semibold text-white/20 tracking-wide whitespace-nowrap">
+        {name}
+      </span>
+    );
+  }
 
   return (
-    <div style={{ marginTop: "2.5rem" }}>
-      {/* Keyframes can only be defined in a style tag, not inline */}
-      <style>{`
-        @keyframes _cscroll {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
-      `}</style>
+    <img
+      src={getLogoUrl(domain)}
+      alt={name}
+      className="h-8 sm:h-10 w-auto max-w-[160px] object-contain brightness-0 invert opacity-30 hover:opacity-60 transition-opacity duration-300"
+      loading="lazy"
+      onError={handleError}
+    />
+  );
+}
 
-      <p
-        style={{
-          fontSize: "10px",
-          textTransform: "uppercase",
-          letterSpacing: "0.25em",
-          color: "rgba(255,255,255,0.2)",
-          marginBottom: "1.25rem",
-          textAlign: "center",
-          fontWeight: 500,
-        }}
-      >
-        Vergleichen Sie unter anderem
-      </p>
+export function InsurerCarousel() {
+  const items = [...CAROUSEL_INSURERS, ...CAROUSEL_INSURERS];
 
-      {/* Fade edges via mask */}
-      <div
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          maskImage:
-            "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-          WebkitMaskImage:
-            "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-        }}
-      >
-        {/* Scrolling track — all inline styles, zero class dependencies */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "3.5rem",
-            animation: "_cscroll 40s linear infinite",
-            width: "max-content",
-            willChange: "transform",
-          }}
-        >
-          {items.map((name, i) => (
-            <span
-              key={`${name}-${i}`}
-              style={{
-                flexShrink: 0,
-                fontSize: "1.1rem",
-                fontWeight: 600,
-                letterSpacing: name === name.toUpperCase() ? "0.15em" : "0.03em",
-                color: "rgba(255,255,255,0.2)",
-                whiteSpace: "nowrap",
-                fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-                transition: "color 0.3s",
-                cursor: "default",
-                userSelect: "none",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.45)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.2)")}
+  return (
+    <div className="mt-10 relative">
+      {/* Carousel container */}
+      <div className="relative overflow-hidden py-4">
+        {/* Fade edges */}
+        <div className="absolute left-0 top-0 bottom-0 w-24 sm:w-40 bg-gradient-to-r from-[#0a1128] to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-24 sm:w-40 bg-gradient-to-l from-[#0a1128] to-transparent z-10 pointer-events-none" />
+
+        {/* Scrolling track */}
+        <div className="flex items-center gap-14 sm:gap-20 animate-scroll-logos px-4">
+          {items.map((insurer, i) => (
+            <div
+              key={`${insurer.domain}-${i}`}
+              className="flex-shrink-0 flex items-center justify-center"
             >
-              {name}
-            </span>
+              <InsurerLogo name={insurer.name} domain={insurer.domain} />
+            </div>
           ))}
         </div>
       </div>
