@@ -30,16 +30,14 @@ function InsurerLogo({ name, domain }: { name: string; domain: string }) {
   if (failed) return null;
 
   return (
-    <div className="flex-shrink-0">
-      <div className="bg-white rounded-xl px-4 py-3 flex items-center justify-center opacity-60 hover:opacity-90 transition-opacity duration-300">
-        <img
-          src={`https://img.logo.dev/${domain}?token=${TOKEN}&format=png&size=120`}
-          alt={name}
-          className="h-7 sm:h-8 w-auto max-w-[140px] object-contain grayscale hover:grayscale-0 transition-all duration-300"
-          loading="lazy"
-          onError={handleError}
-        />
-      </div>
+    <div className="flex-shrink-0 flex items-center justify-center">
+      <img
+        src={`https://img.logo.dev/${domain}?token=${TOKEN}&format=png&size=240`}
+        alt={name}
+        className="h-14 sm:h-16 w-auto max-w-[200px] object-contain grayscale opacity-40 hover:grayscale-0 hover:opacity-80 transition-all duration-300"
+        loading="lazy"
+        onError={handleError}
+      />
     </div>
   );
 }
@@ -55,7 +53,7 @@ export function InsurerCarousel() {
         WebkitMaskImage: "linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent)",
       }}
     >
-      <div className="flex items-center gap-6 sm:gap-8 animate-scroll-logos">
+      <div className="flex items-center gap-10 sm:gap-14 animate-scroll-logos">
         {items.map((insurer, i) => (
           <InsurerLogo key={`${insurer.domain}-${i}`} name={insurer.name} domain={insurer.domain} />
         ))}
