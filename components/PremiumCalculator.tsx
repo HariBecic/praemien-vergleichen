@@ -252,7 +252,7 @@ function createPerson(id?: string): Person {
     name: "",
     birthYear: "",
     franchise: DEFAULT_FRANCHISE_ADULT,
-    withAccident: true,
+    withAccident: false,
     isNewToSwitzerland: false,
     entryDate: "",
   };
@@ -1084,21 +1084,21 @@ export function PremiumCalculator() {
                     {/* Gender: 3 options */}
                     <div className="mb-4">
                       <label className="block text-xs text-white/50 mb-2">Geschlecht</label>
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         {(
                           [
                             { value: "m" as const, label: "Männlich", icon: (
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
                               </svg>
                             )},
                             { value: "f" as const, label: "Weiblich", icon: (
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
                               </svg>
                             )},
                             { value: "k" as const, label: "Kind", icon: (
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                               </svg>
                             )},
@@ -1106,8 +1106,17 @@ export function PremiumCalculator() {
                         ).map((g) => (
                           <button
                             key={g.value}
-                            onClick={() => updatePerson(person.id, { gender: g.value })}
-                            className={`flex items-center gap-2 flex-1 py-2.5 px-3 rounded-lg text-sm font-medium border transition-all ${
+                            onClick={() => {
+                              const updates: Partial<Person> = { gender: g.value };
+                              // Kinder brauchen Unfalldeckung (nicht über Arbeitgeber versichert)
+                              if (g.value === "k") {
+                                updates.withAccident = true;
+                              } else {
+                                updates.withAccident = false;
+                              }
+                              updatePerson(person.id, updates);
+                            }}
+                            className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 px-2 rounded-lg text-xs sm:text-sm font-medium border transition-all ${
                               person.gender === g.value
                                 ? "border-blue-500 bg-blue-500/10 text-blue-400"
                                 : "border-white/[0.08] text-white/50 hover:border-white/[0.12]"
@@ -1369,20 +1378,21 @@ export function PremiumCalculator() {
                     <div className="grid grid-cols-3 gap-2">
                       {(
                         [
-                          { value: "cheapest", label: "Günstigste" },
-                          { value: "recommended", label: "Empfehlung" },
-                          { value: "offers", label: "Angebote" },
+                          { value: "cheapest", label: "Günstigste", icon: "💰" },
+                          { value: "recommended", label: "Empfehlung", icon: "⭐" },
+                          { value: "offers", label: "Angebote", icon: "📋" },
                         ] as const
                       ).map((pref) => (
                         <button
                           key={pref.value}
                           onClick={() => setFormState((prev) => ({ ...prev, preference: pref.value }))}
-                          className={`p-3 rounded-xl text-center text-sm font-medium border-2 transition-all ${
+                          className={`py-3 px-2 rounded-xl text-center text-xs sm:text-sm font-medium border-2 transition-all ${
                             formState.preference === pref.value
-                              ? "border-blue-500 bg-blue-500 text-white"
-                              : "border-white/[0.08] hover:border-white/[0.12] text-white/60"
+                              ? "border-blue-500 bg-blue-500/15 text-white shadow-lg shadow-blue-500/10"
+                              : "border-white/[0.06] bg-white/[0.03] hover:border-white/[0.12] text-white/60"
                           }`}
                         >
+                          <div className="text-lg mb-1">{pref.icon}</div>
                           {pref.label}
                         </button>
                       ))}
