@@ -1476,34 +1476,38 @@ export function PremiumCalculator() {
                 {groupedResults.length > 0 && (
                   <>
                     {/* Filters */}
-                    <div className="flex items-center gap-2 mb-5">
-                      <select
-                        value={modelFilter}
-                        onChange={(e) => { setModelFilter(e.target.value); setExpandedInsurer(null); }}
-                        className="select-field !w-auto text-sm !py-2 !px-3 !pr-8"
-                      >
-                        <option value="all">Alle Modelle</option>
-                        <option value="standard">Standard</option>
-                        <option value="hausarzt">Hausarzt</option>
-                        <option value="hmo">HMO</option>
-                        <option value="telmed">Telmed</option>
-                      </select>
+                    <div className="mb-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-white/60">{groupedResults.length} Versicherer</span>
+                        <button
+                          onClick={() => setShowResults(false)}
+                          className="text-xs sm:text-sm text-blue-400 font-medium hover:underline"
+                        >
+                          ✏️ Angaben ändern
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={modelFilter}
+                          onChange={(e) => { setModelFilter(e.target.value); setExpandedInsurer(null); }}
+                          className="select-field !w-auto text-sm !py-2 !px-3 !pr-8"
+                        >
+                          <option value="all">Alle Modelle</option>
+                          <option value="standard">Standard</option>
+                          <option value="hausarzt">Hausarzt</option>
+                          <option value="hmo">HMO</option>
+                          <option value="telmed">Telmed</option>
+                        </select>
 
-                      <select
-                        value={sortOrder}
-                        onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-                        className="select-field !w-auto text-sm !py-2 !px-3 !pr-8"
-                      >
-                        <option value="asc">Günstigste zuerst</option>
-                        <option value="desc">Teuerste zuerst</option>
-                      </select>
-
-                      <button
-                        onClick={() => setShowResults(false)}
-                        className="ml-auto text-xs sm:text-sm text-blue-400 font-medium hover:underline whitespace-nowrap"
-                      >
-                        Angaben ändern
-                      </button>
+                        <select
+                          value={sortOrder}
+                          onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+                          className="select-field !w-auto text-sm !py-2 !px-3 !pr-8"
+                        >
+                          <option value="asc">Günstigste zuerst</option>
+                          <option value="desc">Teuerste zuerst</option>
+                        </select>
+                      </div>
                     </div>
 
                     {/* Grouped insurer results */}
@@ -1763,7 +1767,7 @@ export function PremiumCalculator() {
                     onClick={() => openLeadModal("offer")}
                     className="btn-accent px-10 py-3.5 rounded-xl text-base"
                   >
-                    Jetzt Wechseln
+                    Jetzt vergleichen
                   </button>
                 </div>
               </>
