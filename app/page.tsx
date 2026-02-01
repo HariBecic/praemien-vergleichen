@@ -1,6 +1,4 @@
 import { PremiumCalculator } from "@/components/PremiumCalculator";
-import { Header } from "@/components/Header";
-import { Logo } from "@/components/Logo";
 import { InsurerCarousel } from "@/components/InsurerCarousel";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -100,7 +98,6 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <Header />
 
       <main>
         {/* ── Hero ── */}
@@ -654,22 +651,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-white/[0.06] py-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <Logo size="small" className="text-white/70" />
-            <div className="flex gap-6 text-sm">
-              <a href="/impressum" className="text-white/40 hover:text-white transition-colors">Impressum</a>
-              <a href="/datenschutz" className="text-white/40 hover:text-white transition-colors">Datenschutz</a>
-            </div>
-          </div>
-          <div className="mt-6 pt-6 border-t border-white/[0.06] text-xs text-center text-white/25">
-            Copyright © {new Date().getFullYear()} Prämien vergleichen · Alle Angaben ohne Gewähr
-          </div>
-        </div>
-      </footer>
     </>
   );
 }

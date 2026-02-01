@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -232,7 +234,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-sans antialiased text-white min-h-screen">
         <div className="mesh-bg" aria-hidden="true" />
+        <Header />
         {children}
+        <Footer />
 
         {/* ── Meta Pixel (Facebook) ── */}
         {/* Replace YOUR_PIXEL_ID with your actual Facebook Pixel IDs */}
