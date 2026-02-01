@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Logo Downloader</title>
+  <style>
+    body { font-family: system-ui; background: #1a1a2e; color: white; padding: 2rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+    .card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1.5rem; text-align: center; }
+    .card img { max-height: 60px; max-width: 180px; margin-bottom: 0.75rem; }
+    .card .status { font-size: 12px; color: #888; }
+    .card .status.ok { color: #4ade80; }
+    .card .status.fail { color: #f87171; }
+    button { background: #e67e22; color: white; border: none; padding: 12px 32px; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 1rem; }
+    button:hover { background: #d35400; }
+    h1 { margin: 0; }
+    p { color: #aaa; }
+  </style>
+</head>
+<body>
+  <h1>🏥 Versicherer Logos herunterladen</h1>
+  <p>Diese Seite lädt alle 13 Logos von Brandfetch und speichert sie als PNG.</p>
+  <button onclick="downloadAll()">⬇️ Alle Logos herunterladen</button>
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const BF = "1idc9vLyOz1J1qurgu6";
+    const INSURERS = [
+      { name: "helsana", domain: "helsana.ch" },
+      { name: "css", domain: "css.ch" },
+      { name: "swica", domain: "swica.ch" },
+      { name: "concordia", domain: "concordia.ch" },
+      { name: "visana", domain: "visana.ch" },
+      { name: "kpt", domain: "kpt.ch" },
+      { name: "groupemutuel", domain: "groupemutuel.ch" },
+      { name: "sanitas", domain: "sanitas.com" },
+      { name: "assura", domain: "assura.ch" },
+      { name: "atupri", domain: "atupri.ch" },
+      { name: "sympany", domain: "sympany.ch" },
+      { name: "oekk", domain: "oekk.ch" },
+      { name: "egk", domain: "egk.ch" },
+    ];
+
+    const grid = document.getElementById("grid");
+
+    // Show all logos
+    INSURERS.forEach(ins => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.id = `card-${ins.name}`;
+
+      const img = document.createElement("img");
+      img.src = `https://cdn.brandfetch.io/${ins.domain}/logo?c=${BF}`;
+      img.alt = ins.name;
+      img.id = `img-${ins.name}`;
+
+      const label = document.createElement("div");
+      label.textContent = ins.name;
+      label.style.fontWeight = "600";
+      label.style.marginBottom = "4px";
+
+      const status = document.createElement("div");
+      status.className = "status";
+      status.id = `status-${ins.name}`;
+      status.textContent = "Bereit";
+
+      card.appendChild(img);
+      card.appendChild(label);
+      card.appendChild(status);
+      grid.appendChild(card);
+    });
+
+    async function downloadAll() {
+      for (const ins of INSURERS) {
+        const status = document.getElementById(`status-${ins.name}`);
+        try {
+          status.textContent = "Lade...";
+
+          const img = document.getElementById(`img-${ins.name}`);
+
+          // Wait for image to load
+          await new Promise((resolve, reject) => {
+            if (img.complete && img.naturalWidth > 0) return resolve();
+            img.onload = resolve;
+            img.onerror = reject;
+          });
+
+          // Draw to canvas to get PNG
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+
+          // Download
+          const link = document.createElement("a");
+          link.download = `${ins.name}.png`;
+          link.href = canvas.toDataURL("image/png");
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          status.textContent = `✓ ${img.naturalWidth}x${img.naturalHeight}`;
+          status.className = "status ok";
+        } catch (e) {
+          status.textContent = `✗ Fehler: ${e.message || "Laden fehlgeschlagen"}`;
+          status.className = "status fail";
+        }
+
+        // Small delay between downloads
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+  </script>
+</body>
+</html>
