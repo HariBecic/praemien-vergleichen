@@ -415,6 +415,17 @@ export function PremiumCalculator() {
   const [plzSuggestions, setPlzSuggestions] = useState<{ plz: string; entry: PlzEntry }[]>([]);
   const [showPlzDropdown, setShowPlzDropdown] = useState(false);
   const plzSearchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sectionRefs = useRef<Record<number, HTMLDivElement | null>>({});
+
+  // Auto-scroll to active section when step changes
+  useEffect(() => {
+    const el = sectionRefs.current[step];
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [step]);
 
   // Tooltips
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
@@ -902,12 +913,8 @@ export function PremiumCalculator() {
   // RENDER
   // ═══════════════════════════════════════════════════════════════════════
 
-  const STEP_LABELS = [
-    "Situation & Wohnort",
-    "Persönliche Angaben",
-    "Aktuelle Versicherung",
-    "Zusatzversicherung",
-  ];
+  const CALC_TYPE_LABELS_S: Record<string, string> = { single: "Einzelperson", couple: "Paar", family: "Familie", unborn: "Ungeborenes Kind" };
+  void CALC_TYPE_LABELS_S; // step labels moved inline into sections
 
   const InfoTooltip = ({ id, text }: { id: string; text: string }) => (
     <span className="relative inline-flex">
@@ -931,73 +938,52 @@ export function PremiumCalculator() {
     </span>
   );
 
+  const CALC_TYPE_LABELS: Record<string, string> = { single: "Einzelperson", couple: "Paar", family: "Familie", unborn: "Ungeborenes Kind" };
+
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* ══════════════════════════════════════════════════════════════════ */}
-      {/* STEP INDICATOR (miavita-style connected line)                     */}
-      {/* ══════════════════════════════════════════════════════════════════ */}
-      <div className="relative flex items-start justify-between mb-10 px-4">
-        {/* Background line */}
-        <div className="absolute top-5 left-[calc(12.5%)] right-[calc(12.5%)] h-0.5 bg-white/[0.08]" />
-        {/* Progress line */}
-        <div
-          className="absolute top-5 left-[calc(12.5%)] h-0.5 bg-blue-500 transition-all duration-500"
-          style={{ width: `${Math.max(0, (step - 1) / 3) * 75}%` }}
-        />
-        {STEP_LABELS.map((label, i) => {
-          const n = i + 1;
-          const isActive = step === n;
-          const isCompleted = step > n;
-          return (
-            <div key={n} className="relative flex flex-col items-center z-10" style={{ width: "25%" }}>
-              <button
-                onClick={() => isCompleted && setStep(n)}
-                disabled={!isCompleted}
-                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all border-2 ${
-                  isActive
-                    ? "border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                    : isCompleted
-                    ? "border-blue-500 bg-blue-500 text-white cursor-pointer hover:bg-blue-600"
-                    : "border-white/[0.12] bg-white/[0.06] text-white/40"
-                }`}
-              >
-                {isCompleted ? (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                ) : (
-                  n
-                )}
-              </button>
-              <span
-                className={`text-xs mt-2 text-center leading-tight hidden sm:block ${
-                  isActive ? "text-blue-400 font-semibold" : isCompleted ? "text-blue-400" : "text-white/40"
-                }`}
-              >
-                {label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════════════ */}
-      {/* MAIN CARD                                                         */}
-      {/* ══════════════════════════════════════════════════════════════════ */}
-      <div className="card-elevated p-6 sm:p-8">
-        {/* Loading overlay */}
-        {premiumLoading && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050a18]/80 backdrop-blur-sm">
-            <div className="text-center">
-              <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-white/60 font-medium">Prämien werden berechnet...</p>
-            </div>
+    <div className="max-w-3xl mx-auto space-y-4">
+      {/* Loading overlay */}
+      {premiumLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050a18]/80 backdrop-blur-sm">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-white/60 font-medium">Prämien werden berechnet...</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ── STEP 1: Situation & Wohnort ──────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 1: Situation & Wohnort                                    */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      <div ref={(el) => { sectionRefs.current[1] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "2rem" }}>
+        {/* Section header */}
+        <div
+          className={`flex items-center gap-3 p-5 ${step > 1 ? "cursor-pointer hover:bg-white/[0.02] transition-colors" : ""}`}
+          onClick={() => step > 1 && setStep(1)}
+        >
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
+            step > 1 ? "bg-blue-500 text-white" : step === 1 ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30" : "bg-white/[0.06] text-white/40"
+          }`}>
+            {step > 1 ? (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+            ) : "1"}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-white/80">Situation & Wohnort</div>
+            {step > 1 && (
+              <div className="text-xs text-white/40 truncate">
+                {CALC_TYPE_LABELS[formState.calculationType] || formState.calculationType} · {formState.plz} {formState.ort} ({formState.canton})
+              </div>
+            )}
+          </div>
+          {step > 1 && (
+            <span className="text-xs text-blue-400 font-medium shrink-0">Ändern</span>
+          )}
+        </div>
+
+        {/* Section content */}
         {step === 1 && (
-          <div className="animate-fade-in">
+          <div className="px-5 pb-6 sm:px-8 sm:pb-8 animate-fade-in">
             <h2 className="text-xl font-bold text-center mb-6">
               Für wen möchtest du jetzt Prämien berechnen?
             </h2>
@@ -1112,30 +1098,48 @@ export function PremiumCalculator() {
                 </p>
               )}
             </div>
-
-            <div className="mt-8 flex justify-center">
-              {formState.canton ? (
-                <button
-                  onClick={() => setStep(2)}
-                  className="btn-accent px-10 py-3 rounded-xl flex items-center gap-2"
-                >
-                  Weiter
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                </button>
-              ) : (
-                <p className="text-xs text-white/30">Gib deine PLZ oder deinen Ort ein um fortzufahren</p>
-              )}
-            </div>
           </div>
         )}
+      </div>
 
-        {/* ── STEP 2: Persönliche Angaben ──────────────────────────────── */}
-        {step === 2 && (
-          <div className="animate-fade-in">
-            <h2 className="text-xl font-bold text-center mb-6">Persönliche Angaben ergänzen</h2>
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 2: Persönliche Angaben                                    */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {step >= 2 && (
+        <div ref={(el) => { sectionRefs.current[2] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "2rem" }}>
+          {/* Section header */}
+          <div
+            className={`flex items-center gap-3 p-5 ${step > 2 ? "cursor-pointer hover:bg-white/[0.02] transition-colors" : ""}`}
+            onClick={() => step > 2 && setStep(2)}
+          >
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
+              step > 2 ? "bg-blue-500 text-white" : step === 2 ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30" : "bg-white/[0.06] text-white/40"
+            }`}>
+              {step > 2 ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              ) : "2"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-white/80">Persönliche Angaben</div>
+              {step > 2 && (
+                <div className="text-xs text-white/40 truncate">
+                  {formState.persons.map((p, i) => {
+                    const ag = getAgeGroup(p.birthYear);
+                    return `${p.name || `Person ${i+1}`} (${AGE_LABELS[ag]}, Fr. ${p.franchise})`;
+                  }).join(" · ")}
+                </div>
+              )}
+            </div>
+            {step > 2 && (
+              <span className="text-xs text-blue-400 font-medium shrink-0">Ändern</span>
+            )}
+          </div>
 
-            <div className="space-y-6">
-              {formState.persons.map((person, idx) => {
+          {/* Section content */}
+          {step === 2 && (
+            <div className="px-5 pb-6 sm:px-8 sm:pb-8 animate-fade-in">
+              <div className="space-y-6">
+                {formState.persons.map((person, idx) => {
                 const ageGroup = getAgeGroup(person.birthYear);
                 const franchises = getFranchisesForAge(ageGroup);
                 const isUnborn = formState.calculationType === "unborn" && idx === 0;
@@ -1372,31 +1376,45 @@ export function PremiumCalculator() {
               )}
             </div>
 
-            <div className="mt-8 flex justify-between">
-              <button onClick={() => setStep(1)} className="text-sm font-medium text-white/50 hover:text-white/80 px-4 py-2">
-                Zurück
-              </button>
+            <div className="mt-8 flex justify-end">
               <button
                 onClick={() => setStep(3)}
                 disabled={!canProceed(2)}
-                className="btn-accent px-10 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn-accent px-10 py-3 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 Weiter
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
               </button>
             </div>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+      )}
 
-        {/* ── STEP 3: Grundversicherung (Preferences + Inline Results) ─ */}
-        {step === 3 && (
-          <div className="animate-fade-in">
-            {!showResults ? (
-              <>
-                <h2 className="text-xl font-bold text-center mb-2">Deine aktuelle Versicherung</h2>
-                <p className="text-center text-white/50 text-sm mb-6">
-                  Diese Angaben helfen uns, dir das beste Sparpotenzial zu zeigen.
-                </p>
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 3: Aktuelle Versicherung + Results                        */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {step >= 3 && (
+        <div ref={(el) => { sectionRefs.current[3] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "2rem" }}>
+          {/* Section header */}
+          {!showResults && (
+            <div className="flex items-center gap-3 p-5">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
+                step >= 3 ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30" : "bg-white/[0.06] text-white/40"
+              }`}>
+                3
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-white/80">Aktuelle Versicherung</div>
+              </div>
+            </div>
+          )}
 
+          {/* Section content */}
+          {step === 3 && (
+            <div className="animate-fade-in">
+              {!showResults ? (
+                <div className="px-5 pb-6 sm:px-8 sm:pb-8">
                 <div className="max-w-md mx-auto space-y-6">
                   {/* Current insurer */}
                   <div>
@@ -1488,10 +1506,7 @@ export function PremiumCalculator() {
                   </div>
                 </div>
 
-                <div className="mt-8 flex justify-between">
-                  <button onClick={() => setStep(2)} className="text-sm font-medium text-white/50 hover:text-white/80 px-4 py-2">
-                    Zurück
-                  </button>
+                <div className="mt-8 flex justify-end">
                   <button
                     onClick={calculateResults}
                     disabled={premiumLoading}
@@ -1503,10 +1518,10 @@ export function PremiumCalculator() {
                     Ergebnis anzeigen
                   </button>
                 </div>
-              </>
-            ) : (
+                </div>
+              ) : (
               /* ── INLINE RESULTS ── */
-              <>
+              <div className="p-5 sm:p-8">
                 {(() => {
                   const summaryParts: string[] = [
                     `${formState.plz} ${formState.ort} (${formState.canton})`,
@@ -1779,15 +1794,30 @@ export function PremiumCalculator() {
                     Weiter zu Zusatzversicherung
                   </button>
                 </div>
-              </>
+              </div>
             )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+      )}
 
-        {/* ── STEP 4: Zusatzversicherung + Lead Form ──────────────────── */}
-        {step === 4 && (
-          <div className="animate-fade-in">
-            <>
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 4: Zusatzversicherung                                     */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {step >= 4 && (
+        <div ref={(el) => { sectionRefs.current[4] = el; }} className="card-elevated overflow-visible" style={{ scrollMarginTop: "2rem" }}>
+          {/* Section header */}
+          <div className="flex items-center gap-3 p-5">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-blue-500 text-white shadow-lg shadow-blue-500/30">
+              4
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-white/80">Zusatzversicherung</div>
+            </div>
+          </div>
+
+          {step === 4 && (
+            <div className="px-5 pb-6 sm:px-8 sm:pb-8 animate-fade-in">
               <>
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-bold mb-2">Wähle, was zählt</h2>
@@ -1861,10 +1891,7 @@ export function PremiumCalculator() {
                   </div>
                 )}
 
-                <div className="mt-8 flex justify-between items-center">
-                  <button onClick={() => setStep(3)} className="text-sm font-medium text-white/40 hover:text-white/70 px-4 py-2 transition-colors">
-                    ← Zurück
-                  </button>
+                <div className="mt-8 flex justify-end">
                   <button
                     onClick={async () => {
                       // Update existing lead with extras
@@ -1905,10 +1932,10 @@ export function PremiumCalculator() {
                   </div>
                 )}
               </>
-            </>
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════════════════ */}
       {/* LEAD MODAL                                                        */}
