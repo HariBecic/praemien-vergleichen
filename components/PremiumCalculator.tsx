@@ -1155,13 +1155,49 @@ export function PremiumCalculator() {
 
                     <div>
                       <label className="block text-xs text-stone-500 mb-1">Geburtsdatum *</label>
-                      <input
-                        type="date"
-                        value={person.birthdate}
-                        onChange={(e) => updatePerson(person.id, { birthdate: e.target.value })}
-                        className="input-field"
-                        required
-                      />
+                      <div className="flex gap-2">
+                        <select
+                          value={person.birthdate ? parseInt(person.birthdate.split("-")[2] || "0") : ""}
+                          onChange={(e) => {
+                            const parts = (person.birthdate || "--").split("-");
+                            const day = e.target.value.padStart(2, "0");
+                            updatePerson(person.id, { birthdate: `${parts[0] || ""}-${parts[1] || ""}-${day}` });
+                          }}
+                          className="select-field !w-auto flex-1"
+                        >
+                          <option value="">Tag</option>
+                          {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                            <option key={d} value={d}>{d}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={person.birthdate ? parseInt(person.birthdate.split("-")[1] || "0") : ""}
+                          onChange={(e) => {
+                            const parts = (person.birthdate || "--").split("-");
+                            const month = e.target.value.padStart(2, "0");
+                            updatePerson(person.id, { birthdate: `${parts[0] || ""}-${month}-${parts[2] || ""}` });
+                          }}
+                          className="select-field !w-auto flex-1"
+                        >
+                          <option value="">Monat</option>
+                          {["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"].map((m, i) => (
+                            <option key={i + 1} value={i + 1}>{m}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={person.birthdate ? person.birthdate.split("-")[0] : ""}
+                          onChange={(e) => {
+                            const parts = (person.birthdate || "--").split("-");
+                            updatePerson(person.id, { birthdate: `${e.target.value}-${parts[1] || "01"}-${parts[2] || "01"}` });
+                          }}
+                          className="select-field !w-auto flex-[1.2]"
+                        >
+                          <option value="">Jahr</option>
+                          {Array.from({ length: 107 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                            <option key={y} value={y}>{y}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
                     <div>
