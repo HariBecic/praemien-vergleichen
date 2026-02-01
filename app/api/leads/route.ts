@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
             neu_in_schweiz: p.isNewToSwitzerland || false,
             einreisedatum: p.entryDate || "",
           })),
+          geburtsdatum: firstPerson.birthDate || "",
           jahrgang: firstPerson.birthYear || "",
           altersgruppe: firstPerson.ageGroup || "",
           franchise: firstPerson.franchise || 0,
