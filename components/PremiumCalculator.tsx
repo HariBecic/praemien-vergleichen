@@ -837,7 +837,7 @@ export function PremiumCalculator() {
     <span className="relative inline-flex">
       <button
         type="button"
-        onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === id ? null : id); }}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveTooltip(activeTooltip === id ? null : id); }}
         className="w-5 h-5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-white/40 text-[10px] font-bold flex items-center justify-center ml-1.5 transition-colors shrink-0"
       >
         i
@@ -1061,7 +1061,7 @@ export function PremiumCalculator() {
                 const isUnborn = formState.calculationType === "unborn" && idx === 0;
 
                 return (
-                  <div key={person.id} className="p-5 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+                  <div key={person.id} className="p-5 rounded-xl bg-white/[0.04] border border-white/[0.08]" style={{ overflow: 'visible' }}>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-semibold text-white/80">
                         {isUnborn ? "Ungeborenes Kind" : `Person ${idx + 1}`}
@@ -1159,11 +1159,18 @@ export function PremiumCalculator() {
 
                       <div>
                         <label className="block text-xs text-white/50 mb-1">Franchise *</label>
-                        <div className="relative">
+                        <div className="relative" ref={(el) => {
+                          if (el) el.setAttribute('data-franchise-id', person.id);
+                        }}>
                           <button
                             type="button"
                             onClick={() => setOpenFranchiseId(openFranchiseId === person.id ? null : person.id)}
-                            className="input-field w-full text-left flex items-center justify-between"
+                            className="w-full px-4 py-3 rounded-xl text-left flex items-center justify-between transition-all duration-150"
+                            style={{
+                              background: 'rgba(255,255,255,0.06)',
+                              border: openFranchiseId === person.id ? '1px solid #3b82f6' : '1px solid rgba(255,255,255,0.1)',
+                              boxShadow: openFranchiseId === person.id ? '0 0 0 3px rgba(59,130,246,0.15)' : 'none',
+                            }}
                           >
                             <span className={franchises.includes(person.franchise) ? "text-white" : "text-white/40"}>
                               {franchises.includes(person.franchise) ? `CHF ${person.franchise.toLocaleString("de-CH")}` : "Wählen"}
@@ -1175,8 +1182,8 @@ export function PremiumCalculator() {
                           {openFranchiseId === person.id && (
                             <>
                               <div className="fixed inset-0 z-40" onClick={() => setOpenFranchiseId(null)} />
-                              <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl"
-                                   style={{ background: 'rgba(15, 26, 58, 0.98)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                              <div className="absolute z-50 top-full left-0 right-0 mt-1 py-1 rounded-xl shadow-2xl"
+                                   style={{ background: '#0f1a3a', border: '1px solid rgba(255,255,255,0.12)' }}>
                                 {franchises.map((f) => (
                                   <button
                                     key={f}
@@ -1207,27 +1214,33 @@ export function PremiumCalculator() {
                     </div>
 
                     {/* Toggles with info tooltips */}
-                    <div className="flex flex-wrap gap-6 mt-4">
-                      <label className="flex items-center gap-2 cursor-pointer text-sm">
-                        <div
-                          className={`relative w-10 h-5 rounded-full transition-colors ${person.withAccident ? "bg-blue-500" : "bg-white/[0.15]"}`}
+                    <div className="flex flex-wrap gap-x-8 gap-y-3 mt-4">
+                      <div className="flex items-center gap-2 text-sm">
+                        <button
+                          type="button"
+                          className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${person.withAccident ? "bg-blue-500" : "bg-white/[0.15]"}`}
                           onClick={() => updatePerson(person.id, { withAccident: !person.withAccident })}
                         >
                           <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${person.withAccident ? "translate-x-5" : "translate-x-0.5"}`} />
-                        </div>
-                        <span>Unfalldeckung einschliessen</span>
+                        </button>
+                        <span className="cursor-pointer" onClick={() => updatePerson(person.id, { withAccident: !person.withAccident })}>
+                          Unfalldeckung einschliessen
+                        </span>
                         <InfoTooltip id={`accident-${person.id}`} text="Wähle dies, wenn du nicht über deinen Arbeitgeber gegen Unfall versichert bist. Angestellte mit 8+ Stunden/Woche sind in der Regel über den Arbeitgeber versichert." />
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer text-sm">
-                        <div
-                          className={`relative w-10 h-5 rounded-full transition-colors ${person.isNewToSwitzerland ? "bg-blue-500" : "bg-white/[0.15]"}`}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <button
+                          type="button"
+                          className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${person.isNewToSwitzerland ? "bg-blue-500" : "bg-white/[0.15]"}`}
                           onClick={() => updatePerson(person.id, { isNewToSwitzerland: !person.isNewToSwitzerland })}
                         >
                           <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${person.isNewToSwitzerland ? "translate-x-5" : "translate-x-0.5"}`} />
-                        </div>
-                        <span>Neu in der Schweiz</span>
+                        </button>
+                        <span className="cursor-pointer" onClick={() => updatePerson(person.id, { isNewToSwitzerland: !person.isNewToSwitzerland })}>
+                          Neu in der Schweiz
+                        </span>
                         <InfoTooltip id={`new-ch-${person.id}`} text="Du bist neu in der Schweiz und hast dich innerhalb der letzten 3 Monate angemeldet? Dann hast du 3 Monate Zeit, eine Krankenkasse zu wählen." />
-                      </label>
+                      </div>
                     </div>
 
                     {person.isNewToSwitzerland && (
