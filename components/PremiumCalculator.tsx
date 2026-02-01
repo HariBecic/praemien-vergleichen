@@ -8,7 +8,7 @@ import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 
 interface Person {
   id: string;
-  gender: "m" | "f" | "";
+  gender: "m" | "f" | "k" | "";
   name: string;
   birthYear: string;
   franchise: number;
@@ -152,6 +152,20 @@ function createPerson(id?: string): Person {
   };
 }
 
+function createUnbornPerson(id?: string): Person {
+  const currentYear = new Date().getFullYear();
+  return {
+    id: id || `p-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    gender: "k",
+    name: "Baby",
+    birthYear: String(currentYear),
+    franchise: DEFAULT_FRANCHISE_CHILD,
+    withAccident: true,
+    isNewToSwitzerland: false,
+    entryDate: "",
+  };
+}
+
 function buildLookupKey(ageGroup: string, withAccident: boolean, franchise: number): string {
   return `${ageGroup}-${withAccident ? "MIT" : "OHN"}-${franchise}`;
 }
@@ -289,6 +303,19 @@ export function PremiumCalculator() {
   const [leadError, setLeadError] = useState("");
   const [leadModalMode, setLeadModalMode] = useState<"save" | "offer">("offer");
   const [showCurrentInsurerField, setShowCurrentInsurerField] = useState(false);
+
+  // PLZ/Ort combo search
+  const [plzQuery, setPlzQuery] = useState("");
+  const [plzSuggestions, setPlzSuggestions] = useState<{ plz: string; entry: PlzEntry }[]>([]);
+  const [showPlzDropdown, setShowPlzDropdown] = useState(false);
+  const plzSearchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Save banner
+  const [showSaveBanner, setShowSaveBanner] = useState(false);
+  const saveBannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Tooltips
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   // ─── Data Loading ───────────────────────────────────────────────────────
 
@@ -511,7 +538,7 @@ export function PremiumCalculator() {
   const canProceed = (currentStep: number): boolean => {
     switch (currentStep) {
       case 1:
-        return formState.plz.length === 4 && formState.canton !== "" && !plzError;
+        return formState.canton !== "" && formState.ort !== "" && !plzError;
       case 2:
         return formState.persons.every(
           (p) => p.birthYear !== "" && p.franchise > -1
@@ -585,8 +612,98 @@ export function PremiumCalculator() {
   useEffect(() => {
     return () => {
       if (plzDebounceRef.current) clearTimeout(plzDebounceRef.current);
+      if (plzSearchRef.current) clearTimeout(plzSearchRef.current);
+      if (saveBannerTimerRef.current) clearTimeout(saveBannerTimerRef.current);
     };
   }, []);
+
+  // ─── PLZ/Ort combo search ─────────────────────────────────────────────
+
+  const handlePlzQueryChange = useCallback(
+    async (query: string) => {
+      setPlzQuery(query);
+      setPlzError("");
+
+      if (query.length < 2) {
+        setPlzSuggestions([]);
+        setShowPlzDropdown(false);
+        return;
+      }
+
+      if (plzSearchRef.current) clearTimeout(plzSearchRef.current);
+
+      plzSearchRef.current = setTimeout(async () => {
+        try {
+          const data = await loadPlzData();
+          const isNumeric = /^\d+$/.test(query);
+          const results: { plz: string; entry: PlzEntry }[] = [];
+          const seen = new Set<string>();
+
+          for (const [plz, entries] of Object.entries(data)) {
+            for (const entry of entries) {
+              const key = `${plz}-${entry.o}-${entry.c}`;
+              if (seen.has(key)) continue;
+
+              const match = isNumeric
+                ? plz.startsWith(query)
+                : entry.o.toLowerCase().startsWith(query.toLowerCase());
+
+              if (match) {
+                seen.add(key);
+                results.push({ plz, entry });
+                if (results.length >= 8) break;
+              }
+            }
+            if (results.length >= 8) break;
+          }
+
+          // Sort: exact PLZ first, then alphabetically
+          results.sort((a, b) => {
+            if (isNumeric) return a.plz.localeCompare(b.plz);
+            return a.entry.o.localeCompare(b.entry.o);
+          });
+
+          setPlzSuggestions(results);
+          setShowPlzDropdown(results.length > 0);
+        } catch {
+          setPlzSuggestions([]);
+          setShowPlzDropdown(false);
+        }
+      }, 200);
+    },
+    [loadPlzData]
+  );
+
+  const handlePlzSuggestionSelect = useCallback(
+    (plz: string, entry: PlzEntry) => {
+      setPlzQuery(`${plz} ${entry.o}`);
+      setShowPlzDropdown(false);
+      setPlzSuggestions([]);
+      setFormState((prev) => ({
+        ...prev,
+        plz,
+        canton: entry.c,
+        ort: entry.o,
+        region: entry.r,
+      }));
+      // Preload canton data
+      loadCantonPremiums(entry.c).catch(() => {});
+    },
+    [loadCantonPremiums]
+  );
+
+  // ─── Save banner auto-show after 5s on results ────────────────────────
+
+  useEffect(() => {
+    if (showResults && !leadSubmitted && !showSaveBanner) {
+      saveBannerTimerRef.current = setTimeout(() => {
+        setShowSaveBanner(true);
+      }, 5000);
+    }
+    return () => {
+      if (saveBannerTimerRef.current) clearTimeout(saveBannerTimerRef.current);
+    };
+  }, [showResults, leadSubmitted, showSaveBanner]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // RENDER
@@ -606,64 +723,111 @@ export function PremiumCalculator() {
     setShowLeadModal(true);
   };
 
+  const InfoTooltip = ({ id, text }: { id: string; text: string }) => (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === id ? null : id); }}
+        className="w-5 h-5 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-500 text-xs font-bold flex items-center justify-center ml-1 transition-colors"
+      >
+        i
+      </button>
+      {activeTooltip === id && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setActiveTooltip(null)} />
+          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-xl bg-stone-800 text-white text-xs leading-relaxed shadow-xl">
+            {text}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-stone-800" />
+          </div>
+        </>
+      )}
+    </span>
+  );
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* ══════════════════════════════════════════════════════════════════ */}
-      {/* STEP INDICATOR (miavita-style)                                    */}
+      {/* STEP INDICATOR (miavita-style connected line)                     */}
       {/* ══════════════════════════════════════════════════════════════════ */}
-      <div className="flex items-start justify-center mb-8 px-2">
+      <div className="relative flex items-start justify-between mb-10 px-4">
+        {/* Background line */}
+        <div className="absolute top-5 left-[calc(12.5%)] right-[calc(12.5%)] h-0.5 bg-stone-200" />
+        {/* Progress line */}
+        <div
+          className="absolute top-5 left-[calc(12.5%)] h-0.5 bg-[#0f4c5c] transition-all duration-500"
+          style={{ width: `${Math.max(0, (step - 1) / 3) * 75}%` }}
+        />
         {STEP_LABELS.map((label, i) => {
           const n = i + 1;
           const isActive = step === n;
           const isCompleted = step > n;
           return (
-            <div key={n} className="flex items-start flex-1 min-w-0">
-              <div className="flex flex-col items-center flex-1 min-w-0">
-                <button
-                  onClick={() => isCompleted && setStep(n)}
-                  disabled={!isCompleted}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all border-2 flex-shrink-0 ${
-                    isActive || isCompleted
-                      ? "border-[#0f4c5c] bg-[#0f4c5c] text-white"
-                      : "border-stone-300 bg-white text-stone-400"
-                  } ${isCompleted ? "cursor-pointer hover:bg-[#1a6b7a]" : ""}`}
-                >
-                  {isCompleted ? (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  ) : (
-                    n
-                  )}
-                </button>
-                <span
-                  className={`hidden sm:block text-xs mt-2 text-center leading-tight ${
-                    isActive ? "text-[#0f4c5c] font-semibold" : isCompleted ? "text-[#0f4c5c]" : "text-stone-400"
-                  }`}
-                >
-                  {label}
-                </span>
-              </div>
-              {i < 3 && (
-                <div className={`h-0.5 w-full mt-5 ${isCompleted ? "bg-[#0f4c5c]" : "bg-stone-200"}`} />
-              )}
+            <div key={n} className="relative flex flex-col items-center z-10" style={{ width: "25%" }}>
+              <button
+                onClick={() => isCompleted && setStep(n)}
+                disabled={!isCompleted}
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all border-2 ${
+                  isActive
+                    ? "border-[#0f4c5c] bg-[#0f4c5c] text-white shadow-lg shadow-[#0f4c5c]/30"
+                    : isCompleted
+                    ? "border-[#0f4c5c] bg-[#0f4c5c] text-white cursor-pointer hover:bg-[#1a6b7a]"
+                    : "border-stone-300 bg-white text-stone-400"
+                }`}
+              >
+                {isCompleted ? (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                ) : (
+                  n
+                )}
+              </button>
+              <span
+                className={`text-xs mt-2 text-center leading-tight hidden sm:block ${
+                  isActive ? "text-[#0f4c5c] font-semibold" : isCompleted ? "text-[#0f4c5c]" : "text-stone-400"
+                }`}
+              >
+                {label}
+              </span>
             </div>
           );
         })}
       </div>
 
-      {/* ── Save Progress Link ── */}
-      {step >= 2 && !leadSubmitted && (
-        <div className="text-center mb-4">
-          <button
-            onClick={() => openLeadModal("save")}
-            className="inline-flex items-center gap-1.5 text-sm text-[#0f4c5c]/70 hover:text-[#0f4c5c] transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-            </svg>
-            Fortschritt speichern
-          </button>
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* SAVE BANNER (auto-popup after 5s on results)                      */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {showSaveBanner && !leadSubmitted && (
+        <div className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-[#0f4c5c]/5 to-[#0f4c5c]/10 border border-[#0f4c5c]/20 animate-fade-in">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#0f4c5c]/10 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-[#0f4c5c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-sm text-[#0f4c5c]">Speichere deinen Fortschritt</h4>
+              <p className="text-xs text-stone-500 mt-0.5">
+                Du erhältst eine E-Mail mit einem Link, damit du deine Ergebnisse beim nächsten Besuch einfach abrufen kannst.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => openLeadModal("save")}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#0f4c5c] text-white hover:bg-[#1a6b7a] transition-colors"
+              >
+                Jetzt speichern
+              </button>
+              <button
+                onClick={() => setShowSaveBanner(false)}
+                className="p-1 rounded text-stone-400 hover:text-stone-600"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -724,6 +888,9 @@ export function PremiumCalculator() {
                       case "family":
                         persons = [createPerson("p1"), createPerson("p2"), createPerson("p3")];
                         break;
+                      case "unborn":
+                        persons = [createUnbornPerson("p1")];
+                        break;
                       default:
                         persons = [createPerson("p1")];
                     }
@@ -741,61 +908,57 @@ export function PremiumCalculator() {
               ))}
             </div>
 
+            {/* PLZ / Ort combo search */}
             <div className="max-w-sm mx-auto">
               <h3 className="font-semibold mb-1">Prämienregion wählen</h3>
               <p className="text-sm text-stone-500 mb-3">Die Prämien ändern sich je nach Region</p>
               <div className="relative">
+                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1">PLZ / Ort *</label>
                 <input
                   type="text"
-                  maxLength={4}
-                  pattern="[0-9]*"
-                  inputMode="numeric"
-                  placeholder="PLZ eingeben"
-                  value={formState.plz}
-                  onChange={(e) => handlePlzChange(e.target.value.replace(/\D/g, ""))}
+                  placeholder="PLZ oder Ort eingeben"
+                  value={plzQuery}
+                  onChange={(e) => handlePlzQueryChange(e.target.value)}
+                  onFocus={() => plzSuggestions.length > 0 && setShowPlzDropdown(true)}
                   className={`input-field text-lg ${plzError ? "!border-red-400" : ""}`}
                 />
                 {plzLoading && (
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <span className="absolute right-4 bottom-3">
                     <div className="w-4 h-4 border-2 border-stone-300 border-t-[#0f4c5c] rounded-full animate-spin" />
                   </span>
                 )}
-                {!plzLoading && formState.ort && (
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-stone-400">
-                    {formState.ort} ({formState.canton})
-                  </span>
+                {!plzLoading && formState.canton && (
+                  <span className="absolute right-4 bottom-3 text-sm text-emerald-500">✓</span>
+                )}
+
+                {/* Dropdown */}
+                {showPlzDropdown && plzSuggestions.length > 0 && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setShowPlzDropdown(false)} />
+                    <div className="absolute z-40 top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-xl max-h-64 overflow-y-auto">
+                      {plzSuggestions.map((s, idx) => (
+                        <button
+                          key={`${s.plz}-${s.entry.o}-${idx}`}
+                          onClick={() => handlePlzSuggestionSelect(s.plz, s.entry)}
+                          className="w-full px-4 py-3 text-left text-sm hover:bg-stone-50 flex items-center justify-between border-b border-stone-50 last:border-0 transition-colors"
+                        >
+                          <span>
+                            <span className="font-medium">{s.plz}</span>{" "}
+                            <span className="text-stone-600">{s.entry.o}</span>
+                          </span>
+                          <span className="text-xs text-stone-400 ml-2">{s.entry.c}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
 
               {plzError && <p className="text-red-500 text-sm mt-2">{plzError}</p>}
 
-              {showPlzSelect && plzEntries.length > 1 && (
-                <div className="mt-3">
-                  <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                    Deine PLZ umfasst mehrere Gemeinden:
-                  </label>
-                  <select
-                    value={`${formState.canton}-${formState.region}-${formState.ort}`}
-                    onChange={(e) => {
-                      const idx = plzEntries.findIndex(
-                        (entry) => `${entry.c}-${entry.r}-${entry.o}` === e.target.value
-                      );
-                      if (idx >= 0) handlePlzEntrySelect(idx);
-                    }}
-                    className="select-field"
-                  >
-                    {plzEntries.map((entry, idx) => (
-                      <option key={idx} value={`${entry.c}-${entry.r}-${entry.o}`}>
-                        {entry.o} – Kanton {entry.c}, Region {entry.r}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {formState.canton && !showPlzSelect && formState.plz.length === 4 && (
+              {formState.canton && (
                 <p className="text-xs text-stone-400 mt-2">
-                  Prämienregion: {formState.canton}-{formState.region}
+                  Prämienregion: {formState.canton}-{formState.region} • {formState.ort}
                 </p>
               )}
             </div>
@@ -821,12 +984,13 @@ export function PremiumCalculator() {
               {formState.persons.map((person, idx) => {
                 const ageGroup = getAgeGroup(person.birthYear);
                 const franchises = getFranchisesForAge(ageGroup);
+                const isUnborn = formState.calculationType === "unborn" && idx === 0;
 
                 return (
                   <div key={person.id} className="p-5 rounded-xl bg-stone-50 border border-stone-200">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-semibold text-stone-700">
-                        Person {idx + 1}
+                        {isUnborn ? "Ungeborenes Kind" : `Person ${idx + 1}`}
                         {person.birthYear && (
                           <span className="text-xs font-normal text-stone-400 ml-2">
                             ({AGE_LABELS[ageGroup]})
@@ -843,23 +1007,28 @@ export function PremiumCalculator() {
                       )}
                     </div>
 
-                    {/* Gender */}
+                    {/* Gender: 3 options */}
                     <div className="mb-4">
                       <label className="block text-xs text-stone-500 mb-2">Geschlecht</label>
                       <div className="flex gap-2">
                         {(
                           [
-                            { value: "m", label: "Männlich", icon: (
+                            { value: "m" as const, label: "Männlich", icon: (
                               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
                               </svg>
                             )},
-                            { value: "f", label: "Weiblich", icon: (
+                            { value: "f" as const, label: "Weiblich", icon: (
                               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
                               </svg>
                             )},
-                          ] as const
+                            { value: "k" as const, label: "Kind", icon: (
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                              </svg>
+                            )},
+                          ]
                         ).map((g) => (
                           <button
                             key={g.value}
@@ -882,7 +1051,7 @@ export function PremiumCalculator() {
                         <label className="block text-xs text-stone-500 mb-1">Vor- und Nachname *</label>
                         <input
                           type="text"
-                          placeholder="Vor- und Nachname"
+                          placeholder={isUnborn ? "Baby" : "Vor- und Nachname"}
                           value={person.name}
                           onChange={(e) => updatePerson(person.id, { name: e.target.value })}
                           className="input-field"
@@ -891,16 +1060,27 @@ export function PremiumCalculator() {
 
                       <div>
                         <label className="block text-xs text-stone-500 mb-1">Jahrgang *</label>
-                        <select
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={4}
+                          placeholder="z.B. 1990"
                           value={person.birthYear}
-                          onChange={(e) => updatePerson(person.id, { birthYear: e.target.value })}
-                          className="select-field"
-                        >
-                          <option value="">Jahr wählen</option>
-                          {Array.from({ length: 107 }, (_, i) => new Date().getFullYear() - i).map((y) => (
-                            <option key={y} value={String(y)}>{y}</option>
-                          ))}
-                        </select>
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+                            updatePerson(person.id, { birthYear: val });
+                          }}
+                          className={`input-field ${
+                            person.birthYear.length === 4 && (parseInt(person.birthYear) < 1920 || parseInt(person.birthYear) > new Date().getFullYear())
+                              ? "!border-red-400"
+                              : ""
+                          }`}
+                        />
+                        {person.birthYear.length === 4 && (
+                          <p className="text-xs text-stone-400 mt-1">
+                            {AGE_LABELS[getAgeGroup(person.birthYear)]} ({new Date().getFullYear() - parseInt(person.birthYear)} J.)
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -920,20 +1100,27 @@ export function PremiumCalculator() {
                       </div>
                     </div>
 
+                    {/* Toggles with info tooltips */}
                     <div className="flex flex-wrap gap-6 mt-4">
                       <label className="flex items-center gap-2 cursor-pointer text-sm">
-                        <div className={`relative w-10 h-5 rounded-full transition-colors ${person.withAccident ? "bg-[#0f4c5c]" : "bg-stone-300"}`}>
+                        <div
+                          className={`relative w-10 h-5 rounded-full transition-colors ${person.withAccident ? "bg-[#0f4c5c]" : "bg-stone-300"}`}
+                          onClick={() => updatePerson(person.id, { withAccident: !person.withAccident })}
+                        >
                           <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${person.withAccident ? "translate-x-5" : "translate-x-0.5"}`} />
-                          <input type="checkbox" checked={person.withAccident} onChange={(e) => updatePerson(person.id, { withAccident: e.target.checked })} className="sr-only" />
                         </div>
-                        Unfalldeckung einschliessen
+                        <span>Unfalldeckung einschliessen</span>
+                        <InfoTooltip id={`accident-${person.id}`} text="Wähle dies, wenn du nicht über deinen Arbeitgeber gegen Unfall versichert bist. Angestellte mit 8+ Stunden/Woche sind in der Regel über den Arbeitgeber versichert." />
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer text-sm">
-                        <div className={`relative w-10 h-5 rounded-full transition-colors ${person.isNewToSwitzerland ? "bg-[#0f4c5c]" : "bg-stone-300"}`}>
+                        <div
+                          className={`relative w-10 h-5 rounded-full transition-colors ${person.isNewToSwitzerland ? "bg-[#0f4c5c]" : "bg-stone-300"}`}
+                          onClick={() => updatePerson(person.id, { isNewToSwitzerland: !person.isNewToSwitzerland })}
+                        >
                           <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${person.isNewToSwitzerland ? "translate-x-5" : "translate-x-0.5"}`} />
-                          <input type="checkbox" checked={person.isNewToSwitzerland} onChange={(e) => updatePerson(person.id, { isNewToSwitzerland: e.target.checked })} className="sr-only" />
                         </div>
-                        Neu in der Schweiz
+                        <span>Neu in der Schweiz</span>
+                        <InfoTooltip id={`new-ch-${person.id}`} text="Du bist neu in der Schweiz und hast dich innerhalb der letzten 3 Monate angemeldet? Dann hast du 3 Monate Zeit, eine Krankenkasse zu wählen." />
                       </label>
                     </div>
 
@@ -961,6 +1148,20 @@ export function PremiumCalculator() {
                 <span className="w-6 h-6 rounded-full bg-[#0f4c5c]/10 flex items-center justify-center text-[#0f4c5c]">+</span>
                 Personen hinzufügen
               </button>
+              {formState.calculationType !== "unborn" && (
+                <button
+                  onClick={() => {
+                    setFormState((prev) => ({
+                      ...prev,
+                      persons: [...prev.persons, createUnbornPerson()],
+                    }));
+                  }}
+                  className="text-sm font-medium text-[#0f4c5c] hover:text-[#1a6b7a] flex items-center gap-2"
+                >
+                  <span className="w-6 h-6 rounded-full bg-[#0f4c5c]/10 flex items-center justify-center text-[#0f4c5c]">+</span>
+                  Ungeborenes Kind hinzufügen
+                </button>
+              )}
             </div>
 
             <div className="mt-8 flex justify-between">
@@ -985,11 +1186,11 @@ export function PremiumCalculator() {
               <>
                 <h2 className="text-xl font-bold text-center mb-2">Stell deine Präferenzen ein</h2>
                 <p className="text-center text-stone-500 text-sm mb-6">
-                  Personalisiere deine Ergebnisse mit unseren Empfehlungen und Angeboten – entdecke potenzielle Ersparnisse oder zusätzliche Vorteile.
+                  Personalisiere deine Ergebnisse mit unseren Empfehlungen und Angeboten.
                 </p>
 
                 <div className="max-w-md mx-auto space-y-6">
-                  {/* Aktuelle Versicherung (collapsible) */}
+                  {/* Current insurer (collapsible) */}
                   <div>
                     {!showCurrentInsurerField ? (
                       <button
@@ -1044,14 +1245,14 @@ export function PremiumCalculator() {
                   {/* Preference buttons */}
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-3">
-                      Passe deine Ergebnisse an, wähle deine Präferenzen:
+                      Wähle deine Präferenz:
                     </label>
                     <div className="grid grid-cols-3 gap-2">
                       {(
                         [
                           { value: "cheapest", label: "Günstigste" },
-                          { value: "recommended", label: "Unsere Empfehlungen" },
-                          { value: "offers", label: "Sonderangebote" },
+                          { value: "recommended", label: "Empfehlung" },
+                          { value: "offers", label: "Angebote" },
                         ] as const
                       ).map((pref) => (
                         <button
@@ -1255,7 +1456,7 @@ export function PremiumCalculator() {
                                 </div>
                               </div>
 
-                              {/* Expand + Offerte */}
+                              {/* Expand + Offerte → goes to Step 4 */}
                               <div className="flex items-center gap-2 flex-shrink-0">
                                 <button
                                   onClick={() => setExpandedInsurer(isExpanded ? null : group.insurerId)}
@@ -1270,7 +1471,7 @@ export function PremiumCalculator() {
                                   </svg>
                                 </button>
                                 <button
-                                  onClick={() => openLeadModal("offer")}
+                                  onClick={() => setStep(4)}
                                   className="px-4 py-2 rounded-lg text-sm font-medium bg-[#e36414] text-white hover:bg-[#fb8b24] transition-colors"
                                 >
                                   Offerte
@@ -1322,13 +1523,13 @@ export function PremiumCalculator() {
                   </>
                 )}
 
-                {/* Navigation from results */}
+                {/* Weiter to Step 4 */}
                 <div className="mt-8 flex justify-center">
                   <button
                     onClick={() => setStep(4)}
                     className="btn-accent px-10 py-3 rounded-xl"
                   >
-                    Weiter
+                    Weiter zu Zusatzversicherung
                   </button>
                 </div>
               </>
@@ -1336,54 +1537,58 @@ export function PremiumCalculator() {
           </div>
         )}
 
-        {/* ── STEP 4: Zusatzversicherung ───────────────────────────────── */}
+        {/* ── STEP 4: Zusatzversicherung + Lead Form ──────────────────── */}
         {step === 4 && (
           <div className="animate-fade-in">
-            <h2 className="text-xl font-bold text-center mb-2 uppercase tracking-wide">Wähle, was zählt</h2>
-            <p className="text-center text-stone-500 text-sm mb-8">
-              Welche Zusatzleistungen sind dir wichtig?
-            </p>
+            {!showLeadModal || leadSubmitted ? (
+              <>
+                <h2 className="text-xl font-bold text-center mb-2">Wähle, was zählt</h2>
+                <p className="text-center text-stone-500 text-sm mb-8">
+                  Welche Zusatzleistungen sind dir wichtig?
+                </p>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {EXTRA_OPTIONS.map((opt) => {
-                const isSelected = formState.extras.includes(opt.id);
-                return (
-                  <button
-                    key={opt.id}
-                    onClick={() => {
-                      setFormState((prev) => ({
-                        ...prev,
-                        extras: prev.extras.includes(opt.id)
-                          ? prev.extras.filter((e) => e !== opt.id)
-                          : [...prev.extras, opt.id],
-                      }));
-                    }}
-                    className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left min-h-[120px] ${
-                      isSelected
-                        ? "border-[#0f4c5c] bg-[#0f4c5c]/5"
-                        : "border-stone-200 hover:border-stone-300 bg-white"
-                    }`}
-                  >
-                    <span className="text-2xl">{opt.icon}</span>
-                    <span className={`text-sm font-medium leading-tight ${isSelected ? "text-[#0f4c5c]" : "text-stone-700"}`}>
-                      {opt.label}
-                    </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {EXTRA_OPTIONS.map((opt) => {
+                    const isSelected = formState.extras.includes(opt.id);
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => {
+                          setFormState((prev) => ({
+                            ...prev,
+                            extras: prev.extras.includes(opt.id)
+                              ? prev.extras.filter((e) => e !== opt.id)
+                              : [...prev.extras, opt.id],
+                          }));
+                        }}
+                        className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left min-h-[120px] ${
+                          isSelected
+                            ? "border-[#0f4c5c] bg-[#0f4c5c]/5"
+                            : "border-stone-200 hover:border-stone-300 bg-white"
+                        }`}
+                      >
+                        <span className="text-2xl">{opt.icon}</span>
+                        <span className={`text-sm font-medium leading-tight ${isSelected ? "text-[#0f4c5c]" : "text-stone-700"}`}>
+                          {opt.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-10 flex justify-between items-center">
+                  <button onClick={() => setStep(3)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
+                    Zurück
                   </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-10 flex justify-between items-center">
-              <button onClick={() => setStep(3)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
-                Zurück
-              </button>
-              <button
-                onClick={() => openLeadModal("offer")}
-                className="btn-accent px-10 py-3.5 rounded-xl text-base"
-              >
-                Jetzt Wechseln
-              </button>
-            </div>
+                  <button
+                    onClick={() => openLeadModal("offer")}
+                    className="btn-accent px-10 py-3.5 rounded-xl text-base"
+                  >
+                    Jetzt Wechseln
+                  </button>
+                </div>
+              </>
+            ) : null}
           </div>
         )}
       </div>
@@ -1405,14 +1610,14 @@ export function PremiumCalculator() {
 
             {!leadSubmitted ? (
               <>
-                <h3 className="text-xl font-bold mb-1 uppercase tracking-wide">
+                <h3 className="text-xl font-bold mb-1">
                   {leadModalMode === "save"
                     ? "Speichere deinen Fortschritt"
                     : "Jetzt Vergleichsofferte erhalten"}
                 </h3>
                 <p className="text-sm text-stone-500 mb-5">
                   {leadModalMode === "save"
-                    ? "Du erhältst eine E-Mail mit einem Link, damit du deine Ergebnisse bei deinem nächsten Besuch einfach abrufen kannst."
+                    ? "Du erhältst eine E-Mail mit einem Link, damit du deine Ergebnisse beim nächsten Besuch einfach abrufen kannst."
                     : "Erhalte eine kostenlose und unverbindliche Offerte basierend auf deinen Angaben."}
                 </p>
                 <div className="space-y-3">
