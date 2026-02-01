@@ -21,16 +21,28 @@ const CAROUSEL_INSURERS: { name: string; domain: string }[] = [
   { name: "Aquilana", domain: "aquilana.ch" },
 ];
 
-const BF_CLIENT = "1idc9vLyOz1J1qurgu6";
+const BF = "1idc9vLyOz1J1qurgu6";
+
+// Brandfetch Logo API — type "logo" returns full wordmark with transparent bg
+// Format: /{domain}/logo (NOT /domain/{domain} which returns favicon icons)
+const URLS = (d: string) => [
+  `https://cdn.brandfetch.io/${d}/logo?c=${BF}`,          // Full wordmark logo
+  `https://cdn.brandfetch.io/${d}/symbol?c=${BF}`,        // Symbol/mark
+  `https://cdn.brandfetch.io/${d}/w/400/logo?c=${BF}`,    // Logo with width param
+];
 
 function InsurerLogo({ name, domain }: { name: string; domain: string }) {
-  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const urls = URLS(domain);
 
-  const handleError = useCallback(() => setFailed(true), []);
+  const handleError = useCallback(() => {
+    setAttempt((a) => a + 1);
+  }, []);
 
-  if (failed) {
+  // All image URLs failed → show text
+  if (attempt >= urls.length) {
     return (
-      <span className="text-xl sm:text-2xl font-semibold text-white/[0.15] whitespace-nowrap">
+      <span className="text-xl sm:text-2xl font-semibold text-white/[0.18] whitespace-nowrap tracking-wide">
         {name}
       </span>
     );
@@ -38,9 +50,9 @@ function InsurerLogo({ name, domain }: { name: string; domain: string }) {
 
   return (
     <img
-      src={`https://cdn.brandfetch.io/domain/${domain}?c=${BF_CLIENT}`}
+      src={urls[attempt]}
       alt={name}
-      className="h-10 sm:h-12 w-auto max-w-[180px] object-contain brightness-0 invert opacity-[0.2] hover:opacity-[0.5] transition-opacity duration-300"
+      className="h-9 sm:h-11 w-auto max-w-[180px] object-contain brightness-0 invert opacity-[0.22] hover:opacity-[0.5] transition-opacity duration-300"
       loading="lazy"
       onError={handleError}
     />
@@ -60,7 +72,7 @@ export function InsurerCarousel() {
         {/* Scrolling track */}
         <div className="flex items-center gap-14 sm:gap-20 animate-scroll-logos px-4">
           {items.map((insurer, i) => (
-            <div key={`${insurer.domain}-${i}`} className="flex-shrink-0">
+            <div key={`${insurer.domain}-${i}`} className="flex-shrink-0 flex items-center justify-center min-h-[44px]">
               <InsurerLogo name={insurer.name} domain={insurer.domain} />
             </div>
           ))}
