@@ -23,14 +23,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert lead
-    const { data, error } = await supabase.from("leads").insert({
+    const { data, error } = await supabase.from("website_leads").insert({
       first_name: body.name.split(" ")[0] || body.name,
       last_name: body.name.split(" ").slice(1).join(" ") || "",
       email: body.email,
       phone: body.phone,
       plz: body.plz || "",
       canton: body.canton || "",
-      birth_year: body.birthdate?.split("-")[0] || "",
+      birth_year: body.birthYear || "",
       age_group: body.ageGroup || "",
       franchise: body.franchise || 0,
       model: body.model || "",

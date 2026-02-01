@@ -10,7 +10,7 @@ interface Person {
   id: string;
   gender: "m" | "f" | "";
   name: string;
-  birthdate: string;
+  birthYear: string;
   franchise: number;
   withAccident: boolean;
   isNewToSwitzerland: boolean;
@@ -121,13 +121,11 @@ const AGE_LABELS: Record<string, string> = {
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
 
-function getAgeGroup(birthdate: string): "KIN" | "JUG" | "ERW" {
-  if (!birthdate) return "ERW";
-  const birth = new Date(birthdate);
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const m = now.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
+function getAgeGroup(birthYear: string): "KIN" | "JUG" | "ERW" {
+  if (!birthYear) return "ERW";
+  const year = parseInt(birthYear);
+  if (isNaN(year)) return "ERW";
+  const age = new Date().getFullYear() - year;
   if (age < 19) return "KIN";
   if (age < 26) return "JUG";
   return "ERW";
@@ -146,7 +144,7 @@ function createPerson(id?: string): Person {
     id: id || `p-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     gender: "",
     name: "",
-    birthdate: "",
+    birthYear: "",
     franchise: DEFAULT_FRANCHISE_ADULT,
     withAccident: true,
     isNewToSwitzerland: false,
@@ -405,9 +403,9 @@ export function PremiumCalculator() {
         const updated = { ...p, ...updates };
 
         // Auto-reset franchise when age group changes
-        if (updates.birthdate !== undefined) {
-          const oldAgeGroup = getAgeGroup(p.birthdate);
-          const newAgeGroup = getAgeGroup(updated.birthdate);
+        if (updates.birthYear !== undefined) {
+          const oldAgeGroup = getAgeGroup(p.birthYear);
+          const newAgeGroup = getAgeGroup(updated.birthYear);
           if (oldAgeGroup !== newAgeGroup) {
             const validFranchises = getFranchisesForAge(newAgeGroup);
             if (!validFranchises.includes(updated.franchise)) {
@@ -454,7 +452,7 @@ export function PremiumCalculator() {
 
       for (let i = 0; i < formState.persons.length; i++) {
         const person = formState.persons[i];
-        const ageGroup = getAgeGroup(person.birthdate);
+        const ageGroup = getAgeGroup(person.birthYear);
         const key = buildLookupKey(ageGroup, person.withAccident, person.franchise);
         const entries = regionData[key] || [];
 
@@ -513,7 +511,7 @@ export function PremiumCalculator() {
         return formState.plz.length === 4 && formState.canton !== "" && !plzError;
       case 2:
         return formState.persons.every(
-          (p) => p.birthdate !== "" && p.franchise > -1
+          (p) => p.birthYear !== "" && p.franchise > -1
         );
       case 3:
         return true;
@@ -546,8 +544,8 @@ export function PremiumCalculator() {
           plz: formState.plz,
           ort: formState.ort,
           canton: formState.canton,
-          birthYear: person?.birthdate?.split("-")[0] || "",
-          ageGroup: person ? getAgeGroup(person.birthdate) : "ERW",
+          birthYear: person?.birthYear || "",
+          ageGroup: person ? getAgeGroup(person.birthYear) : "ERW",
           franchise: person?.franchise || 0,
           model: modelFilter,
           currentInsurer: formState.currentInsurer,
@@ -636,7 +634,7 @@ export function PremiumCalculator() {
       summaryParts.push(`${formState.persons.length} Personen`);
     } else {
       const p = formState.persons[0];
-      const ag = p ? getAgeGroup(p.birthdate) : "ERW";
+      const ag = p ? getAgeGroup(p.birthYear) : "ERW";
       summaryParts.push(AGE_LABELS[ag] || ag);
       summaryParts.push(`Franchise CHF ${p?.franchise?.toLocaleString("de-CH")}`);
     }
@@ -816,7 +814,11 @@ export function PremiumCalculator() {
                           </svg>
                         </button>
                         <button
-                          onClick={() => setShowLeadModal(true)}
+                          onClick={() => {
+                            const firstName = formState.persons[0]?.name || "";
+                            if (firstName && !leadName) setLeadName(firstName);
+                            setShowLeadModal(true);
+                          }}
                           className="px-4 py-2 rounded-lg text-sm font-medium bg-[#e36414] text-white hover:bg-[#fb8b24] transition-colors"
                         >
                           Offerte
@@ -1104,7 +1106,7 @@ export function PremiumCalculator() {
 
           <div className="space-y-6">
             {formState.persons.map((person, idx) => {
-              const ageGroup = getAgeGroup(person.birthdate);
+              const ageGroup = getAgeGroup(person.birthYear);
               const franchises = getFranchisesForAge(ageGroup);
 
               return (
@@ -1112,7 +1114,7 @@ export function PremiumCalculator() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-stone-700">
                       Person {idx + 1}
-                      {person.birthdate && (
+                      {person.birthYear && (
                         <span className="text-xs font-normal text-stone-400 ml-2">
                           ({AGE_LABELS[ageGroup]})
                         </span>
@@ -1154,50 +1156,17 @@ export function PremiumCalculator() {
                     />
 
                     <div>
-                      <label className="block text-xs text-stone-500 mb-1">Geburtsdatum *</label>
-                      <div className="flex gap-2">
-                        <select
-                          value={person.birthdate ? parseInt(person.birthdate.split("-")[2] || "0") : ""}
-                          onChange={(e) => {
-                            const parts = (person.birthdate || "--").split("-");
-                            const day = e.target.value.padStart(2, "0");
-                            updatePerson(person.id, { birthdate: `${parts[0] || ""}-${parts[1] || ""}-${day}` });
-                          }}
-                          className="select-field !w-auto flex-1"
-                        >
-                          <option value="">Tag</option>
-                          {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                            <option key={d} value={d}>{d}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={person.birthdate ? parseInt(person.birthdate.split("-")[1] || "0") : ""}
-                          onChange={(e) => {
-                            const parts = (person.birthdate || "--").split("-");
-                            const month = e.target.value.padStart(2, "0");
-                            updatePerson(person.id, { birthdate: `${parts[0] || ""}-${month}-${parts[2] || ""}` });
-                          }}
-                          className="select-field !w-auto flex-1"
-                        >
-                          <option value="">Monat</option>
-                          {["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"].map((m, i) => (
-                            <option key={i + 1} value={i + 1}>{m}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={person.birthdate ? person.birthdate.split("-")[0] : ""}
-                          onChange={(e) => {
-                            const parts = (person.birthdate || "--").split("-");
-                            updatePerson(person.id, { birthdate: `${e.target.value}-${parts[1] || "01"}-${parts[2] || "01"}` });
-                          }}
-                          className="select-field !w-auto flex-[1.2]"
-                        >
-                          <option value="">Jahr</option>
-                          {Array.from({ length: 107 }, (_, i) => new Date().getFullYear() - i).map((y) => (
-                            <option key={y} value={y}>{y}</option>
-                          ))}
-                        </select>
-                      </div>
+                      <label className="block text-xs text-stone-500 mb-1">Jahrgang *</label>
+                      <select
+                        value={person.birthYear}
+                        onChange={(e) => updatePerson(person.id, { birthYear: e.target.value })}
+                        className="select-field"
+                      >
+                        <option value="">Jahr wählen</option>
+                        {Array.from({ length: 107 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                          <option key={y} value={String(y)}>{y}</option>
+                        ))}
+                      </select>
                     </div>
 
                     <div>
