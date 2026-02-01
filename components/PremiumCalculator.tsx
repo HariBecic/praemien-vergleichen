@@ -555,17 +555,19 @@ export function PremiumCalculator() {
   }, []);
 
   const addPerson = useCallback(() => {
-    setFormState((prev) => ({
-      ...prev,
-      persons: [...prev.persons, createPerson()],
-    }));
+    setFormState((prev) => {
+      const newPersons = [...prev.persons, createPerson()];
+      const calcType = newPersons.length === 1 ? "single" : newPersons.length === 2 ? "couple" : "family";
+      return { ...prev, persons: newPersons, calculationType: calcType };
+    });
   }, []);
 
   const removePerson = useCallback((id: string) => {
-    setFormState((prev) => ({
-      ...prev,
-      persons: prev.persons.filter((p) => p.id !== id),
-    }));
+    setFormState((prev) => {
+      const newPersons = prev.persons.filter((p) => p.id !== id);
+      const calcType = newPersons.length === 1 ? "single" : newPersons.length === 2 ? "couple" : "family";
+      return { ...prev, persons: newPersons, calculationType: calcType };
+    });
   }, []);
 
   // ─── Calculate Results (multi-person) ──────────────────────────────────
