@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "img-src 'self' data: https://www.facebook.com https://cdn.brandfetch.io",
+              "img-src 'self' data: https://www.facebook.com https://img.logo.dev",
               "connect-src 'self' https://*.supabase.co https://www.facebook.com https://graph.facebook.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "frame-src 'none'",
