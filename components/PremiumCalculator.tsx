@@ -405,6 +405,7 @@ export function PremiumCalculator() {
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
   const [leadPhone, setLeadPhone] = useState("");
+  const [leadCountryCode, setLeadCountryCode] = useState("+41");
   const [leadConsent, setLeadConsent] = useState(true);
   const [leadNewsletter, setLeadNewsletter] = useState(true);
   const [leadLoading, setLeadLoading] = useState(false);
@@ -712,7 +713,7 @@ export function PremiumCalculator() {
         body: JSON.stringify({
           name: leadName,
           email: leadEmail,
-          phone: leadPhone,
+          phone: `${leadCountryCode} ${leadPhone}`,
           plz: formState.plz,
           ort: formState.ort,
           canton: formState.canton,
@@ -1995,9 +1996,18 @@ export function PremiumCalculator() {
                   Telefonnummer *
                 </label>
                 <div className="flex gap-2">
-                  <span className="input-field !w-20 flex items-center justify-center text-sm text-white/50">
-                    🇨🇭 +41
-                  </span>
+                  <select
+                    value={leadCountryCode}
+                    onChange={(e) => setLeadCountryCode(e.target.value)}
+                    className="select-field !w-[5.5rem] !pr-7 !pl-2 text-sm text-center"
+                  >
+                    <option value="+41">🇨🇭 +41</option>
+                    <option value="+49">🇩🇪 +49</option>
+                    <option value="+43">🇦🇹 +43</option>
+                    <option value="+39">🇮🇹 +39</option>
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+423">🇱🇮 +423</option>
+                  </select>
                   <input
                     type="tel"
                     placeholder="79 123 45 67"
