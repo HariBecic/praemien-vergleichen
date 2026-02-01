@@ -31,7 +31,7 @@ function LogoImg({ name, domain }: { name: string; domain: string }) {
           flexShrink: 0,
           fontSize: "18px",
           fontWeight: 700,
-          color: "rgba(255,255,255,0.35)",
+          color: "rgba(255,255,255,0.45)",
           whiteSpace: "nowrap",
         }}
       >
@@ -47,15 +47,13 @@ function LogoImg({ name, domain }: { name: string; domain: string }) {
       width={200}
       height={50}
       priority
-      unoptimized
       onError={() => setErr(true)}
       style={{
         flexShrink: 0,
         height: "44px",
         width: "auto",
         objectFit: "contain",
-        filter: "brightness(0) invert(1)",
-        opacity: 0.35,
+        opacity: 0.75,
       }}
     />
   );
