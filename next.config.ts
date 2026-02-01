@@ -30,10 +30,10 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net",
-              "style-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https://www.facebook.com https://cdn.brandfetch.io",
               "connect-src 'self' https://*.supabase.co https://www.facebook.com https://graph.facebook.com",
-              "font-src 'self' https://fonts.gstatic.com",
+              "font-src 'self' https://fonts.gstatic.com data:",
               "frame-src 'none'",
             ].join("; "),
           },
