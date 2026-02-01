@@ -32,6 +32,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert into LeadsHub leads table
+    const persons = body.persons || [];
+    const firstPerson = persons[0] || {};
+
     const { data, error } = await supabase
       .from("leads")
       .insert({
@@ -44,9 +47,9 @@ export async function POST(request: NextRequest) {
         plz: body.plz || "",
         ort: body.ort || "",
         extra_data: {
-          jahrgang: body.birthYear || "",
-          altersgruppe: body.ageGroup || "",
-          franchise: body.franchise || 0,
+          kanton: body.canton || "",
+          berechnungstyp: body.calculationType || "single",
+          anzahl_personen: body.personsCount || 1,
           modell: body.model || "",
           aktuelle_kasse: body.currentInsurer || "",
           aktuelle_praemie: body.currentPremium || "",
@@ -54,9 +57,19 @@ export async function POST(request: NextRequest) {
           guenstigste_praemie: body.cheapestPremium || 0,
           zusatzversicherungen: body.extras || [],
           newsletter: body.newsletter || false,
-          berechnungstyp: body.calculationType || "single",
-          anzahl_personen: body.personsCount || 1,
-          kanton: body.canton || "",
+          // All persons with full details
+          personen: persons.map((p: any, i: number) => ({
+            name: p.name || `Person ${i + 1}`,
+            geschlecht: p.gender || "",
+            jahrgang: p.birthYear || "",
+            altersgruppe: p.ageGroup || "",
+            franchise: p.franchise || 0,
+            unfalldeckung: p.withAccident || false,
+          })),
+          // Keep flat fields for backward compat (first person)
+          jahrgang: firstPerson.birthYear || "",
+          altersgruppe: firstPerson.ageGroup || "",
+          franchise: firstPerson.franchise || 0,
         },
         status: "new",
       })

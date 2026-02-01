@@ -674,10 +674,19 @@ export function PremiumCalculator() {
     setLeadError("");
 
     try {
-      const person = formState.persons[0];
       const cheapest = groupedResults.length > 0
         ? [...groupedResults].sort((a, b) => a.totalMonthly - b.totalMonthly)[0]
         : null;
+
+      // Build persons array with all details
+      const personsData = formState.persons.map((p, i) => ({
+        name: p.name || `Person ${i + 1}`,
+        gender: p.gender,
+        birthYear: p.birthYear,
+        ageGroup: getAgeGroup(p.birthYear),
+        franchise: p.franchise,
+        withAccident: p.withAccident,
+      }));
 
       const res = await fetch("/api/leads", {
         method: "POST",
@@ -689,9 +698,7 @@ export function PremiumCalculator() {
           plz: formState.plz,
           ort: formState.ort,
           canton: formState.canton,
-          birthYear: person?.birthYear || "",
-          ageGroup: person ? getAgeGroup(person.birthYear) : "ERW",
-          franchise: person?.franchise || 0,
+          persons: personsData,
           model: modelFilter,
           currentInsurer: formState.currentInsurer,
           currentPremium: formState.currentPremium,
