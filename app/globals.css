@@ -175,3 +175,16 @@ html { scroll-behavior: smooth; }
 /* ── Glass details accordion ── */
 details.card summary::-webkit-details-marker { display: none; }
 details.card[open] { background: rgba(255, 255, 255, 0.06); }
+
+/* ── Infinite logo carousel ── */
+@keyframes scroll-logos {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-scroll-logos {
+  animation: scroll-logos 35s linear infinite;
+  width: max-content;
+}
+.animate-scroll-logos:hover {
+  animation-play-state: paused;
+}

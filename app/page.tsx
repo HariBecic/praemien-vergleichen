@@ -1,6 +1,7 @@
 import { PremiumCalculator } from "@/components/PremiumCalculator";
 import { Header } from "@/components/Header";
 import { Logo } from "@/components/Logo";
+import { InsurerCarousel } from "@/components/InsurerCarousel";
 
 const TESTIMONIALS = [
   {
@@ -135,15 +136,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Insurer logos row */}
-              <div className="mt-8">
-                <p className="text-[10px] uppercase tracking-widest text-white/20 mb-4">Vergleichen Sie unter anderem</p>
-                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 opacity-40">
-                  {["CSS", "Helsana", "Swica", "Concordia", "Visana", "Sanitas", "KPT", "Atupri"].map((name) => (
-                    <span key={name} className="text-sm font-semibold text-white/60 tracking-wide">{name}</span>
-                  ))}
-                </div>
-              </div>
+              {/* Insurer logos carousel */}
+              <InsurerCarousel />
             </div>
           </div>
         </section>
