@@ -1805,12 +1805,12 @@ export function PremiumCalculator() {
               <>
                 <h3 className="text-xl font-bold mb-1">
                   {leadModalMode === "save"
-                    ? "Speichere deinen Fortschritt"
+                    ? "Kostenlose Offerte erhalten"
                     : "Jetzt Vergleichsofferte erhalten"}
                 </h3>
                 <p className="text-sm text-white/50 mb-5">
                   {leadModalMode === "save"
-                    ? "Du erhältst eine E-Mail mit einem Link, damit du deine Ergebnisse beim nächsten Besuch einfach abrufen kannst."
+                    ? "Erhalte eine persönliche Offerte von geprüften Versicherungsanbietern — kostenlos und unverbindlich."
                     : "Erhalte eine kostenlose und unverbindliche Offerte basierend auf deinen Angaben."}
                 </p>
                 <div className="space-y-3">
@@ -1865,7 +1865,7 @@ export function PremiumCalculator() {
                     />
                     <span className="text-xs text-white/50 leading-relaxed">
                       <strong>Ich stimme zu,</strong> dass meine Daten verarbeitet und an geprüfte
-                      Versicherungsberater weitergegeben werden, um eine persönliche Offerte
+                      Versicherungsanbieter weitergegeben werden, um eine persönliche Offerte
                       zu erhalten. Meine Daten werden vertraulich behandelt.{" "}
                       <a href="/datenschutz" className="text-blue-400 underline">Datenschutzerklärung</a>.
                     </span>
@@ -1895,11 +1895,7 @@ export function PremiumCalculator() {
                     disabled={!leadConsent || !leadName || !leadEmail || !leadPhone || leadLoading}
                     className="btn-accent w-full py-3.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    {leadLoading
-                      ? "Wird gesendet..."
-                      : leadModalMode === "save"
-                      ? "Jetzt speichern"
-                      : "Offerte anfordern"}
+                    {leadLoading ? "Wird gesendet..." : "Offerte anfordern"}
                   </button>
                 </div>
               </>
@@ -1912,9 +1908,7 @@ export function PremiumCalculator() {
                 </div>
                 <h3 className="text-xl font-bold mb-2">Vielen Dank!</h3>
                 <p className="text-white/50 text-sm">
-                  {leadModalMode === "save"
-                    ? "Dein Fortschritt wurde gespeichert. Wir melden uns bei dir."
-                    : "Wir haben deine Anfrage erhalten und melden uns in Kürze bei dir."}
+                  Wir haben deine Anfrage erhalten und melden uns in Kürze bei dir.
                 </p>
                 <p className="text-white/40 text-xs mt-3">
                   Bei Fragen: <strong className="text-white/60">info@praemien-vergleichen.ch</strong>
