@@ -26,7 +26,15 @@ function LogoImg({ name, domain }: { name: string; domain: string }) {
 
   if (err) {
     return (
-      <span className="_cltxt">
+      <span
+        style={{
+          flexShrink: 0,
+          fontSize: "18px",
+          fontWeight: 700,
+          color: "rgba(255,255,255,0.35)",
+          whiteSpace: "nowrap",
+        }}
+      >
         {name}
       </span>
     );
@@ -34,13 +42,21 @@ function LogoImg({ name, domain }: { name: string; domain: string }) {
 
   return (
     <Image
-      className="_cl"
       src={`https://cdn.brandfetch.io/${domain}/logo.png?c=${BF}`}
       alt={name}
       width={200}
       height={50}
       priority
+      unoptimized
       onError={() => setErr(true)}
+      style={{
+        flexShrink: 0,
+        height: "44px",
+        width: "auto",
+        objectFit: "contain",
+        filter: "brightness(0) invert(1)",
+        opacity: 0.35,
+      }}
     />
   );
 }
@@ -65,25 +81,6 @@ export function InsurerCarousel() {
           -webkit-backface-visibility: hidden;
         }
         ._ct:hover { animation-play-state: paused; }
-        ._cl {
-          flex-shrink: 0;
-          height: 44px !important;
-          width: auto !important;
-          object-fit: contain;
-          filter: brightness(0) invert(1);
-          opacity: 0.35;
-          transition: opacity 0.3s ease;
-        }
-        ._cl:hover { opacity: 0.7; }
-        ._cltxt {
-          flex-shrink: 0;
-          font-size: 18px;
-          font-weight: 700;
-          color: rgba(255,255,255,0.35);
-          white-space: nowrap;
-          transition: color 0.3s ease;
-        }
-        ._cltxt:hover { color: rgba(255,255,255,0.7); }
       `}</style>
 
       <p
