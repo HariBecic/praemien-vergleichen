@@ -803,16 +803,16 @@ export function PremiumCalculator() {
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); setActiveTooltip(activeTooltip === id ? null : id); }}
-        className="w-5 h-5 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-500 text-xs font-bold flex items-center justify-center ml-1 transition-colors"
+        className="w-5 h-5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-white/50 text-xs font-bold flex items-center justify-center ml-1 transition-colors"
       >
         i
       </button>
       {activeTooltip === id && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setActiveTooltip(null)} />
-          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-xl bg-stone-800 text-white text-xs leading-relaxed shadow-xl">
+          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-xl bg-white/[0.08] text-white text-xs leading-relaxed shadow-xl">
             {text}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-stone-800" />
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-white/[0.08]" />
           </div>
         </>
       )}
@@ -826,10 +826,10 @@ export function PremiumCalculator() {
       {/* ══════════════════════════════════════════════════════════════════ */}
       <div className="relative flex items-start justify-between mb-10 px-4">
         {/* Background line */}
-        <div className="absolute top-5 left-[calc(12.5%)] right-[calc(12.5%)] h-0.5 bg-stone-200" />
+        <div className="absolute top-5 left-[calc(12.5%)] right-[calc(12.5%)] h-0.5 bg-white/[0.08]" />
         {/* Progress line */}
         <div
-          className="absolute top-5 left-[calc(12.5%)] h-0.5 bg-[#0f4c5c] transition-all duration-500"
+          className="absolute top-5 left-[calc(12.5%)] h-0.5 bg-blue-500 transition-all duration-500"
           style={{ width: `${Math.max(0, (step - 1) / 3) * 75}%` }}
         />
         {STEP_LABELS.map((label, i) => {
@@ -843,10 +843,10 @@ export function PremiumCalculator() {
                 disabled={!isCompleted}
                 className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all border-2 ${
                   isActive
-                    ? "border-[#0f4c5c] bg-[#0f4c5c] text-white shadow-lg shadow-[#0f4c5c]/30"
+                    ? "border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                     : isCompleted
-                    ? "border-[#0f4c5c] bg-[#0f4c5c] text-white cursor-pointer hover:bg-[#1a6b7a]"
-                    : "border-stone-300 bg-white text-stone-400"
+                    ? "border-blue-500 bg-blue-500 text-white cursor-pointer hover:bg-blue-600"
+                    : "border-white/[0.12] bg-white/[0.06] text-white/40"
                 }`}
               >
                 {isCompleted ? (
@@ -859,7 +859,7 @@ export function PremiumCalculator() {
               </button>
               <span
                 className={`text-xs mt-2 text-center leading-tight hidden sm:block ${
-                  isActive ? "text-[#0f4c5c] font-semibold" : isCompleted ? "text-[#0f4c5c]" : "text-stone-400"
+                  isActive ? "text-blue-400 font-semibold" : isCompleted ? "text-blue-400" : "text-white/40"
                 }`}
               >
                 {label}
@@ -875,10 +875,10 @@ export function PremiumCalculator() {
       <div className="card-elevated p-6 sm:p-8">
         {/* Loading overlay */}
         {premiumLoading && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#050a18]/80 backdrop-blur-sm">
             <div className="text-center">
-              <div className="w-12 h-12 border-4 border-[#0f4c5c]/20 border-t-[#0f4c5c] rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-stone-600 font-medium">Prämien werden berechnet...</p>
+              <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-white/60 font-medium">Prämien werden berechnet...</p>
             </div>
           </div>
         )}
@@ -936,8 +936,8 @@ export function PremiumCalculator() {
                   }}
                   className={`flex flex-col items-center gap-2 p-5 rounded-xl border-2 transition-all ${
                     formState.calculationType === type.value
-                      ? "border-[#0f4c5c] bg-[#0f4c5c]/5 text-[#0f4c5c]"
-                      : "border-stone-200 hover:border-stone-300 text-stone-500"
+                      ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                      : "border-white/[0.08] hover:border-white/[0.12] text-white/50"
                   }`}
                 >
                   {type.icon}
@@ -949,20 +949,20 @@ export function PremiumCalculator() {
             {/* PLZ / Ort combo search */}
             <div className="max-w-sm mx-auto">
               <h3 className="font-semibold mb-1">Prämienregion wählen</h3>
-              <p className="text-sm text-stone-500 mb-3">Die Prämien ändern sich je nach Region</p>
+              <p className="text-sm text-white/50 mb-3">Die Prämien ändern sich je nach Region</p>
               <div className="relative">
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1">PLZ / Ort *</label>
+                <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-1">PLZ / Ort *</label>
                 <input
                   type="text"
                   placeholder="PLZ oder Ort eingeben"
                   value={plzQuery}
                   onChange={(e) => handlePlzQueryChange(e.target.value)}
                   onFocus={() => plzSuggestions.length > 0 && setShowPlzDropdown(true)}
-                  className={`input-field text-lg ${plzError ? "!border-red-400" : ""}`}
+                  className={`input-field text-lg ${plzError ? "!border-red-500/40" : ""}`}
                 />
                 {plzLoading && (
                   <span className="absolute right-4 bottom-3">
-                    <div className="w-4 h-4 border-2 border-stone-300 border-t-[#0f4c5c] rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white/[0.12] border-t-blue-500 rounded-full animate-spin" />
                   </span>
                 )}
                 {!plzLoading && formState.canton && (
@@ -973,18 +973,18 @@ export function PremiumCalculator() {
                 {showPlzDropdown && plzSuggestions.length > 0 && (
                   <>
                     <div className="fixed inset-0 z-30" onClick={() => setShowPlzDropdown(false)} />
-                    <div className="absolute z-40 top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-xl max-h-64 overflow-y-auto">
+                    <div className="absolute z-40 top-full left-0 right-0 mt-1 bg-[#0f1a3a] border border-white/[0.08] rounded-xl shadow-xl max-h-64 overflow-y-auto">
                       {plzSuggestions.map((s, idx) => (
                         <button
                           key={`${s.plz}-${s.entry.o}-${idx}`}
                           onClick={() => handlePlzSuggestionSelect(s.plz, s.entry)}
-                          className="w-full px-4 py-3 text-left text-sm hover:bg-stone-50 flex items-center justify-between border-b border-stone-50 last:border-0 transition-colors"
+                          className="w-full px-4 py-3 text-left text-sm hover:bg-white/[0.04] flex items-center justify-between border-b border-white/[0.04] last:border-0 transition-colors"
                         >
                           <span>
                             <span className="font-medium">{s.plz}</span>{" "}
-                            <span className="text-stone-600">{s.entry.o}</span>
+                            <span className="text-white/60">{s.entry.o}</span>
                           </span>
-                          <span className="text-xs text-stone-400 ml-2">{s.entry.c}</span>
+                          <span className="text-xs text-white/40 ml-2">{s.entry.c}</span>
                         </button>
                       ))}
                     </div>
@@ -992,10 +992,10 @@ export function PremiumCalculator() {
                 )}
               </div>
 
-              {plzError && <p className="text-red-500 text-sm mt-2">{plzError}</p>}
+              {plzError && <p className="text-red-400 text-sm mt-2">{plzError}</p>}
 
               {formState.canton && (
-                <p className="text-xs text-stone-400 mt-2">
+                <p className="text-xs text-white/40 mt-2">
                   Prämienregion: {formState.canton}-{formState.region} • {formState.ort}
                 </p>
               )}
@@ -1025,12 +1025,12 @@ export function PremiumCalculator() {
                 const isUnborn = formState.calculationType === "unborn" && idx === 0;
 
                 return (
-                  <div key={person.id} className="p-5 rounded-xl bg-stone-50 border border-stone-200">
+                  <div key={person.id} className="p-5 rounded-xl bg-white/[0.04] border border-white/[0.08]">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-stone-700">
+                      <h3 className="font-semibold text-white/80">
                         {isUnborn ? "Ungeborenes Kind" : `Person ${idx + 1}`}
                         {person.birthYear && (
-                          <span className="text-xs font-normal text-stone-400 ml-2">
+                          <span className="text-xs font-normal text-white/40 ml-2">
                             ({AGE_LABELS[ageGroup]})
                           </span>
                         )}
@@ -1038,7 +1038,7 @@ export function PremiumCalculator() {
                       {idx > 0 && (
                         <button
                           onClick={() => removePerson(person.id)}
-                          className="text-sm text-red-500 hover:text-red-700"
+                          className="text-sm text-red-400 hover:text-red-300"
                         >
                           Entfernen
                         </button>
@@ -1047,7 +1047,7 @@ export function PremiumCalculator() {
 
                     {/* Gender: 3 options */}
                     <div className="mb-4">
-                      <label className="block text-xs text-stone-500 mb-2">Geschlecht</label>
+                      <label className="block text-xs text-white/50 mb-2">Geschlecht</label>
                       <div className="flex gap-2">
                         {(
                           [
@@ -1073,8 +1073,8 @@ export function PremiumCalculator() {
                             onClick={() => updatePerson(person.id, { gender: g.value })}
                             className={`flex items-center gap-2 flex-1 py-2.5 px-3 rounded-lg text-sm font-medium border transition-all ${
                               person.gender === g.value
-                                ? "border-[#0f4c5c] bg-[#0f4c5c]/5 text-[#0f4c5c]"
-                                : "border-stone-200 text-stone-500 hover:border-stone-300"
+                                ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                                : "border-white/[0.08] text-white/50 hover:border-white/[0.12]"
                             }`}
                           >
                             {g.icon}
@@ -1086,7 +1086,7 @@ export function PremiumCalculator() {
 
                     <div className="grid sm:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-xs text-stone-500 mb-1">Vor- und Nachname *</label>
+                        <label className="block text-xs text-white/50 mb-1">Vor- und Nachname *</label>
                         <input
                           type="text"
                           placeholder={isUnborn ? "Baby" : "Vor- und Nachname"}
@@ -1097,7 +1097,7 @@ export function PremiumCalculator() {
                       </div>
 
                       <div>
-                        <label className="block text-xs text-stone-500 mb-1">Jahrgang *</label>
+                        <label className="block text-xs text-white/50 mb-1">Jahrgang *</label>
                         <input
                           type="text"
                           inputMode="numeric"
@@ -1110,19 +1110,19 @@ export function PremiumCalculator() {
                           }}
                           className={`input-field ${
                             person.birthYear.length === 4 && (parseInt(person.birthYear) < 1920 || parseInt(person.birthYear) > new Date().getFullYear())
-                              ? "!border-red-400"
+                              ? "!border-red-500/40"
                               : ""
                           }`}
                         />
                         {person.birthYear.length === 4 && (
-                          <p className="text-xs text-stone-400 mt-1">
+                          <p className="text-xs text-white/40 mt-1">
                             {AGE_LABELS[getAgeGroup(person.birthYear)]} ({new Date().getFullYear() - parseInt(person.birthYear)} J.)
                           </p>
                         )}
                       </div>
 
                       <div>
-                        <label className="block text-xs text-stone-500 mb-1">Franchise *</label>
+                        <label className="block text-xs text-white/50 mb-1">Franchise *</label>
                         <select
                           value={franchises.includes(person.franchise) ? person.franchise : ""}
                           onChange={(e) => updatePerson(person.id, { franchise: parseInt(e.target.value) })}
@@ -1142,7 +1142,7 @@ export function PremiumCalculator() {
                     <div className="flex flex-wrap gap-6 mt-4">
                       <label className="flex items-center gap-2 cursor-pointer text-sm">
                         <div
-                          className={`relative w-10 h-5 rounded-full transition-colors ${person.withAccident ? "bg-[#0f4c5c]" : "bg-stone-300"}`}
+                          className={`relative w-10 h-5 rounded-full transition-colors ${person.withAccident ? "bg-blue-500" : "bg-white/[0.15]"}`}
                           onClick={() => updatePerson(person.id, { withAccident: !person.withAccident })}
                         >
                           <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${person.withAccident ? "translate-x-5" : "translate-x-0.5"}`} />
@@ -1152,7 +1152,7 @@ export function PremiumCalculator() {
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer text-sm">
                         <div
-                          className={`relative w-10 h-5 rounded-full transition-colors ${person.isNewToSwitzerland ? "bg-[#0f4c5c]" : "bg-stone-300"}`}
+                          className={`relative w-10 h-5 rounded-full transition-colors ${person.isNewToSwitzerland ? "bg-blue-500" : "bg-white/[0.15]"}`}
                           onClick={() => updatePerson(person.id, { isNewToSwitzerland: !person.isNewToSwitzerland })}
                         >
                           <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${person.isNewToSwitzerland ? "translate-x-5" : "translate-x-0.5"}`} />
@@ -1164,7 +1164,7 @@ export function PremiumCalculator() {
 
                     {person.isNewToSwitzerland && (
                       <div className="mt-3">
-                        <label className="block text-xs text-stone-500 mb-1">Einreisedatum</label>
+                        <label className="block text-xs text-white/50 mb-1">Einreisedatum</label>
                         <input
                           type="date"
                           value={person.entryDate}
@@ -1181,9 +1181,9 @@ export function PremiumCalculator() {
             <div className="flex flex-col gap-2 mt-4">
               <button
                 onClick={addPerson}
-                className="text-sm font-medium text-[#0f4c5c] hover:text-[#1a6b7a] flex items-center gap-2"
+                className="text-sm font-medium text-blue-400 hover:text-blue-300 flex items-center gap-2"
               >
-                <span className="w-6 h-6 rounded-full bg-[#0f4c5c]/10 flex items-center justify-center text-[#0f4c5c]">+</span>
+                <span className="w-6 h-6 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-400">+</span>
                 Personen hinzufügen
               </button>
               {formState.calculationType !== "unborn" && (
@@ -1194,16 +1194,16 @@ export function PremiumCalculator() {
                       persons: [...prev.persons, createUnbornPerson()],
                     }));
                   }}
-                  className="text-sm font-medium text-[#0f4c5c] hover:text-[#1a6b7a] flex items-center gap-2"
+                  className="text-sm font-medium text-blue-400 hover:text-blue-300 flex items-center gap-2"
                 >
-                  <span className="w-6 h-6 rounded-full bg-[#0f4c5c]/10 flex items-center justify-center text-[#0f4c5c]">+</span>
+                  <span className="w-6 h-6 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-400">+</span>
                   Ungeborenes Kind hinzufügen
                 </button>
               )}
             </div>
 
             <div className="mt-8 flex justify-between">
-              <button onClick={() => setStep(1)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
+              <button onClick={() => setStep(1)} className="text-sm font-medium text-white/50 hover:text-white/80 px-4 py-2">
                 Zurück
               </button>
               <button
@@ -1223,7 +1223,7 @@ export function PremiumCalculator() {
             {!showResults ? (
               <>
                 <h2 className="text-xl font-bold text-center mb-2">Stell deine Präferenzen ein</h2>
-                <p className="text-center text-stone-500 text-sm mb-6">
+                <p className="text-center text-white/50 text-sm mb-6">
                   Personalisiere deine Ergebnisse mit unseren Empfehlungen und Angeboten.
                 </p>
 
@@ -1233,21 +1233,21 @@ export function PremiumCalculator() {
                     {!showCurrentInsurerField ? (
                       <button
                         onClick={() => setShowCurrentInsurerField(true)}
-                        className="flex items-center gap-2 text-sm font-medium text-[#0f4c5c] hover:text-[#1a6b7a]"
+                        className="flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-blue-300"
                       >
-                        <span className="w-6 h-6 rounded-full bg-[#0f4c5c]/10 flex items-center justify-center text-[#0f4c5c]">+</span>
+                        <span className="w-6 h-6 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-400">+</span>
                         Aktuelle Versicherung hinzufügen
                       </button>
                     ) : (
-                      <div className="space-y-3 p-4 rounded-xl bg-stone-50 border border-stone-200">
+                      <div className="space-y-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08]">
                         <div className="flex items-center justify-between">
-                          <label className="text-sm font-medium text-stone-700">Aktuelle Krankenkasse</label>
+                          <label className="text-sm font-medium text-white/80">Aktuelle Krankenkasse</label>
                           <button
                             onClick={() => {
                               setShowCurrentInsurerField(false);
                               setFormState((prev) => ({ ...prev, currentInsurer: "", currentPremium: "" }));
                             }}
-                            className="text-xs text-stone-400 hover:text-stone-600"
+                            className="text-xs text-white/40 hover:text-white/60"
                           >
                             Entfernen
                           </button>
@@ -1264,7 +1264,7 @@ export function PremiumCalculator() {
                         </select>
                         {formState.currentInsurer && (
                           <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">
+                            <label className="block text-sm font-medium text-white/80 mb-1">
                               Aktuelle Monatsprämie CHF {isMultiPerson ? "(Total)" : ""}
                             </label>
                             <input
@@ -1282,7 +1282,7 @@ export function PremiumCalculator() {
 
                   {/* Preference buttons */}
                   <div>
-                    <label className="block text-sm font-medium text-stone-700 mb-3">
+                    <label className="block text-sm font-medium text-white/80 mb-3">
                       Wähle deine Präferenz:
                     </label>
                     <div className="grid grid-cols-3 gap-2">
@@ -1298,8 +1298,8 @@ export function PremiumCalculator() {
                           onClick={() => setFormState((prev) => ({ ...prev, preference: pref.value }))}
                           className={`p-3 rounded-xl text-center text-sm font-medium border-2 transition-all ${
                             formState.preference === pref.value
-                              ? "border-[#0f4c5c] bg-[#0f4c5c] text-white"
-                              : "border-stone-200 hover:border-stone-300 text-stone-600"
+                              ? "border-blue-500 bg-blue-500 text-white"
+                              : "border-white/[0.08] hover:border-white/[0.12] text-white/60"
                           }`}
                         >
                           {pref.label}
@@ -1310,7 +1310,7 @@ export function PremiumCalculator() {
                 </div>
 
                 <div className="mt-8 flex justify-between">
-                  <button onClick={() => setStep(2)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
+                  <button onClick={() => setStep(2)} className="text-sm font-medium text-white/50 hover:text-white/80 px-4 py-2">
                     Zurück
                   </button>
                   <button
@@ -1346,8 +1346,8 @@ export function PremiumCalculator() {
                       <h2 className="text-2xl font-bold text-center mb-2">
                         Dein Prämienvergleich 2026
                       </h2>
-                      <p className="text-center text-stone-500 mb-1">{summaryParts.join(" • ")}</p>
-                      <p className="text-center text-xs text-stone-400 mb-6">
+                      <p className="text-center text-white/50 mb-1">{summaryParts.join(" • ")}</p>
+                      <p className="text-center text-xs text-white/40 mb-6">
                         Offizielle Daten: Bundesamt für Gesundheit (BAG)
                       </p>
                     </>
@@ -1358,7 +1358,7 @@ export function PremiumCalculator() {
                 {isMultiPerson && (
                   <div className="flex flex-wrap gap-2 justify-center mb-4">
                     {personRawDataList.map((pd, i) => (
-                      <span key={pd.personId} className="text-xs bg-stone-100 text-stone-600 px-3 py-1 rounded-full">
+                      <span key={pd.personId} className="text-xs bg-white/[0.06] text-white/60 px-3 py-1 rounded-full">
                         Person {i + 1}: {AGE_LABELS[pd.ageGroup]} • Fr. {formState.persons[i]?.franchise}
                       </span>
                     ))}
@@ -1367,14 +1367,14 @@ export function PremiumCalculator() {
 
                 {/* Savings highlight */}
                 {maxSavings > 0 && (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 mb-6 text-center">
-                    <div className="text-sm font-medium text-emerald-700">
+                  <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-2xl p-5 mb-6 text-center">
+                    <div className="text-sm font-medium text-emerald-400">
                       {currentPremiumNum > 0 ? "Deine mögliche Ersparnis pro Jahr" : "Sparpotenzial pro Jahr"}
                     </div>
                     <div className="text-3xl sm:text-4xl font-bold text-emerald-800 my-1">
                       bis CHF {maxSavings.toLocaleString("de-CH")}
                     </div>
-                    <div className="text-xs text-emerald-600 mt-1">
+                    <div className="text-xs text-emerald-400 mt-1">
                       {uniqueInsurerCount} Versicherer verglichen
                       {currentPremiumNum > 0 && (
                         <> • aktuell CHF {currentPremiumNum.toFixed(0)}/Mt.</>
@@ -1385,8 +1385,8 @@ export function PremiumCalculator() {
 
                 {groupedResults.length === 0 && !premiumLoading && (
                   <div className="text-center py-10">
-                    <p className="text-stone-500 text-lg">Keine Ergebnisse gefunden.</p>
-                    <p className="text-stone-400 text-sm mt-2">
+                    <p className="text-white/50 text-lg">Keine Ergebnisse gefunden.</p>
+                    <p className="text-white/40 text-sm mt-2">
                       Bitte prüfe deine Angaben oder versuche einen anderen Filter.
                     </p>
                   </div>
@@ -1419,7 +1419,7 @@ export function PremiumCalculator() {
 
                       <button
                         onClick={() => setShowResults(false)}
-                        className="ml-auto text-sm text-[#0f4c5c] font-medium hover:underline"
+                        className="ml-auto text-sm text-blue-400 font-medium hover:underline"
                       >
                         Angaben ändern
                       </button>
@@ -1438,7 +1438,7 @@ export function PremiumCalculator() {
                           <div
                             key={group.insurerId}
                             className={`rounded-xl border overflow-hidden transition-all ${
-                              isFirst ? "ring-2 ring-emerald-400 bg-emerald-50/30 border-emerald-200" : "border-stone-200 bg-white"
+                              isFirst ? "ring-2 ring-emerald-400 bg-emerald-500/10 border-emerald-500/25" : "border-white/[0.08] bg-white/[0.03]"
                             }`}
                             style={{ animation: `slideUp 0.3s ease-out ${i * 0.03}s both` }}
                           >
@@ -1472,16 +1472,16 @@ export function PremiumCalculator() {
 
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-semibold text-stone-900">{group.insurerName}</span>
+                                  <span className="font-semibold text-white">{group.insurerName}</span>
                                   {isFirst && <span className="savings-badge text-xs">✓ Günstigste</span>}
                                 </div>
                                 {!isMultiPerson && (
-                                  <div className="text-sm text-stone-500">
+                                  <div className="text-sm text-white/50">
                                     {MODEL_LABELS[cheapestModel] || cheapestModel} – {cheapestTariff}
                                   </div>
                                 )}
                                 {isMultiPerson && (
-                                  <div className="text-sm text-stone-500">
+                                  <div className="text-sm text-white/50">
                                     {group.persons.map((pt) => `${pt.personLabel}: CHF ${pt.cheapest.p.toFixed(0)}`).join(" + ")}
                                   </div>
                                 )}
@@ -1490,8 +1490,8 @@ export function PremiumCalculator() {
                               {/* Savings */}
                               {group.savings > 0 && sortOrder === "asc" && (
                                 <div className="text-right hidden sm:block">
-                                  <div className="text-xs text-emerald-600 font-medium">Ersparnis/Jahr</div>
-                                  <div className="text-sm font-semibold text-emerald-700">
+                                  <div className="text-xs text-emerald-400 font-medium">Ersparnis/Jahr</div>
+                                  <div className="text-sm font-semibold text-emerald-400">
                                     CHF {group.savings.toLocaleString("de-CH")}
                                   </div>
                                 </div>
@@ -1500,10 +1500,10 @@ export function PremiumCalculator() {
                               {/* Price */}
                               <div className="text-right">
                                 <div className="text-xl font-bold">
-                                  <span className="text-sm font-normal text-stone-400">CHF </span>
+                                  <span className="text-sm font-normal text-white/40">CHF </span>
                                   {group.totalMonthly.toFixed(2)}
                                 </div>
-                                <div className="text-xs text-stone-400">
+                                <div className="text-xs text-white/40">
                                   {isMultiPerson ? "Total/Monat" : "pro Monat"}
                                 </div>
                               </div>
@@ -1512,7 +1512,7 @@ export function PremiumCalculator() {
                               <div className="flex items-center gap-2 flex-shrink-0">
                                 <button
                                   onClick={() => setExpandedInsurer(isExpanded ? null : group.insurerId)}
-                                  className="p-2 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
+                                  className="p-2 rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white/60 transition-colors"
                                   title="Alle Tarife anzeigen"
                                 >
                                   <svg
@@ -1524,7 +1524,7 @@ export function PremiumCalculator() {
                                 </button>
                                 <button
                                   onClick={() => setStep(4)}
-                                  className="px-4 py-2 rounded-lg text-sm font-medium bg-[#e36414] text-white hover:bg-[#fb8b24] transition-colors"
+                                  className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-400 hover:to-orange-500 transition-colors"
                                 >
                                   Offerte
                                 </button>
@@ -1533,11 +1533,11 @@ export function PremiumCalculator() {
 
                             {/* Expanded tariff details */}
                             {isExpanded && (
-                              <div className="border-t border-stone-100 bg-stone-50/50 px-4 py-3 animate-fade-in">
+                              <div className="border-t border-white/[0.06] bg-white/[0.03] px-4 py-3 animate-fade-in">
                                 {group.persons.map((pt, pIdx) => (
                                   <div key={pt.personId}>
                                     {isMultiPerson && (
-                                      <div className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2 mt-2 first:mt-0">
+                                      <div className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 mt-2 first:mt-0">
                                         {pt.personLabel} ({AGE_LABELS[pt.ageGroup]})
                                       </div>
                                     )}
@@ -1546,12 +1546,12 @@ export function PremiumCalculator() {
                                         <div
                                           key={`${tariff.tn}-${tIdx}`}
                                           className={`flex items-center justify-between py-1.5 px-3 rounded-lg text-sm ${
-                                            tariff === pt.cheapest ? "bg-emerald-50 text-emerald-800" : "text-stone-600"
+                                            tariff === pt.cheapest ? "bg-emerald-500/10 text-emerald-800" : "text-white/60"
                                           }`}
                                         >
                                           <div>
                                             <span className="font-medium">{tariff.tn}</span>
-                                            <span className="text-stone-400 ml-2">
+                                            <span className="text-white/40 ml-2">
                                               {MODEL_LABELS[tariff.t] || tariff.t}
                                             </span>
                                           </div>
@@ -1562,7 +1562,7 @@ export function PremiumCalculator() {
                                       ))}
                                     </div>
                                     {pIdx < group.persons.length - 1 && (
-                                      <div className="border-b border-stone-200 my-2" />
+                                      <div className="border-b border-white/[0.08] my-2" />
                                     )}
                                   </div>
                                 ))}
@@ -1595,7 +1595,7 @@ export function PremiumCalculator() {
             {!showLeadModal || leadSubmitted ? (
               <>
                 <h2 className="text-xl font-bold text-center mb-2">Wähle, was zählt</h2>
-                <p className="text-center text-stone-500 text-sm mb-8">
+                <p className="text-center text-white/50 text-sm mb-8">
                   Welche Zusatzleistungen sind dir wichtig?
                 </p>
 
@@ -1615,12 +1615,12 @@ export function PremiumCalculator() {
                         }}
                         className={`flex flex-col items-start gap-3 p-4 rounded-xl border-2 transition-all text-left min-h-[120px] ${
                           isSelected
-                            ? "border-[#0f4c5c] bg-[#0f4c5c]/5"
-                            : "border-stone-200 hover:border-stone-300 bg-white"
+                            ? "border-blue-500 bg-blue-500/10"
+                            : "border-white/[0.08] hover:border-white/[0.12] bg-white/[0.03]"
                         }`}
                       >
                         <span className="text-2xl">{opt.icon}</span>
-                        <span className={`text-sm font-medium leading-tight ${isSelected ? "text-[#0f4c5c]" : "text-stone-700"}`}>
+                        <span className={`text-sm font-medium leading-tight ${isSelected ? "text-blue-400" : "text-white/80"}`}>
                           {opt.label}
                         </span>
                       </button>
@@ -1629,7 +1629,7 @@ export function PremiumCalculator() {
                 </div>
 
                 <div className="mt-10 flex justify-between items-center">
-                  <button onClick={() => setStep(3)} className="text-sm font-medium text-stone-500 hover:text-stone-700 px-4 py-2">
+                  <button onClick={() => setStep(3)} className="text-sm font-medium text-white/50 hover:text-white/80 px-4 py-2">
                     Zurück
                   </button>
                   <button
@@ -1650,10 +1650,10 @@ export function PremiumCalculator() {
       {/* ══════════════════════════════════════════════════════════════════ */}
       {showLeadModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#0f1a3a] border border-white/[0.1] rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowLeadModal(false)}
-              className="absolute top-4 right-4 text-stone-400 hover:text-stone-600"
+              className="absolute top-4 right-4 text-white/40 hover:text-white/60"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1667,14 +1667,14 @@ export function PremiumCalculator() {
                     ? "Speichere deinen Fortschritt"
                     : "Jetzt Vergleichsofferte erhalten"}
                 </h3>
-                <p className="text-sm text-stone-500 mb-5">
+                <p className="text-sm text-white/50 mb-5">
                   {leadModalMode === "save"
                     ? "Du erhältst eine E-Mail mit einem Link, damit du deine Ergebnisse beim nächsten Besuch einfach abrufen kannst."
                     : "Erhalte eine kostenlose und unverbindliche Offerte basierend auf deinen Angaben."}
                 </p>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-1">
                       Vor- und Nachname *
                     </label>
                     <input
@@ -1686,7 +1686,7 @@ export function PremiumCalculator() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-1">
                       E-Mail-Adresse *
                     </label>
                     <input
@@ -1698,11 +1698,11 @@ export function PremiumCalculator() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-medium text-white/50 uppercase tracking-wider mb-1">
                       Telefonnummer *
                     </label>
                     <div className="flex gap-2">
-                      <span className="input-field !w-20 flex items-center justify-center text-sm text-stone-500">
+                      <span className="input-field !w-20 flex items-center justify-center text-sm text-white/50">
                         🇨🇭 +41
                       </span>
                       <input
@@ -1720,13 +1720,13 @@ export function PremiumCalculator() {
                       type="checkbox"
                       checked={leadConsent}
                       onChange={(e) => setLeadConsent(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
+                      className="mt-0.5 w-4 h-4 rounded border-white/[0.12] text-blue-400 focus:ring-blue-500"
                     />
-                    <span className="text-xs text-stone-500 leading-relaxed">
+                    <span className="text-xs text-white/50 leading-relaxed">
                       <strong>Ich stimme zu,</strong> dass meine Daten verarbeitet und an geprüfte
                       Versicherungsberater weitergegeben werden, um eine persönliche Offerte
                       zu erhalten. Meine Daten werden vertraulich behandelt.{" "}
-                      <a href="/datenschutz" className="text-[#0f4c5c] underline">Datenschutzerklärung</a>.
+                      <a href="/datenschutz" className="text-blue-400 underline">Datenschutzerklärung</a>.
                     </span>
                   </label>
 
@@ -1735,16 +1735,16 @@ export function PremiumCalculator() {
                       type="checkbox"
                       checked={leadNewsletter}
                       onChange={(e) => setLeadNewsletter(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-stone-300 text-[#0f4c5c] focus:ring-[#0f4c5c]"
+                      className="mt-0.5 w-4 h-4 rounded border-white/[0.12] text-blue-400 focus:ring-blue-500"
                     />
-                    <span className="text-xs text-stone-500 leading-relaxed">
+                    <span className="text-xs text-white/50 leading-relaxed">
                       Ja, ich möchte den Newsletter mit Spartipps, Fristen und einfachen
                       Erklärungen abonnieren.
                     </span>
                   </label>
 
                   {leadError && (
-                    <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                    <div className="p-3 rounded-lg bg-red-500/10 border border-red-200 text-sm text-red-700">
                       {leadError}
                     </div>
                   )}
@@ -1765,18 +1765,18 @@ export function PremiumCalculator() {
             ) : (
               <div className="text-center py-6">
                 <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold mb-2">Vielen Dank!</h3>
-                <p className="text-stone-500 text-sm">
+                <p className="text-white/50 text-sm">
                   {leadModalMode === "save"
                     ? "Dein Fortschritt wurde gespeichert. Wir melden uns bei dir."
                     : "Wir haben deine Anfrage erhalten und melden uns in Kürze bei dir."}
                 </p>
-                <p className="text-stone-400 text-xs mt-3">
-                  Bei Fragen: <strong className="text-stone-600">info@praemien-vergleichen.ch</strong>
+                <p className="text-white/40 text-xs mt-3">
+                  Bei Fragen: <strong className="text-white/60">info@praemien-vergleichen.ch</strong>
                 </p>
               </div>
             )}

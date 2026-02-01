@@ -39,27 +39,26 @@ export default function Home() {
 
       <main>
         {/* ── Hero ── */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-[#0f4c5c] via-[#0a3540] to-[#0f4c5c] text-white">
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          />
+        <section className="relative overflow-hidden pt-28 pb-20 sm:pt-40 sm:pb-32">
+          {/* Extra glow orb behind hero */}
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-blue-500/[0.06] blur-[100px] pointer-events-none" />
 
-          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-28 pb-20 sm:pt-36 sm:pb-28">
+          <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
             <div className="text-center max-w-3xl mx-auto">
-              <p className="text-sm uppercase tracking-widest text-white/60 font-medium mb-4">
-                Sag den Krankenkassenprämien den Kampf an!
-              </p>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/[0.1] bg-white/[0.04] backdrop-blur-sm text-sm text-white/60 mb-6">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                Offizielle BAG-Prämien 2026
+              </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
                 Spare bis zu{" "}
-                <span className="text-[#fb8b24]">CHF 2&apos;000</span>
+                <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
+                  CHF 2&apos;000
+                </span>
               </h1>
 
-              <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
-                Kostenloser Vergleich und in nur 2 Minuten. Finden Sie jetzt die
+              <p className="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
+                Kostenloser Vergleich in nur 2 Minuten. Finden Sie jetzt die
                 günstigste Krankenkasse für 2026!
               </p>
 
@@ -69,13 +68,24 @@ export default function Home() {
               >
                 Jetzt vergleichen!
               </a>
-            </div>
-          </div>
 
-          <div className="absolute bottom-0 left-0 right-0">
-            <svg viewBox="0 0 1440 48" fill="none" className="w-full">
-              <path d="M0 48h1440V16C1200 0 960 32 720 32S240 0 0 16v32z" fill="#fafaf9" />
-            </svg>
+              {/* Stats pills */}
+              <div className="flex flex-wrap items-center justify-center gap-4 mt-12">
+                {[
+                  { value: "217'000+", label: "Tarife verglichen" },
+                  { value: "27", label: "Versicherer" },
+                  { value: "100%", label: "Kostenlos" },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06]"
+                  >
+                    <span className="font-bold text-white">{stat.value}</span>
+                    <span className="text-sm text-white/40">{stat.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -87,24 +97,31 @@ export default function Home() {
         </section>
 
         {/* ── Testimonials ── */}
-        <section className="py-16 sm:py-24 bg-white border-y border-stone-200/60">
+        <section className="py-16 sm:py-24">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <div className="grid sm:grid-cols-2 gap-6">
+            <p className="text-center text-sm text-white/40 uppercase tracking-wider mb-2">
+              Echte Erfahrungen
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">
+              Das sagen unsere Kunden
+            </h2>
+
+            <div className="grid sm:grid-cols-2 gap-4">
               {TESTIMONIALS.map((t) => (
                 <div key={t.name} className="card p-6">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-full bg-[#0f4c5c]/10 flex items-center justify-center font-bold text-[#0f4c5c] text-sm">
+                    <div className="w-11 h-11 rounded-full bg-blue-500/15 border border-blue-500/20 flex items-center justify-center font-bold text-blue-400 text-sm">
                       {t.img}
                     </div>
                     <div>
-                      <div className="font-semibold text-stone-900">{t.name}</div>
-                      <div className="text-xs text-stone-400">{t.badge}</div>
+                      <div className="font-semibold text-white">{t.name}</div>
+                      <div className="text-xs text-white/30">{t.badge}</div>
                     </div>
-                    <div className="ml-auto text-[#fb8b24] text-sm">
+                    <div className="ml-auto text-orange-400 text-sm tracking-wide">
                       {"★".repeat(t.stars)}
                     </div>
                   </div>
-                  <p className="text-sm text-stone-600 leading-relaxed italic">
+                  <p className="text-sm text-white/50 leading-relaxed italic">
                     &ldquo;{t.text}&rdquo;
                   </p>
                 </div>
@@ -119,32 +136,54 @@ export default function Home() {
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
               Warum lohnt sich ein Prämienvergleich?
             </h2>
-            <p className="text-center text-stone-500 mb-12 max-w-2xl mx-auto">
+            <p className="text-center text-white/50 mb-12 max-w-2xl mx-auto">
               Die gleichen Leistungen, aber unterschiedliche Preise – nutzen Sie das zu Ihrem Vorteil.
             </p>
 
-            <div className="grid sm:grid-cols-3 gap-8">
+            <div className="grid sm:grid-cols-3 gap-6">
               {[
                 {
                   title: "Bis zu CHF 2'000 sparen",
                   desc: "Die Prämien-Unterschiede zwischen Krankenkassen können enorm sein. Mit unserem Vergleich finden Sie garantiert ein günstigeres Angebot.",
-                  icon: "💰",
+                  icon: (
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                    </svg>
+                  ),
+                  color: "from-green-400 to-emerald-500",
+                  glow: "bg-green-500/10",
                 },
                 {
                   title: "Nur 2 Minuten Zeitaufwand",
                   desc: "Unser einfacher Fragebogen dauert nur 2 Minuten. Sie erhalten danach eine persönliche Beratung zu den besten Angeboten.",
-                  icon: "⏱️",
+                  icon: (
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ),
+                  color: "from-blue-400 to-indigo-500",
+                  glow: "bg-blue-500/10",
                 },
                 {
                   title: "Unabhängig & Kostenlos",
                   desc: "Wir sind komplett unabhängig. Unser Service ist für Sie 100% kostenlos.",
-                  icon: "✅",
+                  icon: (
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                    </svg>
+                  ),
+                  color: "from-orange-400 to-amber-500",
+                  glow: "bg-orange-500/10",
                 },
               ].map((b) => (
-                <div key={b.title} className="text-center">
-                  <div className="text-4xl mb-4">{b.icon}</div>
-                  <h3 className="text-lg font-bold mb-2">{b.title}</h3>
-                  <p className="text-stone-500 text-sm leading-relaxed">{b.desc}</p>
+                <div key={b.title} className="card p-6 text-center group">
+                  <div className={`w-14 h-14 rounded-2xl ${b.glow} flex items-center justify-center mx-auto mb-4 transition-transform group-hover:scale-110`}>
+                    <div className={`bg-gradient-to-br ${b.color} bg-clip-text text-transparent`}>
+                      {b.icon}
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold mb-2 text-white">{b.title}</h3>
+                  <p className="text-white/50 text-sm leading-relaxed">{b.desc}</p>
                 </div>
               ))}
             </div>
@@ -152,13 +191,13 @@ export default function Home() {
         </section>
 
         {/* ── How it works ── */}
-        <section id="wie-es-funktionert" className="py-16 sm:py-24 bg-white border-y border-stone-200/60">
+        <section id="wie-es-funktionert" className="py-16 sm:py-24">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">
               In 3 einfachen Schritten zur günstigeren Krankenkasse
             </h2>
 
-            <div className="grid sm:grid-cols-3 gap-8 sm:gap-12">
+            <div className="grid sm:grid-cols-3 gap-8 sm:gap-6">
               {[
                 {
                   step: "1",
@@ -176,17 +215,17 @@ export default function Home() {
                   desc: "Wählen Sie das beste Angebot und sparen Sie ab sofort bei Ihrer Krankenkasse.",
                 },
               ].map((item) => (
-                <div key={item.step} className="text-center">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#e36414] text-white text-xl font-bold mb-4">
+                <div key={item.step} className="card p-6 text-center relative">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white text-lg font-bold mb-4 shadow-lg shadow-orange-500/20">
                     {item.step}
                   </div>
-                  <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-                  <p className="text-stone-500 leading-relaxed">{item.desc}</p>
+                  <h3 className="text-xl font-bold mb-2 text-white">{item.title}</h3>
+                  <p className="text-white/50 leading-relaxed text-sm">{item.desc}</p>
                   <a
                     href="#formular"
-                    className="inline-block mt-3 text-sm font-medium text-[#0f4c5c] hover:underline"
+                    className="inline-block mt-4 text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors"
                   >
-                    Jetzt vergleichen!
+                    Jetzt vergleichen →
                   </a>
                 </div>
               ))}
@@ -197,7 +236,7 @@ export default function Home() {
         {/* ── FAQ ── */}
         <section id="faq" className="py-16 sm:py-24">
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
-            <p className="text-center text-sm text-stone-400 uppercase tracking-wider mb-2">
+            <p className="text-center text-sm text-white/40 uppercase tracking-wider mb-2">
               Ihre Fragen beantwortet
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10">
@@ -231,17 +270,17 @@ export default function Home() {
                   a: "Ja, die Leistungen der Grundversicherung sind gesetzlich vorgeschrieben und bei allen Kassen identisch.",
                 },
               ].map((faq) => (
-                <details key={faq.q} className="group card p-5 cursor-pointer">
-                  <summary className="flex items-center justify-between font-semibold list-none">
+                <details key={faq.q} className="card p-5 cursor-pointer group">
+                  <summary className="flex items-center justify-between font-semibold text-white list-none">
                     {faq.q}
                     <svg
-                      className="w-5 h-5 text-stone-400 group-open:rotate-180 transition-transform flex-shrink-0"
+                      className="w-5 h-5 text-white/30 group-open:rotate-180 transition-transform flex-shrink-0"
                       fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                     </svg>
                   </summary>
-                  <p className="mt-3 text-stone-500 leading-relaxed text-sm">{faq.a}</p>
+                  <p className="mt-3 text-white/50 leading-relaxed text-sm">{faq.a}</p>
                 </details>
               ))}
             </div>
@@ -249,32 +288,39 @@ export default function Home() {
         </section>
 
         {/* ── Final CTA ── */}
-        <section className="py-16 sm:py-24 bg-gradient-to-br from-[#0f4c5c] to-[#0a3540] text-white">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Starten Sie jetzt Ihren kostenlosen Prämienvergleich
-            </h2>
-            <a href="#formular" className="btn-accent text-lg px-8 py-4 rounded-2xl mt-4 inline-block">
-              Jetzt vergleichen!
-            </a>
+        <section className="py-16 sm:py-24">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6">
+            <div className="card-elevated p-10 sm:p-14 text-center relative overflow-hidden">
+              {/* Glow accent */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[2px] bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+                Starten Sie jetzt Ihren kostenlosen Prämienvergleich
+              </h2>
+              <p className="text-white/50 mb-8 max-w-lg mx-auto">
+                Über 217&apos;000 Tarife von 27 Schweizer Versicherern auf einen Blick.
+              </p>
+              <a href="#formular" className="btn-accent text-lg px-8 py-4 rounded-2xl inline-block">
+                Jetzt vergleichen!
+              </a>
+            </div>
           </div>
         </section>
       </main>
 
       {/* ── Footer ── */}
-      <footer className="bg-stone-900 text-stone-400 py-10">
+      <footer className="border-t border-white/[0.06] py-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="font-semibold text-white">
-              praemien-vergleichen<span className="text-[#e36414]">.ch</span>
+              praemien-vergleichen<span className="text-orange-400">.ch</span>
             </div>
             <div className="flex gap-6 text-sm">
-              <a href="/impressum" className="hover:text-white transition-colors">Impressum</a>
-              <a href="/datenschutz" className="hover:text-white transition-colors">Datenschutz</a>
+              <a href="/impressum" className="text-white/40 hover:text-white transition-colors">Impressum</a>
+              <a href="/datenschutz" className="text-white/40 hover:text-white transition-colors">Datenschutz</a>
             </div>
           </div>
-          <div className="mt-6 pt-6 border-t border-stone-800 text-xs text-center text-stone-500">
-            Copyright © {new Date().getFullYear()} Prämien vergleichen • Alle Angaben ohne Gewähr
+          <div className="mt-6 pt-6 border-t border-white/[0.06] text-xs text-center text-white/25">
+            Copyright © {new Date().getFullYear()} Prämien vergleichen · Alle Angaben ohne Gewähr
           </div>
         </div>
       </footer>
