@@ -27,22 +27,20 @@ function InsurerLogo({ name, domain }: { name: string; domain: string }) {
   const [failed, setFailed] = useState(false);
   const handleError = useCallback(() => setFailed(true), []);
 
-  if (failed) {
-    return (
-      <span className="text-[20px] sm:text-[24px] font-semibold text-white/20 whitespace-nowrap select-none">
-        {name}
-      </span>
-    );
-  }
+  if (failed) return null;
 
   return (
-    <img
-      src={`https://img.logo.dev/${domain}?token=${TOKEN}&format=png&size=120`}
-      alt={name}
-      className="h-10 sm:h-12 w-auto max-w-[180px] object-contain brightness-0 invert opacity-30 hover:opacity-50 transition-opacity duration-300"
-      loading="lazy"
-      onError={handleError}
-    />
+    <div className="flex-shrink-0">
+      <div className="bg-white rounded-xl px-4 py-3 flex items-center justify-center opacity-60 hover:opacity-90 transition-opacity duration-300">
+        <img
+          src={`https://img.logo.dev/${domain}?token=${TOKEN}&format=png&size=120`}
+          alt={name}
+          className="h-7 sm:h-8 w-auto max-w-[140px] object-contain grayscale hover:grayscale-0 transition-all duration-300"
+          loading="lazy"
+          onError={handleError}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -50,19 +48,16 @@ export function InsurerCarousel() {
   const items = [...CAROUSEL_INSURERS, ...CAROUSEL_INSURERS];
 
   return (
-    <div className="mt-8 relative overflow-hidden"
+    <div
+      className="mt-8 relative overflow-hidden"
       style={{
-        /* CSS mask: transparent fade on both sides, no colored background needed */
         maskImage: "linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent)",
         WebkitMaskImage: "linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent)",
       }}
     >
-      {/* Scrolling track - no background, completely transparent */}
-      <div className="flex items-center gap-12 sm:gap-16 animate-scroll-logos">
+      <div className="flex items-center gap-6 sm:gap-8 animate-scroll-logos">
         {items.map((insurer, i) => (
-          <div key={`${insurer.domain}-${i}`} className="flex-shrink-0 flex items-center justify-center h-12">
-            <InsurerLogo name={insurer.name} domain={insurer.domain} />
-          </div>
+          <InsurerLogo key={`${insurer.domain}-${i}`} name={insurer.name} domain={insurer.domain} />
         ))}
       </div>
     </div>
