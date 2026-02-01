@@ -2,6 +2,65 @@ import { PremiumCalculator } from "@/components/PremiumCalculator";
 import { Header } from "@/components/Header";
 import { Logo } from "@/components/Logo";
 import { InsurerCarousel } from "@/components/InsurerCarousel";
+import { Metadata } from "next";
+import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Krankenkasse Schweiz 2026 | Prämien vergleichen & CHF 2'000 sparen",
+  description:
+    "Krankenkasse vergleichen 2026: Kostenloser Prämienrechner für alle 27 Schweizer Krankenkassen. Offizielle BAG-Daten, alle Kantone, alle Franchisen. Jetzt bis CHF 2'000 pro Jahr sparen!",
+  alternates: {
+    canonical: "https://praemien-vergleichen.ch",
+  },
+};
+
+const FAQ_ITEMS = [
+  {
+    q: "Ist der Krankenkassenvergleich wirklich kostenlos?",
+    a: "Ja, unser Krankenkassen-Vergleich ist 100% kostenlos und unverbindlich. Sie gehen keinerlei Verpflichtungen ein.",
+  },
+  {
+    q: "Wie viel kann ich bei der Krankenkasse sparen?",
+    a: "Je nach aktueller Krankenkasse und gewählter Franchise können Sie zwischen CHF 500 und CHF 2'000 pro Jahr sparen. Bei Familien ist das Sparpotenzial noch grösser.",
+  },
+  {
+    q: "Muss ich meine Krankenkasse wechseln?",
+    a: "Nein, der Vergleich ist unverbindlich. Sie entscheiden selbst, ob Sie die Krankenkasse wechseln möchten.",
+  },
+  {
+    q: "Bis wann kann ich meine Krankenkasse wechseln?",
+    a: "Für einen Wechsel der Krankenkasse per 1. Januar müssen Sie bis spätestens 30. November kündigen. Die Kündigung muss bei der aktuellen Krankenkasse eingetroffen sein.",
+  },
+  {
+    q: "Erhalte ich danach Spam?",
+    a: "Nein, wir geben Ihre Daten nur an seriöse Versicherungsberater weiter, die Sie einmalig kontaktieren.",
+  },
+  {
+    q: "Ist die Grundversicherung bei jeder Krankenkasse gleich?",
+    a: "Ja, die Leistungen der obligatorischen Grundversicherung (KVG) sind gesetzlich vorgeschrieben und bei allen Schweizer Krankenkassen identisch. Der Unterschied liegt nur im Preis.",
+  },
+  {
+    q: "Welche Krankenkasse ist die günstigste in der Schweiz?",
+    a: "Die günstigste Krankenkasse hängt von Ihrem Wohnkanton, Alter und gewähltem Modell ab. Mit unserem Vergleich finden Sie die günstigste Krankenkasse für Ihre persönliche Situation.",
+  },
+  {
+    q: "Was ist der Unterschied zwischen Grundversicherung und Zusatzversicherung?",
+    a: "Die Grundversicherung (KVG) ist obligatorisch und deckt medizinische Grundleistungen ab. Die Zusatzversicherung ist freiwillig und bietet Extras wie Zahnversicherung, alternative Medizin oder Einzelzimmer im Spital.",
+  },
+];
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map((faq) => ({
+    "@type": "Question",
+    name: faq.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.a,
+    },
+  })),
+};
 
 const TESTIMONIALS = [
   {
@@ -37,6 +96,10 @@ const TESTIMONIALS = [
 export default function Home() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <Header />
 
       <main>
@@ -54,6 +117,9 @@ export default function Home() {
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
+                <span className="block text-2xl sm:text-3xl font-semibold text-white/70 mb-2">
+                  Krankenkasse Schweiz 2026
+                </span>
                 Spare bis zu{" "}
                 <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
                   CHF 2&apos;000
@@ -61,8 +127,8 @@ export default function Home() {
               </h1>
 
               <p className="text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
-                Kostenloser Vergleich in nur 2 Minuten. Finden Sie jetzt die
-                günstigste Krankenkasse für 2026!
+                Kostenloser <strong>Krankenkassenvergleich</strong> in nur 2 Minuten.
+                Finden Sie jetzt die günstigste Krankenkasse für 2026 – mit offiziellen BAG-Daten!
               </p>
 
               <a
@@ -290,39 +356,14 @@ export default function Home() {
         <section id="faq" style={{ scrollMarginTop: "4rem" }} className="py-16 sm:py-24">
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
             <p className="text-center text-sm text-white/40 uppercase tracking-wider mb-2">
-              Ihre Fragen beantwortet
+              Ihre Fragen zur Krankenkasse beantwortet
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10">
-              Häufig gestellte Fragen
+              Häufig gestellte Fragen zur Krankenkasse
             </h2>
 
             <div className="space-y-3">
-              {[
-                {
-                  q: "Ist der Vergleich wirklich kostenlos?",
-                  a: "Ja, unser Service ist 100% kostenlos und unverbindlich. Sie gehen keinerlei Verpflichtungen ein.",
-                },
-                {
-                  q: "Wie viel kann ich wirklich sparen?",
-                  a: "Je nach aktueller Krankenkasse und gewählter Franchise können Sie zwischen CHF 500 und CHF 2'000 pro Jahr sparen.",
-                },
-                {
-                  q: "Muss ich meine Krankenkasse wechseln?",
-                  a: "Nein, der Vergleich ist unverbindlich. Sie entscheiden selbst, ob Sie wechseln möchten.",
-                },
-                {
-                  q: "Bis wann kann ich meine Krankenkasse wechseln?",
-                  a: "Für einen Wechsel per 1. Januar müssen Sie bis spätestens 30. November kündigen.",
-                },
-                {
-                  q: "Erhalte ich danach Spam?",
-                  a: "Nein, wir geben Ihre Daten nur an seriöse Versicherungsberater weiter, die Sie einmalig kontaktieren.",
-                },
-                {
-                  q: "Ist meine Grundversicherung überall gleich?",
-                  a: "Ja, die Leistungen der Grundversicherung sind gesetzlich vorgeschrieben und bei allen Kassen identisch.",
-                },
-              ].map((faq) => (
+              {FAQ_ITEMS.map((faq) => (
                 <details key={faq.q} className="card p-5 cursor-pointer group">
                   <summary className="flex items-center justify-between font-semibold text-white list-none">
                     {faq.q}
@@ -337,6 +378,98 @@ export default function Home() {
                 </details>
               ))}
             </div>
+
+            {/* More info links */}
+            <div className="mt-8 text-center">
+              <p className="text-white/40 text-sm mb-4">
+                Mehr Informationen zu Krankenkassen finden Sie in unserem Ratgeber:
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link href="/ratgeber/krankenkasse-wechseln" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  Krankenkasse wechseln
+                </Link>
+                <Link href="/ratgeber/franchise-waehlen" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  Franchise wählen
+                </Link>
+                <Link href="/ratgeber/versicherungsmodelle" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  Versicherungsmodelle
+                </Link>
+                <Link href="/ratgeber/praemienverbilligung" className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                  Prämienverbilligung
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── SEO Content Section ── */}
+        <section className="py-16 sm:py-24 border-t border-white/[0.06]">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8">
+              Krankenkasse Schweiz – Der umfassende Vergleich
+            </h2>
+
+            <div className="prose prose-invert prose-sm max-w-none text-white/60 space-y-6">
+              <p>
+                In der Schweiz ist die <strong>Krankenkasse</strong> (auch Krankenversicherung genannt) für alle Einwohner obligatorisch.
+                Das Bundesgesetz über die Krankenversicherung (KVG) schreibt vor, dass jede in der Schweiz wohnhafte Person eine
+                <strong> Grundversicherung</strong> abschliessen muss. Die Leistungen der Grundversicherung sind bei allen 27 zugelassenen
+                Krankenkassen identisch – nur die Prämien unterscheiden sich.
+              </p>
+
+              <p>
+                Die <strong>Krankenkassenprämien 2026</strong> steigen im Schweizer Durchschnitt um 4.4%. Das bedeutet für eine Familie
+                schnell mehrere Hundert Franken mehr pro Jahr. Umso wichtiger ist es, die Krankenkassen regelmässig zu vergleichen.
+                Mit unserem kostenlosen <strong>Prämienrechner</strong> finden Sie die günstigste Krankenkasse für Ihre persönliche Situation.
+              </p>
+
+              <h3 className="text-lg font-semibold text-white mt-8 mb-4">
+                Krankenkassenprämien nach Kanton
+              </h3>
+              <p>
+                Die Krankenkassenprämien variieren stark je nach Wohnkanton. In städtischen Kantonen wie Zürich, Basel oder Genf
+                sind die Prämien traditionell höher als in ländlichen Kantonen wie Appenzell oder Nidwalden.
+                Vergleichen Sie die Prämien für Ihren Kanton:
+              </p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+                {["zuerich", "bern", "basel-stadt", "aargau", "st-gallen", "luzern", "genf", "waadt"].map((kanton) => (
+                  <Link
+                    key={kanton}
+                    href={`/kanton/${kanton}`}
+                    className="text-blue-400 hover:text-blue-300 text-sm capitalize"
+                  >
+                    Krankenkasse {kanton.replace("-", " ")}
+                  </Link>
+                ))}
+              </div>
+              <p className="mt-2">
+                <Link href="/kanton" className="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                  → Alle 26 Kantone anzeigen
+                </Link>
+              </p>
+
+              <h3 className="text-lg font-semibold text-white mt-8 mb-4">
+                So sparen Sie bei der Krankenkasse
+              </h3>
+              <p>
+                Es gibt drei Hauptfaktoren, mit denen Sie bei der Krankenkasse sparen können:
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>
+                  <strong>Krankenkasse wechseln:</strong> Der Wechsel zu einer günstigeren Kasse spart bis zu CHF 2&apos;000 pro Jahr.
+                  Die Leistungen bleiben identisch. <Link href="/ratgeber/krankenkasse-wechseln" className="text-blue-400 hover:text-blue-300">Mehr erfahren →</Link>
+                </li>
+                <li>
+                  <strong>Franchise erhöhen:</strong> Eine höhere Franchise (z.B. CHF 2&apos;500 statt CHF 300) senkt die monatliche Prämie deutlich.
+                  <Link href="/ratgeber/franchise-waehlen" className="text-blue-400 hover:text-blue-300"> Mehr erfahren →</Link>
+                </li>
+                <li>
+                  <strong>Versicherungsmodell wählen:</strong> Hausarzt-, HMO- oder Telmed-Modelle bieten Rabatte von 10-25%.
+                  <Link href="/ratgeber/versicherungsmodelle" className="text-blue-400 hover:text-blue-300"> Mehr erfahren →</Link>
+                </li>
+              </ul>
+            </div>
           </div>
         </section>
 
@@ -347,13 +480,13 @@ export default function Home() {
               {/* Glow accent */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[2px] bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                Starten Sie jetzt Ihren kostenlosen Prämienvergleich
+                Starten Sie jetzt Ihren kostenlosen Krankenkassenvergleich
               </h2>
               <p className="text-white/50 mb-8 max-w-lg mx-auto">
-                Über 217&apos;000 Tarife von 27 Schweizer Versicherern auf einen Blick.
+                Über 217&apos;000 Tarife von 27 Schweizer Krankenkassen auf einen Blick – mit offiziellen BAG-Daten.
               </p>
               <a href="#formular" className="btn-accent text-lg px-8 py-4 rounded-2xl inline-block">
-                Jetzt vergleichen!
+                Jetzt Krankenkasse vergleichen!
               </a>
             </div>
           </div>
