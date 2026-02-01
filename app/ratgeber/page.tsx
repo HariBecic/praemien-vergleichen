@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { RATGEBER_ARTICLES } from "@/lib/ratgeber-data";
+import { ALL_RATGEBER_ARTICLES } from "@/lib/ratgeber-data";
 
 export const metadata: Metadata = {
   title: "Ratgeber Krankenkasse Schweiz 2026 – Tipps & Anleitungen",
@@ -48,7 +48,7 @@ export default function RatgeberOverview() {
       <section className="py-8">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
           <div className="space-y-4">
-            {RATGEBER_ARTICLES.map((article) => (
+            {ALL_RATGEBER_ARTICLES.map((article) => (
               <Link
                 key={article.slug}
                 href={`/ratgeber/${article.slug}`}

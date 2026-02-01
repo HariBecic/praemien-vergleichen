@@ -376,10 +376,372 @@ export const RATGEBER_ARTICLES: RatgeberArticle[] = [
   },
 ];
 
+// New articles for better topic authority
+const ADDITIONAL_ARTICLES: RatgeberArticle[] = [
+  {
+    slug: "zusatzversicherung",
+    title: "Zusatzversicherung Krankenkasse 2026 – Was lohnt sich wirklich?",
+    metaTitle: "Zusatzversicherung Krankenkasse 2026 – Vergleich, Kosten & Tipps",
+    metaDescription:
+      "Zusatzversicherung Krankenkasse: Was ist sinnvoll? Spital-, Zahn- und Komplementärmedizin-Versicherung im Vergleich. Kosten, Leistungen und Tipps 2026.",
+    keywords: [
+      "Zusatzversicherung Krankenkasse",
+      "Zusatzversicherung Schweiz",
+      "Krankenkasse Zusatzversicherung",
+      "Spitalzusatzversicherung",
+      "Zahnzusatzversicherung",
+      "Komplementärmedizin Versicherung",
+    ],
+    readingTime: "6 Min.",
+    lastUpdated: "2026-01-15",
+    heroSubtitle: "Welche Zusatzversicherungen sind sinnvoll und welche überflüssig?",
+    sections: [
+      {
+        heading: "Was ist eine Zusatzversicherung?",
+        content:
+          "Im Gegensatz zur obligatorischen Grundversicherung (KVG) sind Zusatzversicherungen freiwillig. Sie decken Leistungen ab, die nicht in der Grundversicherung enthalten sind – zum Beispiel Zahnbehandlungen, alternative Medizin, Einzelzimmer im Spital oder freie Spitalwahl in der ganzen Schweiz. Zusatzversicherungen unterliegen dem Versicherungsvertragsgesetz (VVG), nicht dem KVG. Das bedeutet: Im Gegensatz zur Grundversicherung können Krankenkassen bei Zusatzversicherungen Gesundheitsfragen stellen und Anträge ablehnen.",
+      },
+      {
+        heading: "Die wichtigsten Zusatzversicherungen im Überblick",
+        content:
+          "Die gängigsten Zusatzversicherungen sind: Spitalzusatzversicherung (halbprivat/privat für Einzelzimmer und freie Arztwahl), Zahnversicherung (für Zahnbehandlungen, Dentalhygiene, Kieferorthopädie), Komplementärmedizin (für Akupunktur, Homöopathie, Naturheilkunde), ambulante Zusatzversicherung (für Brillen, Fitness, Auslandsschutz) und Spitalkostenversicherung (für Spitalaufenthalte ausserhalb des Wohnkantons).",
+      },
+      {
+        heading: "Spitalzusatzversicherung – Halbprivat oder Privat?",
+        content:
+          "Die Spitalzusatzversicherung ist die teuerste, aber auch eine der beliebtesten Zusatzversicherungen. Sie bietet: freie Spitalwahl in der ganzen Schweiz (auch Privatspitäler), Behandlung durch den Chefarzt, Einzel- oder Zweibettzimmer und oft bessere Verpflegung und Komfort. Die Kosten liegen je nach Alter und Versicherer zwischen CHF 50 und CHF 500 pro Monat. Für junge, gesunde Personen ist eine Spitalzusatzversicherung oft nicht notwendig – die allgemeine Abteilung bietet ebenfalls eine qualitativ hochwertige Versorgung.",
+        tip: "Schliessen Sie Spitalzusatzversicherungen möglichst jung ab – die Prämien steigen mit dem Alter stark an, und bei Vorerkrankungen drohen Ausschlüsse.",
+      },
+      {
+        heading: "Zahnversicherung – Sinnvoll oder nicht?",
+        content:
+          "Zahnbehandlungen sind in der Grundversicherung nur bei Unfall oder schweren Erkrankungen gedeckt. Eine Zahnversicherung übernimmt: Dentalhygiene, Füllungen, Kronen und Brücken, Kieferorthopädie (Zahnspangen) und teilweise Implantate. Die Kosten liegen zwischen CHF 20 und CHF 80 pro Monat. Wichtig: Viele Zahnversicherungen haben Wartefristen (meist 12-24 Monate) und Leistungsobergrenzen (z.B. CHF 3'000 pro Jahr). Für Personen mit guter Zahngesundheit lohnt sich oft das Selbersparen mehr als eine Versicherung.",
+      },
+      {
+        heading: "Komplementärmedizin-Versicherung",
+        content:
+          "Diese Zusatzversicherung deckt alternative Behandlungsmethoden wie Akupunktur, Homöopathie, Osteopathie, Traditionelle Chinesische Medizin (TCM) und Naturheilkunde. Die Kosten sind mit CHF 15-40 pro Monat moderat. Achtung: Die Grundversicherung deckt bereits 5 Methoden der Komplementärmedizin, wenn sie von einem Arzt mit entsprechender Zusatzausbildung durchgeführt werden. Prüfen Sie daher genau, welche zusätzlichen Leistungen Sie wirklich benötigen.",
+      },
+      {
+        heading: "Zusatzversicherung für Familien und Kinder",
+        content:
+          "Für Kinder sind bestimmte Zusatzversicherungen besonders sinnvoll: Zahnversicherung für Kieferorthopädie (Zahnspangen können CHF 5'000-15'000 kosten), Brillenversicherung (Kinderbrillen werden oft benötigt) und Auslandsschutz für Ferienreisen. Da Kinder selten Vorerkrankungen haben, ist der Abschluss in jungen Jahren oft problemlos und günstig.",
+        tip: "Schliessen Sie Zusatzversicherungen für Kinder am besten gleich nach der Geburt ab – dann gibt es keine Gesundheitsfragen und keine Ausschlüsse.",
+      },
+      {
+        heading: "Kündigung und Wechsel bei Zusatzversicherungen",
+        content:
+          "Im Gegensatz zur Grundversicherung können Sie Zusatzversicherungen nicht so einfach wechseln. Die neue Versicherung kann Sie aufgrund von Vorerkrankungen ablehnen oder mit Ausschlüssen versehen. Die Kündigungsfrist beträgt meist 3 Monate zum Jahresende. Tipp: Kündigen Sie eine Zusatzversicherung erst, wenn Sie die schriftliche Aufnahmebestätigung der neuen Versicherung haben.",
+      },
+    ],
+    faqItems: [
+      {
+        q: "Muss ich Zusatzversicherungen bei der gleichen Krankenkasse haben?",
+        a: "Nein. Sie können Grundversicherung und Zusatzversicherungen bei verschiedenen Anbietern haben. Das kann Geld sparen, da nicht jede Kasse bei allen Produkten günstig ist.",
+      },
+      {
+        q: "Kann mich die Krankenkasse bei Zusatzversicherungen ablehnen?",
+        a: "Ja. Im Gegensatz zur Grundversicherung gibt es bei Zusatzversicherungen keine Aufnahmepflicht. Die Kasse kann Gesundheitsfragen stellen und den Antrag ablehnen oder mit Vorbehalten annehmen.",
+      },
+      {
+        q: "Werden Zusatzversicherungen im Alter teurer?",
+        a: "Ja, die meisten Zusatzversicherungen werden mit dem Alter teurer. Besonders Spitalzusatzversicherungen können im Alter sehr teuer werden. Einige Anbieter bieten Tarife mit Altersrückstellungen an, die im Alter stabiler bleiben.",
+      },
+      {
+        q: "Welche Zusatzversicherung empfehlen Experten?",
+        a: "Das hängt von Ihrer persönlichen Situation ab. Für die meisten Personen ist eine ambulante Zusatzversicherung mit Auslandsschutz sinnvoll. Zahnversicherungen lohnen sich vor allem für Familien mit Kindern. Spitalzusatzversicherungen sind oft erst ab mittlerem Alter relevant.",
+      },
+    ],
+  },
+  {
+    slug: "krankenkasse-familie",
+    title: "Krankenkasse für Familien 2026 – So sparen Sie als Familie",
+    metaTitle: "Krankenkasse Familie 2026 – Tipps, Vergleich & Spartipps für Familien",
+    metaDescription:
+      "Krankenkasse für Familien: Kinder, Rabatte und Spartipps. So finden Sie die günstigste Familienversicherung 2026. Bis zu CHF 5'000 pro Jahr sparen!",
+    keywords: [
+      "Krankenkasse Familie",
+      "Krankenkasse Kinder",
+      "Familienversicherung Schweiz",
+      "Kinderprämien Krankenkasse",
+      "Krankenkasse Baby",
+      "Familienrabatt Krankenkasse",
+    ],
+    readingTime: "5 Min.",
+    lastUpdated: "2026-01-15",
+    heroSubtitle: "Die besten Krankenkassen-Tipps für Familien mit Kindern",
+    sections: [
+      {
+        heading: "Krankenkasse für Kinder – Das Wichtigste",
+        content:
+          "In der Schweiz muss jedes Kind innerhalb von 3 Monaten nach der Geburt bei einer Krankenkasse angemeldet werden. Die Wahl der Krankenkasse ist frei – Sie können für jedes Kind eine andere Kasse wählen. Kinderprämien sind deutlich günstiger als Erwachsenenprämien und liegen je nach Kanton zwischen CHF 80 und CHF 150 pro Monat. Die Leistungen der Grundversicherung sind für Kinder identisch mit denen für Erwachsene.",
+      },
+      {
+        heading: "Familienrabatte nutzen",
+        content:
+          "Viele Krankenkassen bieten Familienrabatte an: Ab dem zweiten Kind erhalten Sie oft 10-15% Rabatt auf die Kinderprämien. Einige Kassen bieten Rabatte, wenn die ganze Familie bei ihnen versichert ist. Diese Rabatte können mehrere Hundert Franken pro Jahr ausmachen. Vergleichen Sie daher nicht nur die Einzelprämien, sondern rechnen Sie die Gesamtkosten für die ganze Familie.",
+        tip: "Es kann sich lohnen, alle Familienmitglieder bei der gleichen Kasse zu versichern – aber prüfen Sie immer, ob der Familienrabatt den Preisvorteil einer günstigeren Einzelkasse überwiegt.",
+      },
+      {
+        heading: "Die richtige Franchise für Kinder",
+        content:
+          "Für Kinder gibt es spezielle Franchisestufen: CHF 0, CHF 100, CHF 200, CHF 300, CHF 400, CHF 500 und CHF 600. Da Kinder häufiger zum Arzt gehen als Erwachsene (Vorsorgeuntersuchungen, Impfungen, Kinderkrankheiten), empfehlen die meisten Experten für Kinder die Franchise CHF 0 oder CHF 100. Die Prämienersparnis bei höherer Franchise ist bei Kindern gering, das Risiko von Arztkosten aber hoch.",
+      },
+      {
+        heading: "Versicherungsmodelle für Familien",
+        content:
+          "Für Familien eignet sich oft das Hausarztmodell: Die Kinder haben einen festen Kinderarzt als Ansprechpartner, und Sie sparen 10-20% Prämie. Das HMO-Modell ist für Familien weniger geeignet, da HMO-Zentren oft nicht auf Kinder spezialisiert sind. Das Telmed-Modell kann für ältere Kinder und Jugendliche eine Option sein.",
+      },
+      {
+        heading: "Sparpotenzial für Familien",
+        content:
+          "Eine vierköpfige Familie (2 Erwachsene, 2 Kinder) kann durch den Wechsel zur günstigsten Krankenkasse mehrere Tausend Franken pro Jahr sparen. Rechenbeispiel: Wenn jedes Familienmitglied CHF 100 pro Monat spart, sind das CHF 4'800 pro Jahr. Dazu kommen mögliche Ersparnisse durch Familienrabatte, höhere Franchisen (bei den Eltern) und günstigere Modelle.",
+        tip: "Vergleichen Sie die Krankenkassen jedes Jahr neu – die günstigste Kasse kann sich von Jahr zu Jahr ändern.",
+      },
+      {
+        heading: "Prämienverbilligung für Familien",
+        content:
+          "Familien mit bescheidenem Einkommen haben Anspruch auf Prämienverbilligung (IPV). Kinder und junge Erwachsene in Ausbildung erhalten in vielen Kantonen automatisch eine volle oder teilweise Prämienverbilligung. Die genauen Einkommensgrenzen variieren je nach Kanton und Familiengrösse. Informieren Sie sich bei Ihrer kantonalen Ausgleichskasse.",
+      },
+    ],
+    faqItems: [
+      {
+        q: "Müssen Kinder bei der gleichen Krankenkasse versichert sein wie die Eltern?",
+        a: "Nein. Sie können jedes Familienmitglied bei einer anderen Krankenkasse versichern. Es kann sich aber lohnen, alle bei der gleichen Kasse zu haben, um von Familienrabatten zu profitieren.",
+      },
+      {
+        q: "Bis wann muss ich mein Neugeborenes anmelden?",
+        a: "Sie haben 3 Monate Zeit, Ihr Baby bei einer Krankenkasse anzumelden. Die Versicherung gilt dann rückwirkend ab Geburt. Melden Sie das Kind am besten schon vor der Geburt an.",
+      },
+      {
+        q: "Welche Franchise empfehlen Experten für Kinder?",
+        a: "Für Kinder empfehlen Experten meist die tiefste Franchise (CHF 0 oder CHF 100), da Kinder häufiger zum Arzt gehen und die Prämienersparnis bei höherer Franchise gering ist.",
+      },
+      {
+        q: "Gibt es Familienrabatte bei allen Krankenkassen?",
+        a: "Nein, nicht alle Kassen bieten Familienrabatte. Vergleichen Sie die Angebote und rechnen Sie die Gesamtkosten für Ihre Familie aus.",
+      },
+    ],
+  },
+  {
+    slug: "krankenkasse-neugeborene",
+    title: "Krankenkasse für Neugeborene 2026 – Anmeldung, Fristen & Tipps",
+    metaTitle: "Krankenkasse Neugeborene 2026 – Anmeldung vor Geburt, Fristen & Kosten",
+    metaDescription:
+      "Krankenkasse für Baby: Wann anmelden? Welche Kasse? Kosten und Fristen für Neugeborene 2026. Checkliste für werdende Eltern.",
+    keywords: [
+      "Krankenkasse Neugeborene",
+      "Krankenkasse Baby",
+      "Baby Krankenversicherung Schweiz",
+      "Krankenkasse anmelden Geburt",
+      "Neugeborenes versichern",
+      "Baby Krankenkasse Frist",
+    ],
+    readingTime: "4 Min.",
+    lastUpdated: "2026-01-15",
+    heroSubtitle: "Alles Wichtige zur Krankenversicherung für Ihr Baby",
+    sections: [
+      {
+        heading: "Wann muss ich mein Baby anmelden?",
+        content:
+          "In der Schweiz haben Sie 3 Monate Zeit, Ihr Neugeborenes bei einer Krankenkasse anzumelden. Die Versicherung gilt dann rückwirkend ab dem Geburtsdatum. Es empfiehlt sich jedoch, das Baby bereits vor der Geburt anzumelden – so haben Sie eine Sorge weniger und die Anmeldung ist bei der Geburt bereits erledigt. Die meisten Krankenkassen ermöglichen eine vorgeburtliche Anmeldung ab dem 7. Schwangerschaftsmonat.",
+      },
+      {
+        heading: "Welche Krankenkasse für mein Baby?",
+        content:
+          "Sie können Ihr Baby bei jeder zugelassenen Krankenkasse in der Schweiz anmelden – unabhängig davon, wo Sie selbst versichert sind. Vergleichen Sie die Prämien für Ihr Wohngebiet, da diese je nach Kasse stark variieren können. Die Leistungen der Grundversicherung sind überall identisch. Achten Sie auch auf mögliche Familienrabatte: Wenn Sie mehrere Kinder oder die ganze Familie bei der gleichen Kasse versichern, gibt es oft Vergünstigungen.",
+        tip: "Viele Eltern versichern das Baby bei der gleichen Kasse wie sich selbst – das erleichtert die Administration und bringt oft Rabatte.",
+      },
+      {
+        heading: "Kosten: Was kostet die Krankenkasse für ein Baby?",
+        content:
+          "Kinderprämien sind deutlich günstiger als Erwachsenenprämien. Je nach Kanton und Krankenkasse liegen die monatlichen Prämien für ein Baby zwischen CHF 80 und CHF 150. Die Franchise für Kinder kann zwischen CHF 0 und CHF 600 gewählt werden. Für Babys und Kleinkinder empfiehlt sich die tiefste Franchise (CHF 0), da regelmässige Vorsorgeuntersuchungen und Impfungen anfallen.",
+      },
+      {
+        heading: "Vorgeburtliche Anmeldung – So geht's",
+        content:
+          "Bei der vorgeburtlichen Anmeldung geben Sie den voraussichtlichen Geburtstermin an. Nach der Geburt müssen Sie nur noch das tatsächliche Geburtsdatum und den Namen des Kindes mitteilen. Die meisten Krankenkassen bieten Online-Formulare für die vorgeburtliche Anmeldung an. Benötigte Angaben: Namen und Adresse der Eltern, voraussichtlicher Geburtstermin, gewünschte Franchise und Versicherungsmodell.",
+      },
+      {
+        heading: "Zusatzversicherungen für Babys",
+        content:
+          "Für Babys sind bestimmte Zusatzversicherungen besonders empfehlenswert: Zahnversicherung (für spätere Kieferorthopädie), Komplementärmedizin (falls Sie alternative Behandlungsmethoden wünschen) und Auslandsschutz (für Reisen). Der grosse Vorteil: Bei Babys gibt es keine Gesundheitsfragen und keine Vorbehalte – das Kind wird ohne Einschränkungen aufgenommen. Später kann sich das ändern.",
+        tip: "Schliessen Sie Zusatzversicherungen für Ihr Baby gleich nach der Geburt ab. Dann gibt es garantiert keine Ablehnungen oder Ausschlüsse.",
+      },
+      {
+        heading: "Checkliste für werdende Eltern",
+        content:
+          "1. Ab dem 7. Monat: Krankenkassenprämien für Babys vergleichen\n2. Vor der Geburt: Baby vorgeburtlich bei gewählter Kasse anmelden\n3. Gewünschte Zusatzversicherungen abschliessen\n4. Nach der Geburt: Geburtsdatum und Namen der Kasse melden\n5. Prämienverbilligung prüfen (viele Kantone zahlen für Kinder automatisch)\n6. Unterlagen aufbewahren (Versicherungsausweis, Police)",
+      },
+    ],
+    faqItems: [
+      {
+        q: "Was passiert, wenn ich die 3-Monats-Frist verpasse?",
+        a: "Wenn Sie die Frist verpassen, beginnt die Versicherung erst ab dem Anmeldedatum – nicht rückwirkend ab Geburt. Medizinische Kosten zwischen Geburt und Anmeldung müssten Sie selbst tragen. Melden Sie Ihr Baby daher unbedingt rechtzeitig an.",
+      },
+      {
+        q: "Kann ich mein Baby schon vor der Geburt anmelden?",
+        a: "Ja, die meisten Krankenkassen ermöglichen eine vorgeburtliche Anmeldung ab dem 7. Schwangerschaftsmonat. Das ist sehr empfehlenswert.",
+      },
+      {
+        q: "Muss mein Baby bei der gleichen Krankenkasse sein wie ich?",
+        a: "Nein. Sie können Ihr Baby bei jeder beliebigen Krankenkasse versichern. Es kann aber praktisch sein und Rabatte bringen, die ganze Familie bei einer Kasse zu haben.",
+      },
+      {
+        q: "Welche Franchise soll ich für mein Baby wählen?",
+        a: "Für Babys und Kleinkinder empfiehlt sich die Franchise CHF 0 oder CHF 100. Kinder gehen häufiger zum Arzt, und die Prämienersparnis bei höherer Franchise ist minimal.",
+      },
+    ],
+  },
+  {
+    slug: "krankenkasse-schweiz-vergleich",
+    title: "Krankenkassen Schweiz 2026 – Alle 27 Versicherer im Vergleich",
+    metaTitle: "Krankenkassen Schweiz 2026 – Liste aller Versicherer & Vergleich",
+    metaDescription:
+      "Alle Krankenkassen der Schweiz 2026 im Überblick: Liste der 27 zugelassenen Versicherer, Prämienvergleich und Tipps zur Wahl der besten Krankenkasse.",
+    keywords: [
+      "Krankenkassen Schweiz",
+      "Krankenkassen Liste Schweiz",
+      "alle Krankenkassen Schweiz",
+      "Krankenkassen Vergleich Schweiz",
+      "Schweizer Krankenkassen",
+      "beste Krankenkasse Schweiz",
+      "günstigste Krankenkasse Schweiz",
+    ],
+    readingTime: "6 Min.",
+    lastUpdated: "2026-01-15",
+    heroSubtitle: "Übersicht aller Schweizer Krankenkassen mit Prämienvergleich",
+    sections: [
+      {
+        heading: "Wie viele Krankenkassen gibt es in der Schweiz?",
+        content:
+          "In der Schweiz gibt es 2026 insgesamt 27 zugelassene Krankenkassen, die die obligatorische Grundversicherung (KVG) anbieten. Diese Zahl ist in den letzten Jahren durch Fusionen gesunken – vor 20 Jahren waren es noch über 100 Kassen. Die grössten Versicherer sind CSS, Helsana, Swica und Groupe Mutuel. Alle 27 Kassen bieten identische Leistungen in der Grundversicherung – der Unterschied liegt nur im Preis und im Service.",
+      },
+      {
+        heading: "Liste aller Krankenkassen in der Schweiz 2026",
+        content:
+          "Die 27 zugelassenen Krankenkassen sind: Aquilana, Assura, Atupri, Avenir, CSS, EGK, Groupe Mutuel, Helsana, Innova, Intras, KluG, KPT, Luzerner Hinterland, Moove Sympany, OKK, Philos, Progrès, PROVITA, Rhenusana, SANA24, Sanitas, Steffisburg, Sumiswalder, SWICA, Sympany, Visana und Vita Surselva. Einige dieser Kassen sind nur regional tätig, andere sind schweizweit aktiv.",
+      },
+      {
+        heading: "Die grössten Krankenkassen der Schweiz",
+        content:
+          "Die vier grössten Krankenkassen nach Versichertenzahl sind: CSS (ca. 1.8 Mio. Versicherte), Helsana (ca. 1.5 Mio.), SWICA (ca. 1.5 Mio.) und Groupe Mutuel (ca. 1.3 Mio.). Diese vier Kassen zusammen versichern über die Hälfte der Schweizer Bevölkerung. Grösse bedeutet aber nicht automatisch tiefste Prämien – oft sind kleinere, regionale Kassen günstiger.",
+      },
+      {
+        heading: "Welche Krankenkasse ist die günstigste?",
+        content:
+          "Die günstigste Krankenkasse hängt von Ihrem Wohnort (Kanton und Prämienregion), Ihrem Alter und dem gewählten Versicherungsmodell ab. Es gibt keine Krankenkasse, die überall am günstigsten ist. In vielen Regionen gehören Assura, Groupe Mutuel und CSS zu den günstigeren Anbietern. Nutzen Sie unseren kostenlosen Prämienrechner, um die günstigste Kasse für Ihre persönliche Situation zu finden.",
+        tip: "Vergleichen Sie jedes Jahr neu – die Prämienunterschiede zwischen den Kassen können mehrere Hundert Franken pro Jahr betragen.",
+      },
+      {
+        heading: "Qualität und Service der Krankenkassen",
+        content:
+          "Obwohl die Leistungen der Grundversicherung überall gleich sind, unterscheiden sich die Kassen im Service: Erreichbarkeit des Kundendienstes, Online-Services und App-Funktionalität, Schnelligkeit der Rechnungsabwicklung und Beratungsqualität. Unabhängige Umfragen (z.B. von K-Tipp, Comparis) bewerten regelmässig die Kundenzufriedenheit. Spitzenreiter sind oft SWICA, KPT, Sanitas und Atupri.",
+      },
+      {
+        heading: "Regionale vs. nationale Krankenkassen",
+        content:
+          "Einige Krankenkassen sind nur in bestimmten Regionen oder Kantonen tätig, zum Beispiel Luzerner Hinterland (Luzern), Vita Surselva (Graubünden) oder Steffisburg (Bern). Diese regionalen Kassen sind oft günstiger als die grossen nationalen Anbieter. Der Nachteil: Bei einem Umzug in einen anderen Kanton müssen Sie möglicherweise die Kasse wechseln. Prüfen Sie daher, ob Ihre Wunschkasse auch in Ihrem Kanton tätig ist.",
+      },
+    ],
+    faqItems: [
+      {
+        q: "Sind die Leistungen bei allen Krankenkassen gleich?",
+        a: "Ja, in der Grundversicherung (KVG) sind die Leistungen gesetzlich festgelegt und bei allen 27 Kassen identisch. Unterschiede gibt es nur bei Zusatzversicherungen, die aber freiwillig sind.",
+      },
+      {
+        q: "Welche Krankenkasse hat den besten Service?",
+        a: "Laut unabhängigen Umfragen haben SWICA, KPT, Sanitas und Atupri regelmässig die höchste Kundenzufriedenheit. Aber: Service ist subjektiv, und eine günstigere Prämie kann wichtiger sein als perfekter Service.",
+      },
+      {
+        q: "Kann jede Krankenkasse mich aufnehmen?",
+        a: "Ja, in der Grundversicherung besteht Aufnahmepflicht. Keine Krankenkasse darf Sie ablehnen, unabhängig von Alter, Gesundheitszustand oder Vorerkrankungen. Bei Zusatzversicherungen ist das anders – dort können Kassen Anträge ablehnen.",
+      },
+      {
+        q: "Wie oft kann ich die Krankenkasse wechseln?",
+        a: "Sie können die Krankenkasse jedes Jahr per 1. Januar wechseln. Die Kündigung muss bis 30. November bei der alten Kasse eintreffen. Es gibt keine Mindestvertragsdauer.",
+      },
+    ],
+  },
+  {
+    slug: "krankenkasse-expats",
+    title: "Krankenkasse für Expats & Zuzüger 2026 – Anmeldung & Tipps",
+    metaTitle: "Krankenkasse Expats Schweiz 2026 – Anmeldung, Fristen & Tipps für Zuzüger",
+    metaDescription:
+      "Krankenkasse für Expats und Zuzüger in die Schweiz: Anmeldepflicht, Fristen, Kosten und Tipps. Alles Wichtige zur Krankenversicherung beim Umzug in die Schweiz 2026.",
+    keywords: [
+      "Krankenkasse Expats Schweiz",
+      "Krankenkasse Zuzug Schweiz",
+      "Krankenversicherung Ausländer Schweiz",
+      "Krankenkasse Einwanderung Schweiz",
+      "Krankenkasse neu in der Schweiz",
+      "Grenzgänger Krankenversicherung",
+    ],
+    readingTime: "5 Min.",
+    lastUpdated: "2026-01-15",
+    heroSubtitle: "Krankenversicherung beim Umzug in die Schweiz – Was Sie wissen müssen",
+    sections: [
+      {
+        heading: "Versicherungspflicht in der Schweiz",
+        content:
+          "Wer in der Schweiz wohnt, muss sich innert 3 Monaten nach Wohnsitznahme bei einer Schweizer Krankenkasse für die Grundversicherung (KVG) anmelden. Dies gilt für alle Personen unabhängig von der Staatsangehörigkeit – also auch für EU-Bürger, Drittstaatenangehörige und Schweizer Rückkehrer. Die Versicherung gilt dann rückwirkend ab dem Tag der Einreise bzw. Wohnsitznahme. Melden Sie sich also rechtzeitig an, um Lücken zu vermeiden.",
+      },
+      {
+        heading: "Anmeldung bei der Krankenkasse – So geht's",
+        content:
+          "Nach der Anmeldung bei der Gemeinde (Einwohnerkontrolle) können Sie sich bei einer beliebigen Schweizer Krankenkasse anmelden. Benötigte Unterlagen: Kopie des Ausweises/Passes, Aufenthaltsbewilligung (falls bereits vorhanden), Anmeldebestätigung der Gemeinde, bisherige Versicherungsnachweise (falls vorhanden). Die meisten Kassen ermöglichen eine Online-Anmeldung. Vergleichen Sie vorher die Prämien – die Unterschiede können erheblich sein.",
+        tip: "Sie können die Krankenkasse frei wählen. Nutzen Sie einen Prämienvergleich, um die günstigste Kasse für Ihren Wohnort zu finden.",
+      },
+      {
+        heading: "Aufnahmepflicht – Keine Gesundheitsprüfung",
+        content:
+          "In der Grundversicherung (KVG) besteht Aufnahmepflicht: Jede Krankenkasse muss Sie aufnehmen, unabhängig von Alter, Gesundheitszustand oder Vorerkrankungen. Es gibt keine Gesundheitsfragen und keine Wartezeiten. Das ist ein grosser Unterschied zu privaten Krankenversicherungen in anderen Ländern. Bei Zusatzversicherungen ist das allerdings anders – dort können Kassen Gesundheitsfragen stellen und Anträge ablehnen.",
+      },
+      {
+        heading: "Kosten der Krankenversicherung in der Schweiz",
+        content:
+          "Die Prämien der Grundversicherung variieren je nach Wohnkanton, Alter und gewähltem Modell. Erwachsene zahlen 2026 im Durchschnitt etwa CHF 390 pro Monat (bei Franchise CHF 300). In Kantonen wie Genf, Basel oder Zürich sind die Prämien höher, in ländlichen Kantonen wie Appenzell oder Nidwalden günstiger. Durch Wahl einer höheren Franchise (bis CHF 2'500) oder eines alternativen Modells (Hausarzt, HMO, Telmed) können Sie deutlich sparen.",
+      },
+      {
+        heading: "Besonderheiten für Grenzgänger",
+        content:
+          "Wenn Sie in einem EU/EFTA-Staat wohnen und in der Schweiz arbeiten (Grenzgänger), haben Sie ein Wahlrecht: Sie können sich entweder in der Schweiz oder in Ihrem Wohnsitzland versichern. In der Schweiz sind Sie dann dem KVG unterstellt mit allen Rechten und Pflichten. Viele Grenzgänger wählen die Schweizer Versicherung, weil die Leistungen besser sind. Informieren Sie sich bei Ihrer Gemeinde über die genauen Regelungen.",
+      },
+      {
+        heading: "Private Krankenversicherung vs. KVG",
+        content:
+          "Anders als in einigen anderen Ländern ist es in der Schweiz nicht möglich, sich statt der Grundversicherung (KVG) privat zu versichern. Die Grundversicherung ist obligatorisch. Sie können aber zusätzlich zur Grundversicherung private Zusatzversicherungen abschliessen, z.B. für Zahnbehandlungen, Einzelzimmer im Spital oder alternative Medizin. Achtung: Bei Zusatzversicherungen gibt es Gesundheitsfragen – schliessen Sie diese möglichst bald nach der Einreise ab, wenn Sie noch gesund sind.",
+        tip: "Schliessen Sie Zusatzversicherungen möglichst schnell nach der Einreise ab. Je jünger und gesünder Sie sind, desto einfacher ist die Aufnahme und desto günstiger die Prämie.",
+      },
+    ],
+    faqItems: [
+      {
+        q: "Muss ich mich sofort bei einer Krankenkasse anmelden?",
+        a: "Sie haben 3 Monate Zeit ab Wohnsitznahme. Die Versicherung gilt dann rückwirkend ab Einreisedatum. Es empfiehlt sich aber, sich schnell anzumelden, um medizinische Kosten abzudecken.",
+      },
+      {
+        q: "Kann ich meine ausländische Krankenversicherung behalten?",
+        a: "Nein, die Schweizer Grundversicherung (KVG) ist obligatorisch und kann nicht durch eine ausländische Versicherung ersetzt werden. Sie müssen sich bei einer Schweizer Kasse anmelden.",
+      },
+      {
+        q: "Werden Vorerkrankungen berücksichtigt?",
+        a: "Nein, in der Grundversicherung nicht. Jede Kasse muss Sie aufnehmen, unabhängig von Vorerkrankungen. Bei Zusatzversicherungen können Vorerkrankungen aber zu Ausschlüssen führen.",
+      },
+      {
+        q: "Wie hoch ist die Selbstbeteiligung?",
+        a: "Sie wählen eine Franchise zwischen CHF 300 und CHF 2'500 pro Jahr. Zusätzlich zahlen Sie 10% Selbstbehalt auf Kosten über der Franchise (max. CHF 700/Jahr) plus CHF 15 pro Spitaltag.",
+      },
+    ],
+  },
+];
+
+// Combine all articles
+export const ALL_RATGEBER_ARTICLES = [...RATGEBER_ARTICLES, ...ADDITIONAL_ARTICLES];
+
 export function getRatgeberBySlug(slug: string): RatgeberArticle | undefined {
-  return RATGEBER_ARTICLES.find((a) => a.slug === slug);
+  return ALL_RATGEBER_ARTICLES.find((a) => a.slug === slug);
 }
 
 export function getAllRatgeberSlugs(): string[] {
-  return RATGEBER_ARTICLES.map((a) => a.slug);
+  return ALL_RATGEBER_ARTICLES.map((a) => a.slug);
 }
