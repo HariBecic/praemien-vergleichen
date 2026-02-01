@@ -150,7 +150,7 @@ const INSURER_DOMAINS: Record<string, string> = {
 function getInsurerLogoUrl(insurerName: string): string | null {
   const domain = INSURER_DOMAINS[insurerName];
   if (!domain) return null;
-  return `https://cdn.brandfetch.io/domain/${domain}?c=1idc9vLyOz1`;
+  return `https://cdn.brandfetch.io/${domain}/fallback/lettermark/icon?c=1idc9vLyOz1J1qurgu6`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
