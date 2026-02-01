@@ -409,7 +409,6 @@ export function PremiumCalculator() {
   const [leadNewsletter, setLeadNewsletter] = useState(false);
   const [leadLoading, setLeadLoading] = useState(false);
   const [leadError, setLeadError] = useState("");
-  const [showCurrentInsurerField, setShowCurrentInsurerField] = useState(false);
 
   // PLZ/Ort combo search
   const [plzQuery, setPlzQuery] = useState("");
@@ -833,7 +832,7 @@ export function PremiumCalculator() {
   const STEP_LABELS = [
     "Situation & Wohnort",
     "Persönliche Angaben",
-    "Grundversicherung",
+    "Aktuelle Versicherung",
     "Zusatzversicherung",
   ];
 
@@ -1316,88 +1315,83 @@ export function PremiumCalculator() {
           <div className="animate-fade-in">
             {!showResults ? (
               <>
-                <h2 className="text-xl font-bold text-center mb-2">Stell deine Präferenzen ein</h2>
+                <h2 className="text-xl font-bold text-center mb-2">Deine aktuelle Versicherung</h2>
                 <p className="text-center text-white/50 text-sm mb-6">
-                  Personalisiere deine Ergebnisse mit unseren Empfehlungen und Angeboten.
+                  Diese Angaben helfen uns, dir das beste Sparpotenzial zu zeigen.
                 </p>
 
                 <div className="max-w-md mx-auto space-y-6">
-                  {/* Current insurer (collapsible) */}
+                  {/* Current insurer */}
                   <div>
-                    {!showCurrentInsurerField ? (
-                      <button
-                        onClick={() => setShowCurrentInsurerField(true)}
-                        className="flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-blue-300"
-                      >
-                        <span className="w-6 h-6 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-400">+</span>
-                        Aktuelle Versicherung hinzufügen
-                      </button>
-                    ) : (
-                      <div className="space-y-3 p-4 rounded-xl bg-white/[0.04] border border-white/[0.08]">
-                        <div className="flex items-center justify-between">
-                          <label className="text-sm font-medium text-white/80">Aktuelle Krankenkasse</label>
-                          <button
-                            onClick={() => {
-                              setShowCurrentInsurerField(false);
-                              setFormState((prev) => ({ ...prev, currentInsurer: "", currentPremium: "" }));
-                            }}
-                            className="text-xs text-white/40 hover:text-white/60"
-                          >
-                            Entfernen
-                          </button>
-                        </div>
-                        <select
-                          value={formState.currentInsurer}
-                          onChange={(e) => setFormState((prev) => ({ ...prev, currentInsurer: e.target.value }))}
-                          className="select-field"
-                        >
-                          <option value="">Wählen...</option>
-                          {CURRENT_INSURERS.map((ins) => (
-                            <option key={ins} value={ins}>{ins}</option>
-                          ))}
-                        </select>
-                        {formState.currentInsurer && (
-                          <div>
-                            <label className="block text-sm font-medium text-white/80 mb-1">
-                              Aktuelle Monatsprämie CHF {isMultiPerson ? "(Total)" : ""}
-                            </label>
-                            <input
-                              type="number"
-                              placeholder={isMultiPerson ? "z.B. 900" : "z.B. 450"}
-                              value={formState.currentPremium}
-                              onChange={(e) => setFormState((prev) => ({ ...prev, currentPremium: e.target.value }))}
-                              className="input-field"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Bei welcher Krankenkasse bist du aktuell?
+                    </label>
+                    <select
+                      value={formState.currentInsurer}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormState((prev) => ({
+                          ...prev,
+                          currentInsurer: val,
+                          currentPremium: val === "" || val === "keine" ? "" : prev.currentPremium,
+                        }));
+                      }}
+                      className="select-field"
+                    >
+                      <option value="">Bitte wählen...</option>
+                      <option value="keine">🆕 Keine — Ich bin neu in der Schweiz</option>
+                      {CURRENT_INSURERS.map((ins) => (
+                        <option key={ins} value={ins}>{ins}</option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Preference buttons */}
+                  {/* Current premium — only if insurer selected (not "keine") */}
+                  {formState.currentInsurer && formState.currentInsurer !== "keine" && (
+                    <div className="animate-fade-in">
+                      <label className="block text-sm font-medium text-white/80 mb-2">
+                        Wie viel zahlst du aktuell pro Monat? {isMultiPerson ? "(Total für alle)" : ""}
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">CHF</span>
+                        <input
+                          type="number"
+                          placeholder={isMultiPerson ? "z.B. 900" : "z.B. 450"}
+                          value={formState.currentPremium}
+                          onChange={(e) => setFormState((prev) => ({ ...prev, currentPremium: e.target.value }))}
+                          className="input-field !pl-12"
+                        />
+                      </div>
+                      <p className="text-[11px] text-white/30 mt-1">
+                        Optional — ermöglicht die Anzeige deines Sparpotenzials.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Model selection */}
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-3">
-                      Wähle deine Präferenz:
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                      Welches Versicherungsmodell bevorzugst du?
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {(
-                        [
-                          { value: "cheapest", label: "Günstigste", icon: "💰" },
-                          { value: "recommended", label: "Empfehlung", icon: "⭐" },
-                          { value: "offers", label: "Angebote", icon: "📋" },
-                        ] as const
-                      ).map((pref) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {([
+                        { value: "all", label: "Weiss nicht", desc: "Alle Modelle zeigen" },
+                        { value: "standard", label: "Standard", desc: "Freie Arztwahl" },
+                        { value: "hausarzt", label: "Hausarzt", desc: "Über deinen Hausarzt" },
+                        { value: "hmo", label: "HMO", desc: "Gesundheitszentrum" },
+                        { value: "telmed", label: "Telmed", desc: "Erst anrufen" },
+                      ] as const).map((m) => (
                         <button
-                          key={pref.value}
-                          onClick={() => setFormState((prev) => ({ ...prev, preference: pref.value }))}
-                          className={`py-3 px-2 rounded-xl text-center text-xs sm:text-sm font-medium border-2 transition-all ${
-                            formState.preference === pref.value
+                          key={m.value}
+                          onClick={() => setModelFilter(m.value)}
+                          className={`py-3 px-3 rounded-xl text-center border-2 transition-all ${
+                            modelFilter === m.value
                               ? "border-blue-500 bg-blue-500/15 text-white shadow-lg shadow-blue-500/10"
                               : "border-white/[0.06] bg-white/[0.03] hover:border-white/[0.12] text-white/60"
                           }`}
                         >
-                          <div className="text-lg mb-1">{pref.icon}</div>
-                          {pref.label}
+                          <div className="text-sm font-semibold">{m.label}</div>
+                          <div className="text-[10px] text-white/40 mt-0.5">{m.desc}</div>
                         </button>
                       ))}
                     </div>
