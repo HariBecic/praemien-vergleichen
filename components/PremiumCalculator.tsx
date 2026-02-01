@@ -310,8 +310,7 @@ export function PremiumCalculator() {
   const [showPlzDropdown, setShowPlzDropdown] = useState(false);
   const plzSearchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Save banner
-  const [showSaveBanner, setShowSaveBanner] = useState(false);
+  // Save modal auto-open timer
   const saveBannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Tooltips
@@ -692,18 +691,21 @@ export function PremiumCalculator() {
     [loadCantonPremiums]
   );
 
-  // ─── Save banner auto-show after 5s on results ────────────────────────
+  // ─── Auto-open lead modal after 5s on results ─────────────────────
 
   useEffect(() => {
-    if (showResults && !leadSubmitted && !showSaveBanner) {
+    if (showResults && !leadSubmitted && !showLeadModal) {
       saveBannerTimerRef.current = setTimeout(() => {
-        setShowSaveBanner(true);
+        setLeadModalMode("save");
+        const firstName = formState.persons[0]?.name || "";
+        if (firstName && !leadName) setLeadName(firstName);
+        setShowLeadModal(true);
       }, 5000);
     }
     return () => {
       if (saveBannerTimerRef.current) clearTimeout(saveBannerTimerRef.current);
     };
-  }, [showResults, leadSubmitted, showSaveBanner]);
+  }, [showResults, leadSubmitted, showLeadModal]);
 
   // ═══════════════════════════════════════════════════════════════════════
   // RENDER
@@ -793,43 +795,6 @@ export function PremiumCalculator() {
           );
         })}
       </div>
-
-      {/* ══════════════════════════════════════════════════════════════════ */}
-      {/* SAVE BANNER (auto-popup after 5s on results)                      */}
-      {/* ══════════════════════════════════════════════════════════════════ */}
-      {showSaveBanner && !leadSubmitted && (
-        <div className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-[#0f4c5c]/5 to-[#0f4c5c]/10 border border-[#0f4c5c]/20 animate-fade-in">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#0f4c5c]/10 flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-[#0f4c5c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-sm text-[#0f4c5c]">Speichere deinen Fortschritt</h4>
-              <p className="text-xs text-stone-500 mt-0.5">
-                Du erhältst eine E-Mail mit einem Link, damit du deine Ergebnisse beim nächsten Besuch einfach abrufen kannst.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={() => openLeadModal("save")}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#0f4c5c] text-white hover:bg-[#1a6b7a] transition-colors"
-              >
-                Jetzt speichern
-              </button>
-              <button
-                onClick={() => setShowSaveBanner(false)}
-                className="p-1 rounded text-stone-400 hover:text-stone-600"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ══════════════════════════════════════════════════════════════════ */}
       {/* MAIN CARD                                                         */}
