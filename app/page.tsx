@@ -1,5 +1,6 @@
 import { PremiumCalculator } from "@/components/PremiumCalculator";
 import { Header } from "@/components/Header";
+import { Logo } from "@/components/Logo";
 
 const TESTIMONIALS = [
   {
@@ -311,9 +312,7 @@ export default function Home() {
       <footer className="border-t border-white/[0.06] py-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="font-semibold text-white">
-              praemien-vergleichen<span className="text-orange-400">.ch</span>
-            </div>
+            <Logo size="small" className="text-white/70" />
             <div className="flex gap-6 text-sm">
               <a href="/impressum" className="text-white/40 hover:text-white transition-colors">Impressum</a>
               <a href="/datenschutz" className="text-white/40 hover:text-white transition-colors">Datenschutz</a>

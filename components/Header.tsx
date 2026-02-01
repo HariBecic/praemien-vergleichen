@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Logo } from "./Logo";
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -21,9 +22,7 @@ export function Header() {
       }`}
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <a href="/" className="font-bold text-lg text-white">
-          praemien-vergleichen<span className="text-orange-400">.ch</span>
-        </a>
+        <Logo size="small" className="text-white" />
 
         {/* Desktop nav */}
         <nav className="hidden sm:flex items-center gap-6">
