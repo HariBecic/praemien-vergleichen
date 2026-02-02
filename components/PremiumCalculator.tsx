@@ -84,6 +84,11 @@ const FRANCHISES_CHILD = [0, 100, 200, 300, 400, 500, 600];
 const DEFAULT_FRANCHISE_ADULT = 2500;
 const DEFAULT_FRANCHISE_CHILD = 0;
 
+// Vergütung 2026: CO2-Rückverteilung + Ausgleichsbetrag Reserveabbau
+// Total: CHF 61.80/Jahr = CHF 5.15/Monat pro Person
+// Quelle: BAG / Bundesamt für Gesundheit
+const VERGUETUNG_MONTHLY_PER_PERSON = 5.15;
+
 const CURRENT_INSURERS = [
   "Agrisano", "AMB", "Aquilana", "Assura", "Atupri", "Avenir",
   "Birchmeier", "Concordia", "CSS", "d'Entremont", "EGK", "Einsiedeln",
@@ -333,12 +338,16 @@ function computeGroupedResults(
 
     const insurerName = persons[0].cheapest.n;
 
+    // Vergütung abziehen (pro Person)
+    const verguetungTotal = persons.length * VERGUETUNG_MONTHLY_PER_PERSON;
+    const adjustedMonthly = totalMonthly - verguetungTotal;
+
     groups.push({
       insurerId,
       insurerName,
       persons,
-      totalMonthly: Math.round(totalMonthly * 100) / 100,
-      totalYearly: Math.round(totalMonthly * 12 * 100) / 100,
+      totalMonthly: Math.round(adjustedMonthly * 100) / 100,
+      totalYearly: Math.round(adjustedMonthly * 12 * 100) / 100,
       savings: 0,
       modelTypes: [...modelSet].sort(),
     });
@@ -918,10 +927,13 @@ export function PremiumCalculator() {
         }
 
         if (!cancelled) {
-          setCurrentPremiumAuto(allFound ? totalMonthly : null);
+          // Vergütung abziehen (pro Person)
+          const verguetungTotal = formState.persons.length * VERGUETUNG_MONTHLY_PER_PERSON;
+          const adjustedTotal = allFound ? totalMonthly - verguetungTotal : null;
+          setCurrentPremiumAuto(adjustedTotal);
           // Also set in formState for lead data
-          if (allFound) {
-            setFormState((prev) => ({ ...prev, currentPremium: String(Math.round(totalMonthly * 100) / 100) }));
+          if (allFound && adjustedTotal !== null) {
+            setFormState((prev) => ({ ...prev, currentPremium: String(Math.round(adjustedTotal * 100) / 100) }));
           }
           setCurrentPremiumLoading(false);
         }
@@ -1733,7 +1745,7 @@ export function PremiumCalculator() {
                                   )}
                                   {isMultiPerson && (
                                     <div className="text-xs text-white/50 mt-0.5 truncate">
-                                      {group.persons.map((pt) => `${pt.personLabel}: CHF ${pt.cheapest.p.toFixed(0)}`).join(" · ")}
+                                      {group.persons.map((pt) => `${pt.personLabel}: CHF ${(pt.cheapest.p - VERGUETUNG_MONTHLY_PER_PERSON).toFixed(0)}`).join(" · ")}
                                     </div>
                                   )}
                                 </div>
@@ -1832,7 +1844,7 @@ export function PremiumCalculator() {
                                             </div>
                                           </div>
                                           <span className="font-semibold tabular-nums whitespace-nowrap shrink-0">
-                                            CHF {tariff.p.toFixed(2)}
+                                            CHF {(tariff.p - VERGUETUNG_MONTHLY_PER_PERSON).toFixed(2)}
                                           </span>
                                         </div>
                                       ))}
