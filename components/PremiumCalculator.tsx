@@ -1711,20 +1711,23 @@ export function PremiumCalculator() {
                                   const logoUrl = getInsurerLogoUrl(group.insurerName);
                                   const colors = INSURER_COLORS[group.insurerName] || { bg: "#64748b", text: "#fff" };
                                   const initials = getInsurerInitials(group.insurerName);
-                                  return (
-                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden relative"
-                                      style={{ backgroundColor: colors.bg }}
-                                    >
-                                      {logoUrl && (
+
+                                  if (logoUrl) {
+                                    return (
+                                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden bg-white p-1">
                                         <img
                                           src={logoUrl}
                                           alt={group.insurerName}
-                                          className="w-10 h-10 object-contain absolute inset-0"
-                                          onError={(e) => {
-                                            (e.target as HTMLImageElement).style.display = "none";
-                                          }}
+                                          className="w-full h-full object-contain"
                                         />
-                                      )}
+                                      </div>
+                                    );
+                                  }
+
+                                  return (
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                                      style={{ backgroundColor: colors.bg }}
+                                    >
                                       <span className="text-xs font-bold" style={{ color: colors.text }}>
                                         {initials}
                                       </span>
