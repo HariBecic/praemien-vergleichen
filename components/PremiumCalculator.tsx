@@ -84,10 +84,10 @@ const FRANCHISES_CHILD = [0, 100, 200, 300, 400, 500, 600];
 const DEFAULT_FRANCHISE_ADULT = 2500;
 const DEFAULT_FRANCHISE_CHILD = 0;
 
-// Vergütung 2026: CO2-Rückverteilung (CHF 28.80/Jahr) + Ausgleichsbetrag Reserveabbau (CHF 60/Jahr)
-// Total: CHF 88.80/Jahr = CHF 7.40/Monat pro Person
+// Vergütung 2026: CO2-Rückverteilung + Ausgleichsbetrag Reserveabbau
+// Total: CHF 61.80/Jahr = CHF 5.15/Monat pro Person
 // Quelle: BAG / Bundesamt für Gesundheit
-const VERGUETUNG_MONTHLY_PER_PERSON = 7.40;
+const VERGUETUNG_MONTHLY_PER_PERSON = 5.15;
 
 const CURRENT_INSURERS = [
   "Agrisano", "AMB", "Aquilana", "Assura", "Atupri", "Avenir",
