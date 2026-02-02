@@ -13,37 +13,58 @@ export const metadata: Metadata = {
 };
 
 const FAQ_ITEMS = [
+  // Fristen & Wechsel
   {
-    q: "Ist der Krankenkassenvergleich wirklich kostenlos?",
-    a: "Ja, unser Krankenkassen-Vergleich ist 100% kostenlos und unverbindlich. Sie gehen keinerlei Verpflichtungen ein.",
+    q: "Bis wann muss ich die Krankenkasse kündigen 2026?",
+    a: "Für einen Wechsel per 1. Januar 2026 müssen Sie bis spätestens 30. November 2025 kündigen. Die Kündigung muss eingetroffen sein (nicht Poststempel). Tipp: Per Einschreiben senden oder online kündigen.",
   },
   {
-    q: "Wie viel kann ich bei der Krankenkasse sparen?",
-    a: "Je nach aktueller Krankenkasse und gewählter Franchise können Sie zwischen CHF 500 und CHF 2'000 pro Jahr sparen. Bei Familien ist das Sparpotenzial noch grösser.",
+    q: "Kann ich die Krankenkasse auch im Sommer wechseln?",
+    a: "Ja, zum 1. Juli ist ein Wechsel möglich – aber nur bei der ordentlichen Franchise (CHF 300). Die Kündigung muss bis 31. März bei der Krankenkasse eingetroffen sein. Bei höheren Franchisen ist nur ein Wechsel per 1. Januar möglich.",
+  },
+  // Kosten & Franchise
+  {
+    q: "Welche Franchise soll ich wählen – CHF 300 oder CHF 2'500?",
+    a: "Faustregel: Wählen Sie CHF 2'500, wenn Sie selten zum Arzt gehen und die Ersparnis in einem Notfallfonds anlegen. Bei regelmässigen Arztbesuchen (z.B. Chroniker) lohnt sich CHF 300. Mit CHF 2'500 sparen Sie bis zu CHF 1'500 pro Jahr an Prämien.",
   },
   {
-    q: "Muss ich meine Krankenkasse wechseln?",
-    a: "Nein, der Vergleich ist unverbindlich. Sie entscheiden selbst, ob Sie die Krankenkasse wechseln möchten.",
+    q: "Wie viel kostet die Krankenkasse pro Monat in der Schweiz?",
+    a: "Die durchschnittliche Prämie 2026 beträgt CHF 393.30 pro Monat (Erwachsene, Franchise CHF 300). Je nach Kanton variiert sie stark: In Appenzell Innerrhoden ab CHF 260, in Genf ab CHF 480. Mit alternativen Modellen (HMO, Hausarzt) sparen Sie 10–25%.",
   },
   {
-    q: "Bis wann kann ich meine Krankenkasse wechseln?",
-    a: "Für einen Wechsel der Krankenkasse per 1. Januar müssen Sie bis spätestens 30. November kündigen. Die Kündigung muss bei der aktuellen Krankenkasse eingetroffen sein.",
+    q: "Habe ich Anspruch auf Prämienverbilligung (IPV)?",
+    a: "Das hängt von Ihrem Einkommen und Wohnkanton ab. Grob gilt: Einzelpersonen mit einem steuerbaren Einkommen unter CHF 40'000–50'000 und Familien unter CHF 60'000–80'000 können Prämienverbilligung beantragen. Der Antrag erfolgt bei Ihrer Wohngemeinde oder dem Kanton.",
+  },
+  // Leistungen
+  {
+    q: "Zahlt die Krankenkasse den Zahnarzt?",
+    a: "Nein, Zahnbehandlungen sind NICHT in der Grundversicherung enthalten. Ausnahmen: Unfälle, schwere Kiefererkrankungen oder Zahnprobleme durch andere Krankheiten. Für Zahnarztkosten benötigen Sie eine Zahnzusatzversicherung.",
   },
   {
-    q: "Erhalte ich danach Spam?",
-    a: "Nein, wir geben Ihre Daten nur an seriöse Versicherungsberater weiter, die Sie einmalig kontaktieren.",
+    q: "Übernimmt die Krankenkasse meine Brille oder Kontaktlinsen?",
+    a: "Nur für Kinder bis 18 Jahre: CHF 180 pro Jahr für Brillen/Kontaktlinsen. Erwachsene erhalten seit 2020 keinen Beitrag mehr aus der Grundversicherung. Eine Zusatzversicherung kann Sehhilfen abdecken.",
   },
   {
-    q: "Ist die Grundversicherung bei jeder Krankenkasse gleich?",
-    a: "Ja, die Leistungen der obligatorischen Grundversicherung (KVG) sind gesetzlich vorgeschrieben und bei allen Schweizer Krankenkassen identisch. Der Unterschied liegt nur im Preis.",
+    q: "Was bezahlt die Grundversicherung bei Schwangerschaft?",
+    a: "Die Grundversicherung übernimmt: 7 Vorsorgeuntersuchungen, 2 Ultraschalls, Geburtskosten (Spital/Geburtshaus), Nachkontrollen und Stillberatung. Ab der 13. Schwangerschaftswoche bis 8 Wochen nach Geburt entfällt die Franchise und der Selbstbehalt.",
+  },
+  // Modelle
+  {
+    q: "Was ist der Unterschied zwischen HMO, Hausarzt und Telmed?",
+    a: "HMO: Sie gehen immer zuerst in ein HMO-Zentrum (Gruppenpraxis). Hausarzt-Modell: Ihr Hausarzt ist erste Anlaufstelle. Telmed: Zuerst telefonische Beratung (z.B. Medgate). Alle Modelle sparen 10–25% Prämien, schränken aber die freie Arztwahl ein.",
+  },
+  // Spezialfälle
+  {
+    q: "Soll ich die Unfallversicherung einschliessen oder ausschliessen?",
+    a: "Ausschliessen, wenn Sie mindestens 8 Stunden pro Woche arbeiten – dann sind Sie über den Arbeitgeber unfallversichert (UVG). Dies spart ca. 7% der Prämie. Selbstständige, Hausfrauen/-männer und Studierende müssen Unfall einschliessen.",
   },
   {
-    q: "Welche Krankenkasse ist die günstigste in der Schweiz?",
-    a: "Die günstigste Krankenkasse hängt von Ihrem Wohnkanton, Alter und gewähltem Modell ab. Mit unserem Vergleich finden Sie die günstigste Krankenkasse für Ihre persönliche Situation.",
+    q: "Wie melde ich mein Neugeborenes bei der Krankenkasse an?",
+    a: "Sie haben 3 Monate Zeit nach der Geburt. Das Kind kann rückwirkend ab Geburt versichert werden. Die Krankenkasse darf das Kind nicht ablehnen (Aufnahmepflicht). Tipp: Kind bei einer günstigen Kasse anmelden – es muss nicht die gleiche wie die Eltern sein.",
   },
   {
-    q: "Was ist der Unterschied zwischen Grundversicherung und Zusatzversicherung?",
-    a: "Die Grundversicherung (KVG) ist obligatorisch und deckt medizinische Grundleistungen ab. Die Zusatzversicherung ist freiwillig und bietet Extras wie Zahnversicherung, alternative Medizin oder Einzelzimmer im Spital.",
+    q: "Ist die Krankenkasse in der Schweiz obligatorisch?",
+    a: "Ja, die Grundversicherung (KVG) ist für alle Personen mit Wohnsitz in der Schweiz Pflicht. Sie haben 3 Monate Zeit nach Zuzug, sich zu versichern. Zusatzversicherungen sind freiwillig.",
   },
 ];
 
