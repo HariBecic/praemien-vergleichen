@@ -5,11 +5,16 @@
 const CAROUSEL_INSURERS = [
   { name: "Helsana", file: "/logos/helsana.svg" },
   { name: "CSS", file: "/logos/css.svg" },
-  { name: "SWICA", file: "/logos/swica.png" },
-  { name: "Concordia", file: "/logos/concordia.png" },
+  { name: "SWICA", file: "/logos/swica.svg" },
+  { name: "Concordia", file: "/logos/concordia.svg" },
   { name: "KPT", file: "/logos/kpt.svg" },
   { name: "Groupe Mutuel", file: "/logos/groupemutuel.svg" },
   { name: "Visana", file: "/logos/visana.svg" },
+  { name: "Sanitas", file: "/logos/sanitas.svg" },
+  { name: "Assura", file: "/logos/assura.svg" },
+  { name: "Atupri", file: "/logos/atupri.svg" },
+  { name: "ÖKK", file: "/logos/oekk.svg" },
+  { name: "Sympany", file: "/logos/sympany.svg" },
 ];
 
 export function InsurerCarousel() {
