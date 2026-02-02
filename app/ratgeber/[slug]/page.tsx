@@ -129,7 +129,7 @@ export default async function RatgeberPage({
         </nav>
 
         {/* Article Header */}
-        <header className="max-w-3xl mx-auto px-4 sm:px-6 pb-12">
+        <header className="max-w-3xl mx-auto px-4 sm:px-6 pb-8">
           <div className="flex items-center gap-4 text-sm text-white/40 mb-4">
             <span>📖 {article.readingTime} Lesezeit</span>
             <span>·</span>
@@ -142,6 +142,26 @@ export default async function RatgeberPage({
             {article.heroSubtitle}
           </p>
         </header>
+
+        {/* Expert/Author Box - E-E-A-T */}
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-12">
+          <div className="flex items-start gap-4 p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center flex-shrink-0">
+              <svg className="w-7 h-7 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+              </svg>
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-white">Geprüft von Experten</span>
+                <span className="px-2 py-0.5 rounded text-xs bg-green-500/10 text-green-400 border border-green-500/20">Verifiziert</span>
+              </div>
+              <p className="text-sm text-white/50 leading-relaxed">
+                Dieser Artikel wurde von unserem Redaktionsteam mit Expertise im Schweizer Krankenversicherungsrecht verfasst und auf Basis offizieller BAG-Daten geprüft.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Table of Contents */}
         <nav className="max-w-3xl mx-auto px-4 sm:px-6 mb-12">
@@ -239,22 +259,40 @@ export default async function RatgeberPage({
 
         {/* Related Articles */}
         <section className="max-w-3xl mx-auto px-4 sm:px-6 py-12 border-t border-white/[0.06]">
-          <h2 className="text-xl font-bold mb-6">Weitere Ratgeber</h2>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {otherArticles.map((a) => (
+          <h2 className="text-xl font-bold mb-2">Verwandte Ratgeber</h2>
+          <p className="text-white/40 text-sm mb-6">Das könnte Sie auch interessieren</p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {otherArticles.slice(0, 4).map((a) => (
               <Link
                 key={a.slug}
                 href={`/ratgeber/${a.slug}`}
-                className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-[#e36414]/30 hover:bg-white/[0.05] transition-all group"
+                className="p-5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-[#e36414]/30 hover:bg-white/[0.05] transition-all group"
               >
-                <span className="text-white group-hover:text-[#fb923c] transition-colors font-medium text-sm">
+                <span className="text-white group-hover:text-[#fb923c] transition-colors font-semibold">
                   {a.title.split("–")[0].trim()}
                 </span>
-                <span className="block text-xs text-white/30 mt-1">
-                  {a.readingTime} · {a.sections.length} Abschnitte
+                <p className="text-sm text-white/40 mt-2 line-clamp-2">
+                  {a.metaDescription.slice(0, 100)}...
+                </p>
+                <span className="inline-flex items-center gap-1 text-xs text-blue-400 mt-3 group-hover:text-blue-300">
+                  Weiterlesen
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
                 </span>
               </Link>
             ))}
+          </div>
+          <div className="text-center mt-6">
+            <Link
+              href="/ratgeber"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.05] border border-white/[0.1] hover:bg-white/[0.08] text-sm font-medium text-white transition-all"
+            >
+              Alle Ratgeber anzeigen
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
           </div>
         </section>
 
