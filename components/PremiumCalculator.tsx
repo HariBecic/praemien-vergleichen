@@ -156,34 +156,21 @@ const AGE_LABELS: Record<string, string> = {
   ERW: "Erwachsene/r",
 };
 
-const INSURER_DOMAINS: Record<string, string> = {
-  "Agrisano": "agrisano.ch",
-  "Aquilana": "aquilana.ch",
-  "Assura": "assura.ch",
-  "Atupri": "atupri.ch",
-  "Avenir": "groupemutuel.ch",
-  "Birchmeier": "birchmeier-kk.ch",
-  "CSS": "css.ch",
-  "Concordia": "concordia.ch",
-  "EGK": "egk.ch",
-  "Galenos": "galenos.ch",
-  "Helsana": "helsana.ch",
-  "KPT": "kpt.ch",
-  "Luzerner Hinterland": "luzernerhinderland.ch",
-  "Mutuel": "groupemutuel.ch",
-  "Philos": "groupemutuel.ch",
-  "SLKK": "slkk.ch",
-  "SWICA": "swica.ch",
-  "Sanitas": "sanitas.com",
-  "Steffisburg": "kksteffisburg.ch",
-  "Sumiswalder": "sumiswalder.ch",
-  "Sympany": "sympany.ch",
-  "Visana": "visana.ch",
-  "Wädenswil": "kkw.ch",
-  "rhenusana": "rhenusana.ch",
-  "sana24": "sana24.ch",
-  "vita surselva": "vitasurselva.ch",
-  "ÖKK": "oekk.ch",
+// Lokale Logos (keine externen Requests mehr)
+const LOCAL_LOGOS: Record<string, string> = {
+  "CSS": "/logos/css.svg",
+  "Concordia": "/logos/concordia.png",
+  "EGK": "/logos/egk.svg",
+  "Helsana": "/logos/helsana.svg",
+  "KPT": "/logos/kpt.svg",
+  "SWICA": "/logos/swica.png",
+  "Sympany": "/logos/sympany.svg",
+  "Visana": "/logos/visana.svg",
+  "ÖKK": "/logos/oekk.svg",
+  // Groupe Mutuel Marken
+  "Avenir": "/logos/groupemutuel.svg",
+  "Mutuel": "/logos/groupemutuel.svg",
+  "Philos": "/logos/groupemutuel.svg",
 };
 
 const INSURER_COLORS: Record<string, { bg: string; text: string }> = {
@@ -217,9 +204,7 @@ const INSURER_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 function getInsurerLogoUrl(insurerName: string): string | null {
-  const domain = INSURER_DOMAINS[insurerName];
-  if (!domain) return null;
-  return `https://cdn.brandfetch.io/domain/${domain}?c=1idc9vLyOz1J1qurgu6`;
+  return LOCAL_LOGOS[insurerName] || null;
 }
 
 function getInsurerInitials(name: string): string {
