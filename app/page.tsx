@@ -203,7 +203,7 @@ export default function Home() {
         </section>
 
         {/* ── Key Facts (Visual Infographic Style) ── */}
-        <section className="py-16 sm:py-24 border-t border-white/[0.06]">
+        <section className="py-16 sm:py-24">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
               Krankenkasse Schweiz – Fakten 2026
@@ -252,7 +252,7 @@ export default function Home() {
         </section>
 
         {/* ── Krankenkassen Kantone (Visual Grid) ── */}
-        <section className="py-16 sm:py-24 border-t border-white/[0.06]">
+        <section className="py-16 sm:py-24">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <p className="text-center text-sm text-white/40 uppercase tracking-wider mb-2">
               Prämien nach Region
@@ -313,7 +313,7 @@ export default function Home() {
         </section>
 
         {/* ── Ratgeber Cards (Visual) ── */}
-        <section className="py-16 sm:py-24 border-t border-white/[0.06]">
+        <section className="py-16 sm:py-24">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <p className="text-center text-sm text-white/40 uppercase tracking-wider mb-2">
               Wissen & Tipps
